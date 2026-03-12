@@ -12,7 +12,7 @@ struct MacOSFocusController {
             return false
         }
 
-        return running.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+        return running.activate()
     }
 
     @discardableResult
@@ -21,7 +21,7 @@ struct MacOSFocusController {
             return false
         }
 
-        let appActivated = running.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+        let appActivated = running.activate()
 
         guard permissionService.isTrusted, let element = window.axElement else {
             return appActivated
