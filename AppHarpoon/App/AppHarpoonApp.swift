@@ -14,6 +14,7 @@ struct AppHarpoonApp: App {
                 permissions: appModel.accessibilityPermissions
             )
         }
+        .menuBarExtraStyle(.window)
 
         Settings {
             SettingsView(
