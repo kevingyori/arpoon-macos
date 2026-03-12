@@ -170,8 +170,20 @@ final class AppModel: ObservableObject {
                 present(outcome: liveOutcome, fallbackLabel: assignment.label)
                 return
             }
+        }
 
-            liveSlotWindows.removeValue(forKey: slot)
+        if let resolvedWindow = resolveLiveWindow(for: assignment.target) {
+            liveSlotWindows[slot] = resolvedWindow.window
+
+            let resolvedOutcome = focusService.focus(
+                liveWindow: resolvedWindow.window,
+                strategy: resolvedWindow.strategy
+            )
+
+            if case .focused = resolvedOutcome {
+                present(outcome: resolvedOutcome, fallbackLabel: assignment.label)
+                return
+            }
         }
 
         let outcome = focusService.focus(target: assignment.target)
@@ -296,6 +308,19 @@ final class AppModel: ObservableObject {
             liveSlotWindows[slot] = liveWindow
         default:
             liveSlotWindows.removeValue(forKey: slot)
+        }
+    }
+
+    private func resolveLiveWindow(for target: Target) -> (window: LiveWindow, strategy: ResolutionStrategy)? {
+        guard case .window = target else {
+            return nil
+        }
+
+        switch resolutionService.resolve(target: target) {
+        case .window(let liveWindow, let strategy):
+            return (liveWindow, strategy)
+        default:
+            return nil
         }
     }
 }

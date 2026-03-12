@@ -12,7 +12,7 @@ struct MacOSFocusController {
             return false
         }
 
-        return running.activate()
+        return running.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
     }
 
     @discardableResult
@@ -21,16 +21,27 @@ struct MacOSFocusController {
             return false
         }
 
-        let appActivated = running.activate()
+        let appActivated = running.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
 
         guard permissionService.isTrusted, let element = window.axElement else {
             return appActivated
         }
 
+        let appElement = AXUIElementCreateApplication(window.pid)
+        let frontmostResult = AXUIElementSetAttributeValue(appElement, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
+        let appFocusedWindowResult = AXUIElementSetAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, element)
+        let appMainWindowResult = AXUIElementSetAttributeValue(appElement, kAXMainWindowAttribute as CFString, element)
         let raiseResult = AXUIElementPerformAction(element, kAXRaiseAction as CFString)
         let mainResult = AXUIElementSetAttributeValue(element, kAXMainAttribute as CFString, kCFBooleanTrue)
         let focusedResult = AXUIElementSetAttributeValue(element, kAXFocusedAttribute as CFString, kCFBooleanTrue)
 
-        return appActivated && [raiseResult, mainResult, focusedResult].contains(.success)
+        return appActivated || [
+            frontmostResult,
+            appFocusedWindowResult,
+            appMainWindowResult,
+            raiseResult,
+            mainResult,
+            focusedResult
+        ].contains(.success)
     }
 }

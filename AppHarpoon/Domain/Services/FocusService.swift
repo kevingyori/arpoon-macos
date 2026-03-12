@@ -13,12 +13,12 @@ struct FocusService {
     let appProvider: RunningAppProvider
     let labelPolicy: TargetLabelPolicy
 
-    func focus(liveWindow: LiveWindow) -> FocusOutcome {
+    func focus(liveWindow: LiveWindow, strategy: ResolutionStrategy = .liveSessionWindow) -> FocusOutcome {
         guard focusController.focus(window: liveWindow) else {
             return .unavailable(reason: "The saved live window no longer responded.")
         }
 
-        return .focused(label: labelPolicy.label(for: liveWindow), strategy: .liveSessionWindow)
+        return .focused(label: labelPolicy.label(for: liveWindow), strategy: strategy)
     }
 
     func focus(target: Target) -> FocusOutcome {
