@@ -12,7 +12,7 @@ final class AccessibilityPermissionService: ObservableObject {
 
     func requestAccess() {
         let options = [
-            kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true
+            "AXTrustedCheckOptionPrompt": true
         ] as CFDictionary
 
         isTrusted = AXIsProcessTrustedWithOptions(options)

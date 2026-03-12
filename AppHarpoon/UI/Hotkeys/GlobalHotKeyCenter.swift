@@ -1,6 +1,7 @@
 import Carbon
 import Foundation
 
+@MainActor
 final class GlobalHotKeyCenter {
     static let shared = GlobalHotKeyCenter()
 
@@ -62,7 +63,9 @@ final class GlobalHotKeyCenter {
                 return status
             }
 
-            GlobalHotKeyCenter.shared.handlers[hotKeyID.id]?()
+            Task { @MainActor in
+                GlobalHotKeyCenter.shared.invoke(id: hotKeyID.id)
+            }
             return noErr
         }
 
@@ -74,5 +77,9 @@ final class GlobalHotKeyCenter {
             nil,
             &eventHandlerRef
         )
+    }
+
+    private func invoke(id: UInt32) {
+        handlers[id]?()
     }
 }
