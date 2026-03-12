@@ -22,6 +22,7 @@ final class AppModel: ObservableObject {
     private let searchController: SearchPaletteController
     private let hotkeyController: HotkeyController
     private var cancellables = Set<AnyCancellable>()
+    private var liveSlotWindows: [Int: LiveWindow] = [:]
     private var started = false
 
     private init() {
@@ -116,6 +117,7 @@ final class AppModel: ObservableObject {
         }
 
         let assignment = slotStore.bind(slot: slot, target: outcome.target)
+        updateLiveWindowCache(for: slot, liveWindow: outcome.liveWindow)
         let detail: String
 
         switch outcome.source {
@@ -143,6 +145,7 @@ final class AppModel: ObservableObject {
         }
 
         let assignment = slotStore.bind(slot: slot, target: target)
+        updateLiveWindowCache(for: slot, item: item)
         showMessage(
             title: "Slot \(slot) -> \(assignment.label)",
             detail: "Updated from the search palette.",
@@ -159,6 +162,16 @@ final class AppModel: ObservableObject {
                 tone: .warning
             )
             return
+        }
+
+        if let liveWindow = liveSlotWindows[slot] {
+            let liveOutcome = focusService.focus(liveWindow: liveWindow)
+            if case .focused = liveOutcome {
+                present(outcome: liveOutcome, fallbackLabel: assignment.label)
+                return
+            }
+
+            liveSlotWindows.removeValue(forKey: slot)
         }
 
         let outcome = focusService.focus(target: assignment.target)
@@ -203,6 +216,7 @@ final class AppModel: ObservableObject {
         }
 
         slotStore.clear(slot: slot)
+        liveSlotWindows.removeValue(forKey: slot)
         showMessage(
             title: "Cleared slot \(slot)",
             detail: nil,
@@ -266,5 +280,22 @@ final class AppModel: ObservableObject {
             model: .message(title: title, detail: detail, tone: tone),
             timeout: settings.hudTimeout
         )
+    }
+
+    private func updateLiveWindowCache(for slot: Int, liveWindow: LiveWindow?) {
+        if let liveWindow {
+            liveSlotWindows[slot] = liveWindow
+        } else {
+            liveSlotWindows.removeValue(forKey: slot)
+        }
+    }
+
+    private func updateLiveWindowCache(for slot: Int, item: SearchItem) {
+        switch item {
+        case .window(let liveWindow):
+            liveSlotWindows[slot] = liveWindow
+        default:
+            liveSlotWindows.removeValue(forKey: slot)
+        }
     }
 }

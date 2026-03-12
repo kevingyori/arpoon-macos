@@ -8,6 +8,7 @@ enum CaptureSource {
 struct CaptureOutcome {
     let target: Target
     let source: CaptureSource
+    let liveWindow: LiveWindow?
 }
 
 @MainActor
@@ -30,7 +31,8 @@ struct TargetCaptureService {
                         capturedAt: .now
                     )
                 ),
-                source: .window
+                source: .window,
+                liveWindow: window
             )
         }
 
@@ -40,7 +42,8 @@ struct TargetCaptureService {
 
         return CaptureOutcome(
             target: .app(AppTarget(bundleId: app.bundleId, appName: app.appName)),
-            source: .appFallback
+            source: .appFallback,
+            liveWindow: nil
         )
     }
 }

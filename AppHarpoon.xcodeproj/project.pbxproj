@@ -41,6 +41,7 @@
 		D558A2074869A9E7FE7EEFDE /* MacOSFocusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C25FDE60B82A7405D2B4B9 /* MacOSFocusController.swift */; };
 		D7560436A22067F59B2D6B3B /* SlotAssignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3283F8A7765DE6D7A1BC12A5 /* SlotAssignment.swift */; };
 		DA22DF8367C172F4597464AA /* SearchPaletteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9A84CD1292E7858E55AA1C4 /* SearchPaletteController.swift */; };
+		FAAFDDAD987B31E8DEDF5BCC /* ControlPanelWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74443723A9D0176211987DC /* ControlPanelWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -70,6 +71,7 @@
 		A14B3ED029BDAA4083184C27 /* LiveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveApp.swift; sourceTree = "<group>"; };
 		A1E818FF120D264B2649773B /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
 		B162A420979630491A7B6730 /* LiveWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWindow.swift; sourceTree = "<group>"; };
+		B74443723A9D0176211987DC /* ControlPanelWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanelWindowController.swift; sourceTree = "<group>"; };
 		B9A84CD1292E7858E55AA1C4 /* SearchPaletteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPaletteController.swift; sourceTree = "<group>"; };
 		BAF5C17A6C1F8EEE581074F4 /* SlotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotStore.swift; sourceTree = "<group>"; };
 		BFBC0ADB67CB6CD12BC3B77A /* TargetResolutionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetResolutionService.swift; sourceTree = "<group>"; };
@@ -107,6 +109,7 @@
 			isa = PBXGroup;
 			children = (
 				A1E818FF120D264B2649773B /* AppIconView.swift */,
+				B74443723A9D0176211987DC /* ControlPanelWindowController.swift */,
 				6ABA3FA59CBF259DA86E3B23 /* MenuBarView.swift */,
 				134BD48229C6055157476750 /* StatusItemController.swift */,
 			);
@@ -316,6 +319,7 @@
 				6B1344ACB9AD2CC825C70B3B /* AppIconView.swift in Sources */,
 				862556FA5CE7B8198B9A5528 /* AppModel.swift in Sources */,
 				8BBEA98CA489172C7999317F /* AssignmentStore.swift in Sources */,
+				FAAFDDAD987B31E8DEDF5BCC /* ControlPanelWindowController.swift in Sources */,
 				8EB579CA34256B6392098BD2 /* FocusService.swift in Sources */,
 				1AE0BE11164000AF7B718B60 /* GlobalHotKeyCenter.swift in Sources */,
 				99E004C8D6D4E89567321D08 /* HUDModel.swift in Sources */,

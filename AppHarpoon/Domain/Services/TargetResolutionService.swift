@@ -1,6 +1,7 @@
 import Foundation
 
 enum ResolutionStrategy {
+    case liveSessionWindow
     case exactWindowID
     case exactFrame
     case exactTitle
@@ -10,6 +11,8 @@ enum ResolutionStrategy {
 
     var displayName: String {
         switch self {
+        case .liveSessionWindow:
+            return "live session match"
         case .exactWindowID:
             return "exact window match"
         case .exactFrame:
