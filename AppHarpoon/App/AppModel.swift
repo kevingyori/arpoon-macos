@@ -60,7 +60,7 @@ final class AppModel: ObservableObject {
 
         let searchViewModel = SearchViewModel(searchIndexService: searchIndexService)
         searchController = SearchPaletteController(viewModel: searchViewModel)
-        hotkeyController = HotkeyController()
+        hotkeyController = HotkeyController(settings: settings)
 
         hotkeyController.onJump = { [weak self] slot in
             self?.jump(to: slot)
@@ -93,6 +93,16 @@ final class AppModel: ObservableObject {
                 self?.searchController.refresh()
             }
             .store(in: &cancellables)
+
+        settings.$hotkeys
+            .sink { [weak self] _ in
+                guard let self, self.started else {
+                    return
+                }
+
+                self.hotkeyController.registerConfiguredHotkeys()
+            }
+            .store(in: &cancellables)
     }
 
     func start() {
@@ -103,7 +113,7 @@ final class AppModel: ObservableObject {
         started = true
         slotStore.load()
         accessibilityPermissions.startMonitoring()
-        hotkeyController.registerDefaultHotkeys()
+        hotkeyController.registerConfiguredHotkeys()
     }
 
     func bindFocusedTarget(to slot: Int) {
@@ -259,6 +269,14 @@ final class AppModel: ObservableObject {
                 : "Grant access in System Settings > Privacy & Security > Accessibility.",
             tone: accessibilityPermissions.isTrusted ? .success : .warning
         )
+    }
+
+    func setHotkeyRecordingActive(_ isActive: Bool) {
+        if isActive {
+            hotkeyController.suspend()
+        } else {
+            hotkeyController.resume()
+        }
     }
 
     private func present(outcome: FocusOutcome, fallbackLabel: String) {

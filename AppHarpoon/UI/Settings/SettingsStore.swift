@@ -3,6 +3,10 @@ import Foundation
 
 @MainActor
 final class SettingsStore: ObservableObject {
+    @Published private(set) var hotkeys: [HotkeyAction: HotkeyShortcut] {
+        didSet { persistHotkeys() }
+    }
+
     @Published var preferWindowTargets: Bool {
         didSet { defaults.set(preferWindowTargets, forKey: Keys.preferWindowTargets) }
     }
@@ -23,6 +27,7 @@ final class SettingsStore: ObservableObject {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        hotkeys = Self.loadHotkeys(from: defaults)
 
         preferWindowTargets = defaults.object(forKey: Keys.preferWindowTargets) as? Bool ?? true
         launchAppsOnJump = defaults.object(forKey: Keys.launchAppsOnJump) as? Bool ?? true
@@ -34,11 +39,74 @@ final class SettingsStore: ObservableObject {
             hudTimeout = defaults.double(forKey: Keys.hudTimeout)
         }
     }
+
+    func shortcut(for action: HotkeyAction) -> HotkeyShortcut? {
+        hotkeys[action]
+    }
+
+    @discardableResult
+    func setShortcut(_ shortcut: HotkeyShortcut, for action: HotkeyAction) -> HotkeyUpdateResult {
+        guard shortcut.modifiers != 0 else {
+            return .requiresModifier
+        }
+
+        if let duplicate = hotkeys.first(where: { $0.key != action && $0.value == shortcut })?.key {
+            return .duplicate(duplicate)
+        }
+
+        hotkeys[action] = shortcut
+        return .updated
+    }
+
+    func clearShortcut(for action: HotkeyAction) {
+        hotkeys.removeValue(forKey: action)
+    }
+
+    func resetHotkeysToDefaults() {
+        hotkeys = Self.defaultHotkeys()
+    }
+
+    private func persistHotkeys() {
+        let payload = hotkeys
+            .sorted { $0.key.id < $1.key.id }
+            .map { PersistedHotkeyBinding(actionID: $0.key.id, shortcut: $0.value) }
+
+        if let encoded = try? JSONEncoder().encode(payload) {
+            defaults.set(encoded, forKey: Keys.hotkeys)
+        }
+    }
+
+    private static func loadHotkeys(from defaults: UserDefaults) -> [HotkeyAction: HotkeyShortcut] {
+        guard let data = defaults.data(forKey: Keys.hotkeys),
+              let payload = try? JSONDecoder().decode([PersistedHotkeyBinding].self, from: data) else {
+            return defaultHotkeys()
+        }
+
+        let decoded = payload.reduce(into: [HotkeyAction: HotkeyShortcut]()) { result, item in
+            guard let action = HotkeyAction(id: item.actionID) else {
+                return
+            }
+
+            result[action] = item.shortcut
+        }
+
+        return decoded.isEmpty ? defaultHotkeys() : defaultHotkeys().merging(decoded) { _, loaded in loaded }
+    }
+
+    private static func defaultHotkeys() -> [HotkeyAction: HotkeyShortcut] {
+        Dictionary(uniqueKeysWithValues: HotkeyAction.allCases.map { ($0, $0.defaultShortcut) })
+    }
 }
 
 private enum Keys {
+    static let hotkeys = "hotkeys"
     static let preferWindowTargets = "preferWindowTargets"
     static let launchAppsOnJump = "launchAppsOnJump"
     static let fallbackToAppOnJump = "fallbackToAppOnJump"
     static let hudTimeout = "hudTimeout"
+}
+
+private struct PersistedHotkeyBinding: Codable {
+    let actionID: String
+    let shortcut: HotkeyShortcut
 }

@@ -15,15 +15,14 @@ final class GlobalHotKeyCenter {
         installHandler()
     }
 
-    func register(keyCode: UInt32, modifiers: UInt32, handler: @escaping () -> Void) {
+    @discardableResult
+    func register(keyCode: UInt32, modifiers: UInt32, handler: @escaping () -> Void) -> Bool {
         let id = nextID
         nextID += 1
 
-        handlers[id] = handler
-
         let hotKeyID = EventHotKeyID(signature: signature, id: id)
         var hotKeyRef: EventHotKeyRef?
-        RegisterEventHotKey(
+        let status = RegisterEventHotKey(
             keyCode,
             modifiers,
             hotKeyID,
@@ -32,9 +31,22 @@ final class GlobalHotKeyCenter {
             &hotKeyRef
         )
 
-        if let hotKeyRef {
-            hotKeyRefs[id] = hotKeyRef
+        guard status == noErr, let hotKeyRef else {
+            return false
         }
+
+        handlers[id] = handler
+        hotKeyRefs[id] = hotKeyRef
+        return true
+    }
+
+    func unregisterAll() {
+        for hotKeyRef in hotKeyRefs.values {
+            UnregisterEventHotKey(hotKeyRef)
+        }
+
+        handlers.removeAll()
+        hotKeyRefs.removeAll()
     }
 
     private func installHandler() {

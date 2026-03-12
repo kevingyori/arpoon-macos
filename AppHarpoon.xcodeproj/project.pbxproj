@@ -13,6 +13,7 @@
 		2439CE24A874BC15D656E04C /* SearchIndexService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C42F3A87879C7B2C557921 /* SearchIndexService.swift */; };
 		2962FA2A81135AFBB1830C93 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6982A99B5C0638A3BD3215EE /* AppDelegate.swift */; };
 		2CDA89D8876279875ADB5FCF /* JSONAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F02621B61A614BE049CFBA /* JSONAssignmentStore.swift */; };
+		33F44F859DF01733ABF8F905 /* HotkeyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C6D05723135C82AB0B5A059 /* HotkeyModels.swift */; };
 		34BC4D5CAF6D2F6A48474A9C /* HotkeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 180B7586D9B21D5C577F24D7 /* HotkeyController.swift */; };
 		3AD55E93A4293696CE0A5FA9 /* TargetLabelPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C5625DC981925AA4C6C0AF8 /* TargetLabelPolicy.swift */; };
 		43C5D11B4389331C3BE60508 /* AppHarpoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E988212272FC66A2ED019DD6 /* AppHarpoonApp.swift */; };
@@ -67,6 +68,7 @@
 		78EAE23CD07C0BF0DC76F563 /* TargetCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetCaptureService.swift; sourceTree = "<group>"; };
 		7EC2D19681CEA70DBEE6F2CF /* AssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentStore.swift; sourceTree = "<group>"; };
 		818796C58BA40236C38CFC9E /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
+		8C6D05723135C82AB0B5A059 /* HotkeyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyModels.swift; sourceTree = "<group>"; };
 		97CEF000E6A1C7C6277939F8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A14B3ED029BDAA4083184C27 /* LiveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveApp.swift; sourceTree = "<group>"; };
 		A1E818FF120D264B2649773B /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
@@ -209,6 +211,7 @@
 			children = (
 				684F7D8FAEB29282FB250F0B /* GlobalHotKeyCenter.swift */,
 				180B7586D9B21D5C577F24D7 /* HotkeyController.swift */,
+				8C6D05723135C82AB0B5A059 /* HotkeyModels.swift */,
 			);
 			path = Hotkeys;
 			sourceTree = "<group>";
@@ -326,6 +329,7 @@
 				0FA78B46FCBA8010623C2BB0 /* HUDView.swift in Sources */,
 				C64A71F2600A29929CDCCD1E /* HUDWindowController.swift in Sources */,
 				34BC4D5CAF6D2F6A48474A9C /* HotkeyController.swift in Sources */,
+				33F44F859DF01733ABF8F905 /* HotkeyModels.swift in Sources */,
 				2CDA89D8876279875ADB5FCF /* JSONAssignmentStore.swift in Sources */,
 				AB764290EE5552A953528CEC /* LiveApp.swift in Sources */,
 				526DDFAA657E4BC08B63B25E /* LiveWindow.swift in Sources */,

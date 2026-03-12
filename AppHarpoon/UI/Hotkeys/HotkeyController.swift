@@ -8,54 +8,66 @@ final class HotkeyController {
     var onShowHUD: (() -> Void)?
     var onToggleSearch: (() -> Void)?
 
+    private let settings: SettingsStore
     private let hotKeyCenter = GlobalHotKeyCenter.shared
-    private var registered = false
+    private var suspended = false
 
-    func registerDefaultHotkeys() {
-        guard !registered else {
+    init(settings: SettingsStore) {
+        self.settings = settings
+    }
+
+    func registerConfiguredHotkeys() {
+        guard !suspended else {
             return
         }
 
-        registered = true
+        hotKeyCenter.unregisterAll()
 
-        for (index, keyCode) in slotKeyCodes.enumerated() {
-            let slot = index + 1
+        for action in HotkeyAction.allCases {
+            guard let shortcut = settings.shortcut(for: action) else {
+                continue
+            }
 
-            hotKeyCenter.register(keyCode: keyCode, modifiers: UInt32(cmdKey)) { [weak self] in
+            hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
                 Task { @MainActor in
-                    self?.onJump?(slot)
+                    self?.dispatch(action)
                 }
-            }
-
-            hotKeyCenter.register(keyCode: keyCode, modifiers: UInt32(cmdKey | shiftKey)) { [weak self] in
-                Task { @MainActor in
-                    self?.onBind?(slot)
-                }
-            }
-        }
-
-        hotKeyCenter.register(keyCode: UInt32(kVK_ANSI_0), modifiers: UInt32(cmdKey)) { [weak self] in
-            Task { @MainActor in
-                self?.onShowHUD?()
-            }
-        }
-
-        hotKeyCenter.register(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(cmdKey)) { [weak self] in
-            Task { @MainActor in
-                self?.onToggleSearch?()
             }
         }
     }
 
-    private let slotKeyCodes: [UInt32] = [
-        UInt32(kVK_ANSI_1),
-        UInt32(kVK_ANSI_2),
-        UInt32(kVK_ANSI_3),
-        UInt32(kVK_ANSI_4),
-        UInt32(kVK_ANSI_5),
-        UInt32(kVK_ANSI_6),
-        UInt32(kVK_ANSI_7),
-        UInt32(kVK_ANSI_8),
-        UInt32(kVK_ANSI_9)
-    ]
+    func suspend() {
+        guard !suspended else {
+            return
+        }
+
+        suspended = true
+        hotKeyCenter.unregisterAll()
+    }
+
+    func resume() {
+        guard suspended else {
+            return
+        }
+
+        suspended = false
+        registerConfiguredHotkeys()
+    }
+
+    private func dispatch(_ action: HotkeyAction) {
+        switch action.kind {
+        case .jumpSlot:
+            if let slot = action.slot {
+                onJump?(slot)
+            }
+        case .bindSlot:
+            if let slot = action.slot {
+                onBind?(slot)
+            }
+        case .showHUD:
+            onShowHUD?()
+        case .toggleSearch:
+            onToggleSearch?()
+        }
+    }
 }
