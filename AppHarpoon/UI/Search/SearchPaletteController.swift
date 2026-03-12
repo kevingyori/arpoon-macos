@@ -20,7 +20,7 @@ final class SearchPaletteController {
         panel.titlebarAppearsTransparent = true
         panel.isFloatingPanel = true
         panel.level = .floating
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .moveToActiveSpace]
+        panel.collectionBehavior = [.fullScreenAuxiliary, .moveToActiveSpace]
         panel.center()
         panel.contentViewController = NSHostingController(rootView: SearchPaletteView(viewModel: viewModel))
     }
