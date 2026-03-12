@@ -28,9 +28,9 @@ final class StatusItemController: NSObject, NSWindowDelegate {
             return
         }
 
-        button.image = NSImage(systemSymbolName: "paperclip.circle.fill", accessibilityDescription: "AppHarpoon")
+        button.image = NSImage(systemSymbolName: "paperclip.circle.fill", accessibilityDescription: "Harpoon")
         button.imagePosition = .imageOnly
-        button.toolTip = "AppHarpoon"
+        button.toolTip = "Harpoon"
         button.target = self
         button.action = #selector(togglePopover(_:))
     }

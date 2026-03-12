@@ -58,7 +58,7 @@ struct HUDView: View {
             }
 
             if !accessibilityTrusted {
-                Label("Accessibility is off, so AppHarpoon can bind apps but window targeting will be limited.", systemImage: "exclamationmark.triangle.fill")
+                Label("Accessibility is off, so Harpoon can bind apps but window targeting will be limited.", systemImage: "exclamationmark.triangle.fill")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.orange)
             }

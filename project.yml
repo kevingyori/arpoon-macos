@@ -1,4 +1,4 @@
-name: AppHarpoon
+name: Harpoon
 options:
   bundleIdPrefix: dev.kevingyori
 settings:
@@ -6,17 +6,17 @@ settings:
     SWIFT_VERSION: 6.0
     MACOSX_DEPLOYMENT_TARGET: 14.0
 targets:
-  AppHarpoon:
+  Harpoon:
     type: application
     platform: macOS
     sources:
-      - AppHarpoon
+      - Harpoon
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.kevingyori.AppHarpoon
-        PRODUCT_NAME: AppHarpoon
+        PRODUCT_BUNDLE_IDENTIFIER: dev.kevingyori.Harpoon
+        PRODUCT_NAME: Harpoon
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: AppHarpoon
+        INFOPLIST_KEY_CFBundleDisplayName: Harpoon
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication

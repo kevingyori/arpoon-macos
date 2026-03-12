@@ -292,7 +292,7 @@ final class AppModel: ObservableObject {
         case .launched(let appName):
             showMessage(
                 title: "Launching \(appName)",
-                detail: "The app was not running, so AppHarpoon launched it.",
+                detail: "The app was not running, so Harpoon launched it.",
                 tone: .success
             )
 

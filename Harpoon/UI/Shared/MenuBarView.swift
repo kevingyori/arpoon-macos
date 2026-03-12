@@ -20,7 +20,7 @@ struct MenuBarView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("AppHarpoon")
+            Text("Harpoon")
                 .font(.system(size: 18, weight: .semibold))
 
             Text("Bind the focused app or window to a slot, then jump back instantly.")

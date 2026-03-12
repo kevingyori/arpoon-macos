@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct AppHarpoonApp: App {
+struct HarpoonApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {

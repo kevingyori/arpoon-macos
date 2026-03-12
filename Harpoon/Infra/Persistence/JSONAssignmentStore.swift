@@ -47,7 +47,7 @@ final class JSONAssignmentStore: AssignmentStore {
         )
 
         return base
-            .appendingPathComponent("AppHarpoon", isDirectory: true)
+            .appendingPathComponent("Harpoon", isDirectory: true)
             .appendingPathComponent("slots.json", isDirectory: false)
     }
 }

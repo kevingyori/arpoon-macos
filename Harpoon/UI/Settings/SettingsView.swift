@@ -31,7 +31,7 @@ struct SettingsView: View {
             Section("Capture") {
                 Toggle("Prefer window targets when possible", isOn: $settings.preferWindowTargets)
 
-                Text("When accessibility data is available, AppHarpoon stores the focused window first and falls back to the app only when needed.")
+                Text("When accessibility data is available, Harpoon stores the focused window first and falls back to the app only when needed.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }

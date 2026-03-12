@@ -20,7 +20,7 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
             defer: false
         )
 
-        window.title = "AppHarpoon"
+        window.title = "Harpoon"
         window.center()
         window.isReleasedWhenClosed = false
         window.contentViewController = hostingController
