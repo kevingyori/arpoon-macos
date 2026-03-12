@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0FA78B46FCBA8010623C2BB0 /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818796C58BA40236C38CFC9E /* HUDView.swift */; };
+		112E48B63710127817F7F922 /* StatusPopupPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D00546A1A1BF4B08C4A7D8F /* StatusPopupPanel.swift */; };
 		12072DD6DD441B7615AC45C9 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134BD48229C6055157476750 /* StatusItemController.swift */; };
 		1AE0BE11164000AF7B718B60 /* GlobalHotKeyCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 684F7D8FAEB29282FB250F0B /* GlobalHotKeyCenter.swift */; };
 		2439CE24A874BC15D656E04C /* SearchIndexService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C42F3A87879C7B2C557921 /* SearchIndexService.swift */; };
@@ -55,6 +56,7 @@
 		180B7586D9B21D5C577F24D7 /* HotkeyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyController.swift; sourceTree = "<group>"; };
 		245B356DD0E2A12F9E0BD03F /* HUDWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDWindowController.swift; sourceTree = "<group>"; };
 		3283F8A7765DE6D7A1BC12A5 /* SlotAssignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotAssignment.swift; sourceTree = "<group>"; };
+		3D00546A1A1BF4B08C4A7D8F /* StatusPopupPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusPopupPanel.swift; sourceTree = "<group>"; };
 		48E4BA985902DB5E62F781F4 /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
 		49C42F3A87879C7B2C557921 /* SearchIndexService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchIndexService.swift; sourceTree = "<group>"; };
 		5C5625DC981925AA4C6C0AF8 /* TargetLabelPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetLabelPolicy.swift; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 				B74443723A9D0176211987DC /* ControlPanelWindowController.swift */,
 				6ABA3FA59CBF259DA86E3B23 /* MenuBarView.swift */,
 				134BD48229C6055157476750 /* StatusItemController.swift */,
+				3D00546A1A1BF4B08C4A7D8F /* StatusPopupPanel.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -350,6 +353,7 @@
 				D7560436A22067F59B2D6B3B /* SlotAssignment.swift in Sources */,
 				9C7FAE19FDD3C9278BDC7921 /* SlotStore.swift in Sources */,
 				12072DD6DD441B7615AC45C9 /* StatusItemController.swift in Sources */,
+				112E48B63710127817F7F922 /* StatusPopupPanel.swift in Sources */,
 				935683E38F359745BB4E3CCB /* Target.swift in Sources */,
 				5E799F2042E3FBD4B4BEC077 /* TargetCaptureService.swift in Sources */,
 				3AD55E93A4293696CE0A5FA9 /* TargetLabelPolicy.swift in Sources */,

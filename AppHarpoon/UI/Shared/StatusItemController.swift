@@ -2,25 +2,25 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class StatusItemController: NSObject, NSPopoverDelegate {
+final class StatusItemController: NSObject, NSWindowDelegate {
     private let statusItem: NSStatusItem
-    private let popover: NSPopover
+    private let panel: StatusPopupPanel
     private let appModel: AppModel
-    private var eventMonitor: Any?
+    private let panelSize = NSSize(width: 360, height: 520)
 
     init(appModel: AppModel) {
         self.appModel = appModel
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        popover = NSPopover()
+        panel = StatusPopupPanel(
+            contentRect: NSRect(origin: .zero, size: panelSize),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
         super.init()
 
         configureStatusItem()
-        configurePopover()
-        installEventMonitor()
-    }
-
-    func popoverShouldDetach(_ popover: NSPopover) -> Bool {
-        false
+        configurePanel()
     }
 
     private func configureStatusItem() {
@@ -35,12 +35,16 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         button.action = #selector(togglePopover(_:))
     }
 
-    private func configurePopover() {
-        popover.behavior = .transient
-        popover.animates = true
-        popover.delegate = self
-        popover.contentSize = NSSize(width: 360, height: 520)
-        popover.contentViewController = NSHostingController(
+    private func configurePanel() {
+        panel.delegate = self
+        panel.isReleasedWhenClosed = false
+        panel.hasShadow = true
+        panel.hidesOnDeactivate = false
+        panel.backgroundColor = .windowBackgroundColor
+        panel.isOpaque = false
+        panel.level = .floating
+        panel.collectionBehavior = [.moveToActiveSpace, .transient]
+        panel.contentViewController = NSHostingController(
             rootView: MenuBarView(
                 appModel: appModel,
                 slotStore: appModel.slotStore,
@@ -48,16 +52,10 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 permissions: appModel.accessibilityPermissions
             )
         )
-    }
 
-    private func installEventMonitor() {
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            guard let self, self.popover.isShown else {
-                return
-            }
-
-            self.popover.performClose(nil)
-        }
+        panel.contentView?.wantsLayer = true
+        panel.contentView?.layer?.cornerRadius = 14
+        panel.contentView?.layer?.masksToBounds = true
     }
 
     @objc
@@ -66,11 +64,40 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             return
         }
 
-        if popover.isShown {
-            popover.performClose(sender)
+        if panel.isVisible {
+            panel.orderOut(sender)
         } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            showPanel(anchoredTo: button)
         }
+    }
+
+    func windowDidResignKey(_ notification: Notification) {
+        panel.orderOut(nil)
+    }
+
+    private func showPanel(anchoredTo button: NSStatusBarButton) {
+        guard let buttonWindow = button.window else {
+            return
+        }
+
+        let localRect = button.convert(button.bounds, to: nil)
+        let buttonFrameOnScreen = buttonWindow.convertToScreen(localRect)
+        let visibleFrame = buttonWindow.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
+
+        var origin = CGPoint(
+            x: round(buttonFrameOnScreen.midX - panelSize.width / 2),
+            y: round(buttonFrameOnScreen.minY - panelSize.height - 8)
+        )
+
+        origin.x = min(
+            max(origin.x, visibleFrame.minX + 8),
+            visibleFrame.maxX - panelSize.width - 8
+        )
+
+        origin.y = max(origin.y, visibleFrame.minY + 8)
+
+        panel.setFrame(NSRect(origin: origin, size: panelSize), display: false)
+        NSApp.activate(ignoringOtherApps: true)
+        panel.makeKeyAndOrderFront(nil)
     }
 }
