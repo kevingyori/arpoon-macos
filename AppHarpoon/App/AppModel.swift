@@ -101,7 +101,7 @@ final class AppModel: ObservableObject {
 
         started = true
         slotStore.load()
-        accessibilityPermissions.refresh()
+        accessibilityPermissions.startMonitoring()
         hotkeyController.registerDefaultHotkeys()
     }
 
