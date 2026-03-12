@@ -1,5 +1,19 @@
 import Foundation
 
+struct WindowFrame: Codable, Hashable {
+    let x: Double
+    let y: Double
+    let width: Double
+    let height: Double
+
+    init(x: Double, y: Double, width: Double, height: Double) {
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+    }
+}
+
 struct AppTarget: Codable, Hashable {
     let bundleId: String
     let appName: String
@@ -11,6 +25,7 @@ struct WindowTarget: Codable, Hashable {
     let pid: Int32?
     let windowTitle: String?
     let windowID: Int?
+    let frame: WindowFrame?
     let capturedAt: Date
 }
 
@@ -27,6 +42,7 @@ extension Target: Codable {
         case pid
         case windowTitle
         case windowID
+        case frame
         case capturedAt
     }
 
@@ -56,6 +72,7 @@ extension Target: Codable {
                     pid: try container.decodeIfPresent(Int32.self, forKey: .pid),
                     windowTitle: try container.decodeIfPresent(String.self, forKey: .windowTitle),
                     windowID: try container.decodeIfPresent(Int.self, forKey: .windowID),
+                    frame: try container.decodeIfPresent(WindowFrame.self, forKey: .frame),
                     capturedAt: try container.decode(Date.self, forKey: .capturedAt)
                 )
             )
@@ -78,6 +95,7 @@ extension Target: Codable {
             try container.encodeIfPresent(target.pid, forKey: .pid)
             try container.encodeIfPresent(target.windowTitle, forKey: .windowTitle)
             try container.encodeIfPresent(target.windowID, forKey: .windowID)
+            try container.encodeIfPresent(target.frame, forKey: .frame)
             try container.encode(target.capturedAt, forKey: .capturedAt)
         }
     }

@@ -21,7 +21,8 @@ struct AccessibilityWindowProvider {
 
         let infos = cgWindowInfos(for: app.processIdentifier)
         let title = windowTitle(for: axWindow)
-        let windowID = matchingWindowID(title: title, infos: infos, excluding: [])
+        let frame = windowFrame(for: axWindow)
+        let windowID = matchingWindowID(title: title, frame: frame, infos: infos, excluding: [])
 
         return LiveWindow(
             bundleId: bundleId,
@@ -29,6 +30,7 @@ struct AccessibilityWindowProvider {
             pid: app.processIdentifier,
             title: title,
             windowID: windowID,
+            frame: frame,
             isMain: boolAttribute(kAXMainAttribute as CFString, on: axWindow) ?? false,
             isFocused: true,
             axElement: axWindow
@@ -75,7 +77,8 @@ struct AccessibilityWindowProvider {
 
         return axWindows.compactMap { axWindow in
             let title = windowTitle(for: axWindow)
-            let windowID = matchingWindowID(title: title, infos: infos, excluding: consumedIDs)
+            let frame = windowFrame(for: axWindow)
+            let windowID = matchingWindowID(title: title, frame: frame, infos: infos, excluding: consumedIDs)
 
             if let windowID {
                 consumedIDs.insert(windowID)
@@ -87,6 +90,7 @@ struct AccessibilityWindowProvider {
                 pid: app.processIdentifier,
                 title: title,
                 windowID: windowID,
+                frame: frame,
                 isMain: boolAttribute(kAXMainAttribute as CFString, on: axWindow) ?? false,
                 isFocused: boolAttribute(kAXFocusedAttribute as CFString, on: axWindow) ?? false,
                 axElement: axWindow
@@ -134,6 +138,36 @@ struct AccessibilityWindowProvider {
         return value as? Bool
     }
 
+    private func cgPointAttribute(_ attribute: CFString, on element: AXUIElement) -> CGPoint? {
+        var value: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(element, attribute, &value)
+        guard result == .success, let axValue = value, CFGetTypeID(axValue) == AXValueGetTypeID() else {
+            return nil
+        }
+
+        var point = CGPoint.zero
+        guard AXValueGetValue(axValue as! AXValue, .cgPoint, &point) else {
+            return nil
+        }
+
+        return point
+    }
+
+    private func cgSizeAttribute(_ attribute: CFString, on element: AXUIElement) -> CGSize? {
+        var value: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(element, attribute, &value)
+        guard result == .success, let axValue = value, CFGetTypeID(axValue) == AXValueGetTypeID() else {
+            return nil
+        }
+
+        var size = CGSize.zero
+        guard AXValueGetValue(axValue as! AXValue, .cgSize, &size) else {
+            return nil
+        }
+
+        return size
+    }
+
     private func windowTitle(for element: AXUIElement) -> String? {
         if let title = stringAttribute(kAXTitleAttribute as CFString, on: element), !title.isEmpty {
             return title
@@ -144,6 +178,20 @@ struct AccessibilityWindowProvider {
         }
 
         return nil
+    }
+
+    private func windowFrame(for element: AXUIElement) -> WindowFrame? {
+        guard let origin = cgPointAttribute(kAXPositionAttribute as CFString, on: element),
+              let size = cgSizeAttribute(kAXSizeAttribute as CFString, on: element) else {
+            return nil
+        }
+
+        return WindowFrame(
+            x: origin.x,
+            y: origin.y,
+            width: size.width,
+            height: size.height
+        )
     }
 
     private func cgWindowInfos(for pid: pid_t) -> [CGWindowInfo] {
@@ -158,19 +206,63 @@ struct AccessibilityWindowProvider {
                 return nil
             }
 
+            let bounds = cgBounds(from: info[kCGWindowBounds as String])
+
             return CGWindowInfo(
                 windowID: windowNumber,
-                title: info[kCGWindowName as String] as? String
+                title: info[kCGWindowName as String] as? String,
+                bounds: bounds
             )
         }
     }
 
-    private func matchingWindowID(title: String?, infos: [CGWindowInfo], excluding consumedIDs: Set<Int>) -> Int? {
+    private func matchingWindowID(title: String?, frame: WindowFrame?, infos: [CGWindowInfo], excluding consumedIDs: Set<Int>) -> Int? {
+        if let frame,
+           let exactFrame = infos.first(where: { !consumedIDs.contains($0.windowID) && roughlyMatches($0.bounds, frame) && normalized($0.title) == normalized(title) }) {
+            return exactFrame.windowID
+        }
+
+        if let frame,
+           let exactFrame = infos.first(where: { !consumedIDs.contains($0.windowID) && roughlyMatches($0.bounds, frame) }) {
+            return exactFrame.windowID
+        }
+
         if let exact = infos.first(where: { !consumedIDs.contains($0.windowID) && normalized($0.title) == normalized(title) }) {
             return exact.windowID
         }
 
         return infos.first(where: { !consumedIDs.contains($0.windowID) })?.windowID
+    }
+
+    private func cgBounds(from rawBounds: Any?) -> WindowFrame? {
+        guard let rawBounds = rawBounds as? NSDictionary else {
+            return nil
+        }
+
+        var rect = CGRect.zero
+        guard CGRectMakeWithDictionaryRepresentation(rawBounds, &rect) else {
+            return nil
+        }
+
+        return WindowFrame(
+            x: rect.origin.x,
+            y: rect.origin.y,
+            width: rect.size.width,
+            height: rect.size.height
+        )
+    }
+
+    private func roughlyMatches(_ lhs: WindowFrame?, _ rhs: WindowFrame) -> Bool {
+        guard let lhs else {
+            return false
+        }
+
+        let tolerance = 8.0
+
+        return abs(lhs.x - rhs.x) <= tolerance &&
+            abs(lhs.y - rhs.y) <= tolerance &&
+            abs(lhs.width - rhs.width) <= tolerance &&
+            abs(lhs.height - rhs.height) <= tolerance
     }
 
     private func normalized(_ title: String?) -> String {
@@ -181,4 +273,5 @@ struct AccessibilityWindowProvider {
 private struct CGWindowInfo {
     let windowID: Int
     let title: String?
+    let bounds: WindowFrame?
 }

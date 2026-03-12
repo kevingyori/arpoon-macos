@@ -72,6 +72,7 @@ enum SearchItem: Identifiable, Hashable {
                     pid: window.pid,
                     windowTitle: window.title,
                     windowID: window.windowID,
+                    frame: window.frame,
                     capturedAt: .now
                 )
             )

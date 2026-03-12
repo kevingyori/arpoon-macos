@@ -7,12 +7,13 @@ struct LiveWindow: Identifiable {
     let pid: Int32
     let title: String?
     let windowID: Int?
+    let frame: WindowFrame?
     let isMain: Bool
     let isFocused: Bool
     let axElement: AXUIElement?
 
     var id: String {
-        "\(bundleId)#\(windowID ?? -1)#\(pid)#\(title ?? "")"
+        "\(bundleId)#\(windowID ?? -1)#\(pid)#\(title ?? "")#\(frame?.x ?? -1)#\(frame?.y ?? -1)"
     }
 }
 
@@ -22,6 +23,7 @@ extension LiveWindow: Hashable {
         lhs.pid == rhs.pid &&
         lhs.windowID == rhs.windowID &&
         lhs.title == rhs.title &&
+        lhs.frame == rhs.frame &&
         lhs.isMain == rhs.isMain &&
         lhs.isFocused == rhs.isFocused
     }
@@ -31,6 +33,7 @@ extension LiveWindow: Hashable {
         hasher.combine(pid)
         hasher.combine(windowID)
         hasher.combine(title)
+        hasher.combine(frame)
         hasher.combine(isMain)
         hasher.combine(isFocused)
     }
