@@ -21,10 +21,8 @@ struct MacOSFocusController {
             return false
         }
 
-        let appActivated = running.activate()
-
         guard permissionService.isTrusted, let element = window.axElement else {
-            return appActivated
+            return running.activate()
         }
 
         let appElement = AXUIElementCreateApplication(window.pid)
@@ -35,7 +33,7 @@ struct MacOSFocusController {
         let mainResult = AXUIElementSetAttributeValue(element, kAXMainAttribute as CFString, kCFBooleanTrue)
         let focusedResult = AXUIElementSetAttributeValue(element, kAXFocusedAttribute as CFString, kCFBooleanTrue)
 
-        return appActivated || [
+        let axFocused = [
             frontmostResult,
             appFocusedWindowResult,
             appMainWindowResult,
@@ -43,5 +41,7 @@ struct MacOSFocusController {
             mainResult,
             focusedResult
         ].contains(.success)
+
+        return axFocused || running.activate()
     }
 }
