@@ -1,5 +1,6 @@
 import ApplicationServices
 import AppKit
+import Darwin
 import Foundation
 
 @MainActor
@@ -17,35 +18,39 @@ struct MacOSFocusController {
 
     @discardableResult
     func focus(window: LiveWindow) -> Bool {
-        guard let running = NSRunningApplication(processIdentifier: window.pid),
-              permissionService.isTrusted,
+        guard permissionService.isTrusted,
               let element = window.axElement else {
             return false
         }
 
-        if running.isActive, focusWindowElement(element) {
+        if let windowID = window.windowID,
+           focusWindowWithSkyLight(pid: window.pid, windowID: CGWindowID(windowID), element: element) {
             return true
         }
 
-        let appElement = AXUIElementCreateApplication(window.pid)
-        let activated = running.isActive || running.activate()
-        settleActivation()
-
-        let frontmostResult = AXUIElementSetAttributeValue(appElement, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
-        let appFocusedWindowResult = AXUIElementSetAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, element)
-        let appMainWindowResult = AXUIElementSetAttributeValue(appElement, kAXMainWindowAttribute as CFString, element)
-
-        if [frontmostResult, appFocusedWindowResult, appMainWindowResult].contains(.success),
-           focusWindowElement(element) {
-            return true
-        }
-
-        if activated {
-            settleActivation()
+        if let running = NSRunningApplication(processIdentifier: window.pid),
+           running.isActive {
             return focusWindowElement(element)
         }
 
         return false
+    }
+
+    private func focusWindowWithSkyLight(pid: pid_t, windowID: CGWindowID, element: AXUIElement) -> Bool {
+        guard let setFrontProcessWithOptions = skyLightSetFrontProcessWithOptions,
+              let postEventRecordTo = skyLightPostEventRecordTo else {
+            return false
+        }
+
+        var psn = ProcessSerialNumber()
+        guard GetProcessForPID(pid, &psn) == 0 else {
+            return false
+        }
+
+        let frontResult = setFrontProcessWithOptions(&psn, windowID, SLPSMode.userGenerated.rawValue)
+        makeKeyWindow(&psn, windowID: windowID, postEventRecordTo: postEventRecordTo)
+
+        return frontResult == 0 && focusWindowElement(element)
     }
 
     private func focusWindowElement(_ element: AXUIElement) -> Bool {
@@ -57,7 +62,64 @@ struct MacOSFocusController {
         return [unminimizeResult, raiseResult, mainResult, focusedResult].contains(.success)
     }
 
-    private func settleActivation() {
-        RunLoop.current.run(until: Date().addingTimeInterval(0.02))
+    // Mirrors the event sequence AltTab uses to ask WindowServer to make a specific
+    // window key after fronting only that process/window pair.
+    private func makeKeyWindow(
+        _ psn: inout ProcessSerialNumber,
+        windowID: CGWindowID,
+        postEventRecordTo: SLPSPostEventRecordToFn
+    ) {
+        var mutableWindowID = UInt32(windowID)
+        var bytes = [UInt8](repeating: 0, count: 0xF8)
+        bytes[0x04] = 0xF8
+        bytes[0x3A] = 0x10
+        memcpy(&bytes[0x3C], &mutableWindowID, MemoryLayout<UInt32>.size)
+        memset(&bytes[0x20], 0xFF, 0x10)
+        bytes[0x08] = 0x01
+        _ = postEventRecordTo(&psn, &bytes)
+        bytes[0x08] = 0x02
+        _ = postEventRecordTo(&psn, &bytes)
     }
 }
+
+private enum SLPSMode: UInt32 {
+    case allWindows = 0x100
+    case userGenerated = 0x200
+    case noWindows = 0x400
+}
+
+@_silgen_name("GetProcessForPID") @discardableResult
+private func GetProcessForPID(_ pid: pid_t, _ psn: UnsafeMutablePointer<ProcessSerialNumber>) -> OSStatus
+
+private typealias SLPSSetFrontProcessWithOptionsFn =
+    @convention(c) (UnsafeMutablePointer<ProcessSerialNumber>, CGWindowID, SLPSMode.RawValue) -> Int32
+
+private typealias SLPSPostEventRecordToFn =
+    @convention(c) (UnsafeMutablePointer<ProcessSerialNumber>, UnsafeMutablePointer<UInt8>) -> Int32
+
+private let skyLightSetFrontProcessWithOptions: SLPSSetFrontProcessWithOptionsFn? = {
+    resolveSkyLightSymbol("_SLPSSetFrontProcessWithOptions", as: SLPSSetFrontProcessWithOptionsFn.self)
+}()
+
+private let skyLightPostEventRecordTo: SLPSPostEventRecordToFn? = {
+    resolveSkyLightSymbol("SLPSPostEventRecordTo", as: SLPSPostEventRecordToFn.self)
+}()
+
+private func resolveSkyLightSymbol<T>(_ symbol: String, as _: T.Type) -> T? {
+    for path in skyLightCandidatePaths {
+        guard let handle = dlopen(path, RTLD_NOW) else {
+            continue
+        }
+
+        if let resolved = dlsym(handle, symbol) {
+            return unsafeBitCast(resolved, to: T.self)
+        }
+    }
+
+    return nil
+}
+
+private let skyLightCandidatePaths = [
+    "/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight",
+    "/System/Library/PrivateFrameworks/SkyLight.framework/Versions/A/SkyLight"
+]
