@@ -30,6 +30,7 @@ enum ResolutionResult {
     case unavailable(reason: String)
 }
 
+@MainActor
 struct TargetResolutionService {
     let appProvider: RunningAppProvider
     let windowProvider: AccessibilityWindowProvider

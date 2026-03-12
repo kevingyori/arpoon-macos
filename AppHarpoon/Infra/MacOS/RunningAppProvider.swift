@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 
+@MainActor
 struct RunningAppProvider {
     func focusedApp() -> LiveApp? {
         guard let app = NSWorkspace.shared.frontmostApplication else {
@@ -27,7 +28,7 @@ struct RunningAppProvider {
     @discardableResult
     func launchOrActivate(bundleId: String) -> Bool {
         if let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == bundleId }) {
-            return app.activate(options: [.activateIgnoringOtherApps])
+            return app.activate()
         }
 
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) else {

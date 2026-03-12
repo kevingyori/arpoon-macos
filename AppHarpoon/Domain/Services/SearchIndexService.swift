@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 struct SearchIndexService {
     let slotStore: SlotStore
     let appProvider: RunningAppProvider

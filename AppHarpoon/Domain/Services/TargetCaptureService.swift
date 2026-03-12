@@ -10,6 +10,7 @@ struct CaptureOutcome {
     let source: CaptureSource
 }
 
+@MainActor
 struct TargetCaptureService {
     let appProvider: RunningAppProvider
     let windowProvider: AccessibilityWindowProvider

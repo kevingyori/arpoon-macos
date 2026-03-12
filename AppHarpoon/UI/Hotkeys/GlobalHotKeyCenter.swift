@@ -20,7 +20,7 @@ final class GlobalHotKeyCenter {
 
         handlers[id] = handler
 
-        var hotKeyID = EventHotKeyID(signature: signature, id: id)
+        let hotKeyID = EventHotKeyID(signature: signature, id: id)
         var hotKeyRef: EventHotKeyRef?
         RegisterEventHotKey(
             keyCode,

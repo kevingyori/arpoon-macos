@@ -2,6 +2,7 @@ import ApplicationServices
 import AppKit
 import Foundation
 
+@MainActor
 struct AccessibilityWindowProvider {
     let permissionService: AccessibilityPermissionService
 

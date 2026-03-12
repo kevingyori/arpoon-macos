@@ -237,7 +237,7 @@ final class AppModel: ObservableObject {
     private func present(outcome: FocusOutcome, fallbackLabel: String) {
         switch outcome {
         case .focused(let label, let strategy):
-            let detail = strategy?.displayName.map { "Resolved via \($0)." }
+            let detail = strategy.map { "Resolved via \($0.displayName)." }
             showMessage(
                 title: "Jumped to \(label ?? fallbackLabel)",
                 detail: detail,

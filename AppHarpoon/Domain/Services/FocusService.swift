@@ -6,6 +6,7 @@ enum FocusOutcome {
     case unavailable(reason: String)
 }
 
+@MainActor
 struct FocusService {
     let resolutionService: TargetResolutionService
     let focusController: MacOSFocusController

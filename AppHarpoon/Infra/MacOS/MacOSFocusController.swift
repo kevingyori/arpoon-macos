@@ -2,6 +2,7 @@ import ApplicationServices
 import AppKit
 import Foundation
 
+@MainActor
 struct MacOSFocusController {
     let permissionService: AccessibilityPermissionService
 
@@ -11,7 +12,7 @@ struct MacOSFocusController {
             return false
         }
 
-        return running.activate(options: [.activateIgnoringOtherApps])
+        return running.activate()
     }
 
     @discardableResult
@@ -20,7 +21,7 @@ struct MacOSFocusController {
             return false
         }
 
-        let appActivated = running.activate(options: [.activateIgnoringOtherApps])
+        let appActivated = running.activate()
 
         guard permissionService.isTrusted, let element = window.axElement else {
             return appActivated
