@@ -3,9 +3,31 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var permissions: AccessibilityPermissionService
+    @State private var activeRecorderID: String?
 
     var body: some View {
         Form {
+            Section("Shortcuts") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Click a shortcut, then press the new key combination. Escape cancels. Delete clears. Global shortcuts require at least one modifier key.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+
+                    shortcutGroup(title: "Jump Slots", actions: HotkeyAction.jumpActions)
+                    shortcutGroup(title: "Bind Slots", actions: HotkeyAction.bindActions)
+                    shortcutGroup(title: "General", actions: HotkeyAction.generalActions)
+
+                    HStack {
+                        Spacer()
+
+                        Button("Reset Defaults") {
+                            activeRecorderID = nil
+                            settings.resetHotkeysToDefaults()
+                        }
+                    }
+                }
+            }
+
             Section("Capture") {
                 Toggle("Prefer window targets when possible", isOn: $settings.preferWindowTargets)
 
@@ -51,6 +73,30 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .padding(20)
-        .frame(width: 540)
+        .frame(width: 680)
+        .onChange(of: activeRecorderID) { _, newValue in
+            AppModel.shared.setHotkeyRecordingActive(newValue != nil)
+        }
+        .onDisappear {
+            AppModel.shared.setHotkeyRecordingActive(false)
+        }
+    }
+
+    @ViewBuilder
+    private func shortcutGroup(title: String, actions: [HotkeyAction]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            ForEach(actions, id: \.id) { action in
+                ShortcutRecorderRow(
+                    action: action,
+                    settings: settings,
+                    activeRecorderID: $activeRecorderID
+                )
+            }
+        }
+        .padding(.vertical, 2)
     }
 }

@@ -26,6 +26,7 @@
 		8BBEA98CA489172C7999317F /* AssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC2D19681CEA70DBEE6F2CF /* AssignmentStore.swift */; };
 		8EB579CA34256B6392098BD2 /* FocusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3FC17ECA911AF17E25FEBF /* FocusService.swift */; };
 		8FE8D396D3924E041EC48551 /* AccessibilityWindowProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 745B422E758C166EEB96015F /* AccessibilityWindowProvider.swift */; };
+		90ED79D129C766BFE372E9EA /* ShortcutRecorderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9929B3711B2A058E77CA4373 /* ShortcutRecorderRow.swift */; };
 		935683E38F359745BB4E3CCB /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFCB9F364936E535628500D7 /* Target.swift */; };
 		98F07217112C1898AAC7E112 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66CBA9858A8C2ED977CAFE6E /* SettingsStore.swift */; };
 		99E004C8D6D4E89567321D08 /* HUDModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E42BE700644FE3F1CA760E31 /* HUDModel.swift */; };
@@ -70,6 +71,7 @@
 		818796C58BA40236C38CFC9E /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
 		8C6D05723135C82AB0B5A059 /* HotkeyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyModels.swift; sourceTree = "<group>"; };
 		97CEF000E6A1C7C6277939F8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		9929B3711B2A058E77CA4373 /* ShortcutRecorderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorderRow.swift; sourceTree = "<group>"; };
 		A14B3ED029BDAA4083184C27 /* LiveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveApp.swift; sourceTree = "<group>"; };
 		A1E818FF120D264B2649773B /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
 		B162A420979630491A7B6730 /* LiveWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWindow.swift; sourceTree = "<group>"; };
@@ -157,6 +159,7 @@
 			children = (
 				66CBA9858A8C2ED977CAFE6E /* SettingsStore.swift */,
 				97CEF000E6A1C7C6277939F8 /* SettingsView.swift */,
+				9929B3711B2A058E77CA4373 /* ShortcutRecorderRow.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -343,6 +346,7 @@
 				A140040806F438B5F3E95B07 /* SearchViewModel.swift in Sources */,
 				98F07217112C1898AAC7E112 /* SettingsStore.swift in Sources */,
 				D19DD7CBFD32759EA5A37B23 /* SettingsView.swift in Sources */,
+				90ED79D129C766BFE372E9EA /* ShortcutRecorderRow.swift in Sources */,
 				D7560436A22067F59B2D6B3B /* SlotAssignment.swift in Sources */,
 				9C7FAE19FDD3C9278BDC7921 /* SlotStore.swift in Sources */,
 				12072DD6DD441B7615AC45C9 /* StatusItemController.swift in Sources */,
