@@ -19,7 +19,7 @@ That’s basically [ThePrimeagen's Harpoon](https://github.com/ThePrimeagen/harp
 
 Arpoon is a small native macOS utility for binding live apps or windows to shortcuts so you can jump back to them instantly.
 
-It is a **focus-and-recall tool**.
+![Menu bar popup](<images/Screenshot_1.png>)
 
 You can use it to:
 
