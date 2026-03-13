@@ -1,65 +1,111 @@
 # Arpoon for macOS
 
-Arpoon is a native macOS utility designed for dynamically binding live applications or specific windows to shortcuts, allowing you to jump back to them instantly. 
+Built in an evening and a morning with Codex after watching [Theo talk about his own window manager setup](https://www.youtube.com/watch?v=EUE8N6mqtGg) and realizing I didn’t actually want a window manager.
 
-Inspired by [ThePrimeagen's Harpoon](https://github.com/ThePrimeagen/harpoon) for text editors, this tool adapts the philosophy of "fast recall for a small working set" to the macOS desktop environment. It's essentially Arpoon, but for your macOS apps and windows.
+I’d already done the usual tour: Amethyst, yabai, AeroSpace, and i3 on Linux. They’re all good tools. But after enough time with them, I had to admit something obvious: I never really took advantage of the tiling part.
 
-## What It Is
+I didn’t want automatic layouts. I didn’t care about packing every window into a neat grid. I didn’t need workspaces to model my life.
 
-Arpoon is a focus-and-recall tool optimized for speed and minimal mental overhead. 
+What I wanted was much simpler:
 
-- **Quickly bind** a specific running app or window to a shortcut.
-- **Instantly focus** it again with a single keystroke.
-- **Treat windows as working targets**, rather than clutter to be managed.
-- **Standalone macOS utility**, operating independently and natively.
-- **Optimized for focus and z-index**, prioritizing bringing the right window to the front over rearranging your screen.
+* bind a key to the thing I’m using right now
+* jump back to it instantly
+* keep a small working set of apps and windows close at hand
+* optimize for **focus**, not layout
 
-## What It Is Not
+That’s basically [ThePrimeagen's Harpoon](https://github.com/ThePrimeagen/harpoon), but for macOS apps and windows.
+
+## What it is
+
+Arpoon is a small native macOS utility for binding live apps or windows to shortcuts so you can jump back to them instantly.
+
+It is a **focus-and-recall tool**.
+
+You can use it to:
+
+* bind a running app or specific window to a shortcut
+* jump back to it with one keystroke
+* keep a compact working set of live targets
+* treat windows as things you return to, not things you constantly rearrange
+
+It works with normal macOS windowing. It does not try to replace your desktop with a new philosophy.
+
+## Why
+
+A lot of window managers assume the main problem is arranging windows.
+
+For me, it wasn’t.
+
+My problem was usually: **I have a few things I care about right now. How do I get back to them instantly without thinking?**
+
+I don’t mind overlapping windows. I don’t mind floating windows. I don’t need my desktop to look like a perfect demo screenshot.
+
+What I care about is:
+
+* bringing the right thing to the front
+* doing it fast
+* not having to mentally track where it lives
+
+## What it is not
 
 Arpoon is **not** a full window manager.
 
-- Not a tiling manager (like Amethyst or Yabai).
-- Not an auto-layout engine.
-- Not a workspace/virtual desktop system.
-- Not a tool to prevent overlapping windows.
+It is not:
 
-Window overlap is expected and acceptable. The primary goal is getting the exact window or app you need to the front as quickly and predictably as possible.
+* a tiling manager like Amethyst, yabai, or AeroSpace
+* an auto-layout engine
+* a workspace or virtual desktop system
+* a tool for preventing overlap
+* a system for micromanaging window geometry
 
-## Features & Default Shortcuts
+If you want perfect tiling, this is the wrong tool.
 
-Arpoon supports two primary routing schemes: **Static Slots** and **Dynamic Windows**, along with directional focus.
+If you want **this window is mine, and I want it on a key**, this is the right tool.
 
-### 1. Static Slots (Default)
-Bind a specific window to a numbered slot and recall it instantly.
+## Features
 
-- **Bind to Slot 1-9:** `Cmd + Shift + 1-9`
-- **Jump to Slot 1-9:** `Cmd + 1-9`
+### Dynamic hotkeys
 
-### 2. Dynamic Hotkeys
-Assign on-the-fly hotkeys to specific targets without relying on predefined slots.
+Assign hotkeys to specific targets on the fly.
 
-- **Add Dynamic Hotkey:** `Cmd + Shift + 0`
+* **Add dynamic hotkey:** `Alt + A`
 
-### 3. Directional Focus
-Quickly jump between visible applications on your screen based on their spatial arrangement.
+### Static slots
 
-- **Focus App Left:** `Cmd + Option + Left Arrow`
-- **Focus App Right:** `Cmd + Option + Right Arrow`
-- **Focus App Up:** `Cmd + Option + Up Arrow`
-- **Focus App Down:** `Cmd + Option + Down Arrow`
+Bind a specific window to a numbered slot and jump back to it instantly.
 
-### 4. HUD (Heads-Up Display)
-View your current bindings and active working set at a glance.
+* **Bind to slot 1–9:** `Cmd + Shift + 1–9`
+* **Jump to slot 1–9:** `Cmd + 1–9`
 
-- **Show HUD:** `Cmd + 0`
-- *(Optional)* Show HUD by holding the `Option` key (configurable in settings).
+### Directional focus
 
-## Development
+I included this because I didn’t want a second app for something this simple.
 
-Build and install the development version of the app using the provided script:
+Jump between visible applications based on where they are on screen.
+
+* **Focus app left:** `Alt + H`
+* **Focus app right:** `Alt + L`
+* **Focus app up:** `Alt + K`
+* **Focus app down:** `Alt + J`
+
+## Install
 
 ```bash
 ./scripts/install-dev.sh
 ```
 
-This script will build `Arpoon.app`, install it directly into `/Applications/Arpoon.app`, and automatically launch it.
+This will:
+
+* build `Arpoon.app`
+* install it to `/Applications/Arpoon.app`
+* launch it automatically
+
+## Roadmap
+
+A proper README should probably get:
+
+* screenshots or a short demo GIF
+* install instructions beyond the dev script
+* permissions/setup notes
+* a short section on how target binding works
+* known limitations
