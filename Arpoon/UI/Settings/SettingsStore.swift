@@ -63,7 +63,7 @@ final class SettingsStore: ObservableObject {
         preferWindowTargets = defaults.object(forKey: Keys.preferWindowTargets) as? Bool ?? true
         launchAppsOnJump = defaults.object(forKey: Keys.launchAppsOnJump) as? Bool ?? true
         fallbackToAppOnJump = defaults.object(forKey: Keys.fallbackToAppOnJump) as? Bool ?? true
-        hotkeyScheme = HotkeyScheme(rawValue: defaults.string(forKey: Keys.hotkeyScheme) ?? "") ?? .staticSlots
+        hotkeyScheme = HotkeyScheme(rawValue: defaults.string(forKey: Keys.hotkeyScheme) ?? "") ?? .dynamicWindows
 
         if defaults.object(forKey: Keys.hudTimeout) == nil {
             hudTimeout = 2.2

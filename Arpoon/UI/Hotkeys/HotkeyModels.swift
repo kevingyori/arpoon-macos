@@ -95,32 +95,32 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
         case .showHUD:
             return HotkeyShortcut(
                 keyCode: UInt32(kVK_ANSI_0),
-                modifiers: UInt32(cmdKey)
+                modifiers: UInt32(cmdKey | optionKey)
             )
         case .focusVisibleAppLeft:
             return HotkeyShortcut(
-                keyCode: UInt32(kVK_LeftArrow),
-                modifiers: UInt32(cmdKey | optionKey)
+                keyCode: UInt32(kVK_ANSI_H),
+                modifiers: UInt32(optionKey)
             )
         case .focusVisibleAppRight:
             return HotkeyShortcut(
-                keyCode: UInt32(kVK_RightArrow),
-                modifiers: UInt32(cmdKey | optionKey)
+                keyCode: UInt32(kVK_ANSI_L),
+                modifiers: UInt32(optionKey)
             )
         case .focusVisibleAppUp:
             return HotkeyShortcut(
-                keyCode: UInt32(kVK_UpArrow),
-                modifiers: UInt32(cmdKey | optionKey)
+                keyCode: UInt32(kVK_ANSI_K),
+                modifiers: UInt32(optionKey)
             )
         case .focusVisibleAppDown:
             return HotkeyShortcut(
-                keyCode: UInt32(kVK_DownArrow),
-                modifiers: UInt32(cmdKey | optionKey)
+                keyCode: UInt32(kVK_ANSI_J),
+                modifiers: UInt32(optionKey)
             )
         case .addDynamicHotkey:
             return HotkeyShortcut(
-                keyCode: UInt32(kVK_ANSI_0),
-                modifiers: UInt32(cmdKey | shiftKey)
+                keyCode: UInt32(kVK_ANSI_A),
+                modifiers: UInt32(optionKey)
             )
         }
     }
