@@ -19,7 +19,7 @@ That’s basically [ThePrimeagen's Harpoon](https://github.com/ThePrimeagen/harp
 
 Arpoon is a small native macOS utility for binding live apps or windows to shortcuts so you can jump back to them instantly.
 
-![Menu bar popup](<images/Screenshot_1.png>)
+<img src="images/Screenshot_1.png" height="400" alt="Menu bar popup">
 
 You can use it to:
 
