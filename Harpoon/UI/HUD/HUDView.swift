@@ -13,34 +13,38 @@ struct HUDView: View {
                 overviewView(assignments: assignments, accessibilityTrusted: accessibilityTrusted)
             }
         }
-        .padding(18)
-        .frame(width: 420)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .padding(containerPadding)
+        .frame(width: model.preferredWidth)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.18))
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(Color.white.opacity(borderOpacity))
         )
-        .shadow(color: .black.opacity(0.18), radius: 24, y: 12)
+        .shadow(color: .black.opacity(shadowOpacity), radius: shadowRadius, y: shadowYOffset)
     }
 
     @ViewBuilder
     private func messageView(title: String, detail: String?, tone: HUDTone) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: symbol(for: tone))
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(color(for: tone))
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: symbol(for: tone))
+                .font(.system(size: 14, weight: .semibold))
+                .frame(width: 18, height: 18)
+                .foregroundStyle(color(for: tone))
 
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 17, weight: .semibold))
-            }
+                    .font(.system(size: 14, weight: .semibold))
+                    .lineLimit(2)
 
-            if let detail, !detail.isEmpty {
-                Text(detail)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                if let detail, !detail.isEmpty {
+                    Text(detail)
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -93,6 +97,60 @@ struct HUDView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var containerPadding: CGFloat {
+        switch model {
+        case .message:
+            return 14
+        case .overview:
+            return 18
+        }
+    }
+
+    private var cornerRadius: CGFloat {
+        switch model {
+        case .message:
+            return 16
+        case .overview:
+            return 18
+        }
+    }
+
+    private var borderOpacity: Double {
+        switch model {
+        case .message:
+            return 0.14
+        case .overview:
+            return 0.18
+        }
+    }
+
+    private var shadowOpacity: Double {
+        switch model {
+        case .message:
+            return 0.14
+        case .overview:
+            return 0.18
+        }
+    }
+
+    private var shadowRadius: CGFloat {
+        switch model {
+        case .message:
+            return 16
+        case .overview:
+            return 24
+        }
+    }
+
+    private var shadowYOffset: CGFloat {
+        switch model {
+        case .message:
+            return 8
+        case .overview:
+            return 12
+        }
     }
 
     private func color(for tone: HUDTone) -> Color {

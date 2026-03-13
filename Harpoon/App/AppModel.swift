@@ -223,6 +223,10 @@ final class AppModel: ObservableObject {
     }
 
     private func showMessage(title: String, detail: String?, tone: HUDTone) {
+        guard settings.showNotificationPopups else {
+            return
+        }
+
         hudController.show(
             model: .message(title: title, detail: detail, tone: tone),
             timeout: settings.hudTimeout

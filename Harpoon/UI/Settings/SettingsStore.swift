@@ -23,6 +23,10 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(hudTimeout, forKey: Keys.hudTimeout) }
     }
 
+    @Published var showNotificationPopups: Bool {
+        didSet { defaults.set(showNotificationPopups, forKey: Keys.showNotificationPopups) }
+    }
+
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -38,6 +42,8 @@ final class SettingsStore: ObservableObject {
         } else {
             hudTimeout = defaults.double(forKey: Keys.hudTimeout)
         }
+
+        showNotificationPopups = defaults.object(forKey: Keys.showNotificationPopups) as? Bool ?? true
     }
 
     func shortcut(for action: HotkeyAction) -> HotkeyShortcut? {
@@ -104,6 +110,7 @@ private enum Keys {
     static let launchAppsOnJump = "launchAppsOnJump"
     static let fallbackToAppOnJump = "fallbackToAppOnJump"
     static let hudTimeout = "hudTimeout"
+    static let showNotificationPopups = "showNotificationPopups"
 }
 
 private struct PersistedHotkeyBinding: Codable {

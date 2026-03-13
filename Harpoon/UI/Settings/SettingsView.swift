@@ -42,6 +42,8 @@ struct SettingsView: View {
             }
 
             Section("HUD") {
+                Toggle("Show notification popups", isOn: $settings.showNotificationPopups)
+
                 HStack {
                     Text("Dismiss after")
                     Slider(value: $settings.hudTimeout, in: 1.0 ... 5.0, step: 0.2)
@@ -49,6 +51,10 @@ struct SettingsView: View {
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
+
+                Text("Applies to the transient popups shown after binds, jumps, clears, and permission requests.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
             }
 
             Section("Permissions") {
