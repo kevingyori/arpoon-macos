@@ -39,7 +39,7 @@
 		AD191EE532A4368687F84190 /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF82965E5216EB73C86BE9F9 /* Target.swift */; };
 		AEB869714EC4EE911013A447 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F0897D80116B4B2A984719 /* SettingsView.swift */; };
 		B7A44A7D9B17A25C504FA115 /* LiveApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F26BA36235E22C434E30357 /* LiveApp.swift */; };
-		BDC72B6B01E89967F64BD5D7 /* HarpoonStatusItemTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 049361054E1D5E7A98E60A78 /* HarpoonStatusItemTemplate.pdf */; };
+		BDC72B6B01E89967F64BD5D7 /* ArpoonStatusItemTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 049361054E1D5E7A98E60A78 /* ArpoonStatusItemTemplate.pdf */; };
 		C96F98E2E7599161A42CED83 /* AppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A075B98F9435C2AE390BEC /* AppIconView.swift */; };
 		D2539FD7E476D4E86CE16D6B /* HotkeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7963CA73414E9D7E95A7F5A /* HotkeyController.swift */; };
 		D5AFA5955E9BA7D393037148 /* AssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A709999257151CE35F1BB3 /* AssignmentStore.swift */; };
@@ -48,15 +48,15 @@
 		EBFF692FCC58B87640C7B801 /* HUDModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80BD6F3A5184C37C9B55940 /* HUDModel.swift */; };
 		EDD3CF9C6628F993F9F6F73F /* OptionHoldHUDController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FBF841046B2DBB9E5F41CC /* OptionHoldHUDController.swift */; };
 		F28BC10326852F1C57AB986A /* ShortcutRecorderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B037224AB5C6D29DD46DD072 /* ShortcutRecorderRow.swift */; };
-		F2FB48C9BC875B145A27E7F6 /* HarpoonStatusItemTemplate.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3A2F581419C2D8220F626DED /* HarpoonStatusItemTemplate.svg */; };
-		F62DA540BE6C1A9D627AC491 /* HarpoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6AAB04859706AB608F7D7FD /* HarpoonApp.swift */; };
+		F2FB48C9BC875B145A27E7F6 /* ArpoonStatusItemTemplate.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3A2F581419C2D8220F626DED /* ArpoonStatusItemTemplate.svg */; };
+		F62DA540BE6C1A9D627AC491 /* ArpoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6AAB04859706AB608F7D7FD /* ArpoonApp.swift */; };
 		F739A60DD2CB03A0F5CCE4AD /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD01A7337A954E8D76C359A5 /* AppModel.swift */; };
 		FB56A6DF1D91A145E4858B5D /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5168B0AA45540807CF4BF720 /* SettingsStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0239BC1D4C1D6575262EBBF4 /* AccessibilityWindowProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityWindowProvider.swift; sourceTree = "<group>"; };
-		049361054E1D5E7A98E60A78 /* HarpoonStatusItemTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = HarpoonStatusItemTemplate.pdf; sourceTree = "<group>"; };
+		049361054E1D5E7A98E60A78 /* ArpoonStatusItemTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = ArpoonStatusItemTemplate.pdf; sourceTree = "<group>"; };
 		066CE7FB55408ED1D8335586 /* GlobalHotKeyCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyCenter.swift; sourceTree = "<group>"; };
 		0B5FEB74CF36FC5B570F314D /* MacOSFocusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSFocusController.swift; sourceTree = "<group>"; };
 		0C60F821A61B2834EE715469 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
@@ -66,7 +66,7 @@
 		2392903AF53E02CB7EE4D95F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2AF0FA1C0B726227F1C2A432 /* TitleMatchPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleMatchPolicy.swift; sourceTree = "<group>"; };
 		34DA69DC61E1B544AC336F1A /* JSONDynamicHotkeyAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDynamicHotkeyAssignmentStore.swift; sourceTree = "<group>"; };
-		3A2F581419C2D8220F626DED /* HarpoonStatusItemTemplate.svg */ = {isa = PBXFileReference; path = HarpoonStatusItemTemplate.svg; sourceTree = "<group>"; };
+		3A2F581419C2D8220F626DED /* ArpoonStatusItemTemplate.svg */ = {isa = PBXFileReference; path = ArpoonStatusItemTemplate.svg; sourceTree = "<group>"; };
 		3CA0204EA0B00DCF9047898E /* LiveWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWindow.swift; sourceTree = "<group>"; };
 		4166BE7C5DE84F48960EE360 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		5168B0AA45540807CF4BF720 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
@@ -75,13 +75,13 @@
 		5FE14BD502DC9E2CF0BA4141 /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
 		77E9084276C14F37ACC3BAA6 /* DynamicHotkeyAssignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyAssignment.swift; sourceTree = "<group>"; };
 		7F9A6752DB04E6D2380C4F49 /* RunningAppProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppProvider.swift; sourceTree = "<group>"; };
-		7FA558A814BE6A520BBEAC0A /* Harpoon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Harpoon.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7FA558A814BE6A520BBEAC0A /* Arpoon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Arpoon.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7FFBDA60506B753989E2D7AD /* SlotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotStore.swift; sourceTree = "<group>"; };
 		815CD2319D883170A05F7F62 /* WindowAccessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
 		9F26BA36235E22C434E30357 /* LiveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveApp.swift; sourceTree = "<group>"; };
 		A0151AC910921C404CAA19B0 /* GlassPanelSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanelSurface.swift; sourceTree = "<group>"; };
 		A2A7039C86B860CABD1683DE /* DynamicHotkeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyStore.swift; sourceTree = "<group>"; };
-		A6AAB04859706AB608F7D7FD /* HarpoonApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarpoonApp.swift; sourceTree = "<group>"; };
+		A6AAB04859706AB608F7D7FD /* ArpoonApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArpoonApp.swift; sourceTree = "<group>"; };
 		A7815EDD7AD7BAD40BA02158 /* GlassKeyPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKeyPanel.swift; sourceTree = "<group>"; };
 		A9A075B98F9435C2AE390BEC /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
 		AEE514431F792ADEBCAAE2EB /* JSONAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONAssignmentStore.swift; sourceTree = "<group>"; };
@@ -132,12 +132,12 @@
 		1EB85578F3D587DCAD1CEC93 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7FA558A814BE6A520BBEAC0A /* Harpoon.app */,
+				7FA558A814BE6A520BBEAC0A /* Arpoon.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		1F6E45A04AC6F3BBCF61A2B3 /* Harpoon */ = {
+		1F6E45A04AC6F3BBCF61A2B3 /* Arpoon */ = {
 			isa = PBXGroup;
 			children = (
 				C1978E8AF124F60AC7E79518 /* Assets.xcassets */,
@@ -147,7 +147,7 @@
 				FB433E1C5785AB1D3D74D775 /* Resources */,
 				399A98B63194409FBFD837D4 /* UI */,
 			);
-			path = Harpoon;
+			path = Arpoon;
 			sourceTree = "<group>";
 		};
 		399A98B63194409FBFD837D4 /* UI */ = {
@@ -237,7 +237,7 @@
 		C85CB0C9FF75E2A20B516922 = {
 			isa = PBXGroup;
 			children = (
-				1F6E45A04AC6F3BBCF61A2B3 /* Harpoon */,
+				1F6E45A04AC6F3BBCF61A2B3 /* Arpoon */,
 				1EB85578F3D587DCAD1CEC93 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -256,7 +256,7 @@
 			children = (
 				2392903AF53E02CB7EE4D95F /* AppDelegate.swift */,
 				CD01A7337A954E8D76C359A5 /* AppModel.swift */,
-				A6AAB04859706AB608F7D7FD /* HarpoonApp.swift */,
+				A6AAB04859706AB608F7D7FD /* ArpoonApp.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -278,8 +278,8 @@
 		FB433E1C5785AB1D3D74D775 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				049361054E1D5E7A98E60A78 /* HarpoonStatusItemTemplate.pdf */,
-				3A2F581419C2D8220F626DED /* HarpoonStatusItemTemplate.svg */,
+				049361054E1D5E7A98E60A78 /* ArpoonStatusItemTemplate.pdf */,
+				3A2F581419C2D8220F626DED /* ArpoonStatusItemTemplate.svg */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -287,9 +287,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		ACAEBBAAAC398FF0E279E8A3 /* Harpoon */ = {
+		ACAEBBAAAC398FF0E279E8A3 /* Arpoon */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 55AD41E975F714962CA58F54 /* Build configuration list for PBXNativeTarget "Harpoon" */;
+			buildConfigurationList = 55AD41E975F714962CA58F54 /* Build configuration list for PBXNativeTarget "Arpoon" */;
 			buildPhases = (
 				00E376F22C5A5456212BD7AB /* Sources */,
 				F089DC23318169D73100AB04 /* Resources */,
@@ -298,11 +298,11 @@
 			);
 			dependencies = (
 			);
-			name = Harpoon;
+			name = Arpoon;
 			packageProductDependencies = (
 			);
-			productName = Harpoon;
-			productReference = 7FA558A814BE6A520BBEAC0A /* Harpoon.app */;
+			productName = Arpoon;
+			productReference = 7FA558A814BE6A520BBEAC0A /* Arpoon.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -319,7 +319,7 @@
 					};
 				};
 			};
-			buildConfigurationList = CE3FB2FA21FEB26A1F0A7AEC /* Build configuration list for PBXProject "Harpoon" */;
+			buildConfigurationList = CE3FB2FA21FEB26A1F0A7AEC /* Build configuration list for PBXProject "Arpoon" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -333,7 +333,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				ACAEBBAAAC398FF0E279E8A3 /* Harpoon */,
+				ACAEBBAAAC398FF0E279E8A3 /* Arpoon */,
 			);
 		};
 /* End PBXProject section */
@@ -344,8 +344,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8B5E031702419FAF0E5AACC2 /* Assets.xcassets in Resources */,
-				BDC72B6B01E89967F64BD5D7 /* HarpoonStatusItemTemplate.pdf in Resources */,
-				F2FB48C9BC875B145A27E7F6 /* HarpoonStatusItemTemplate.svg in Resources */,
+				BDC72B6B01E89967F64BD5D7 /* ArpoonStatusItemTemplate.pdf in Resources */,
+				F2FB48C9BC875B145A27E7F6 /* ArpoonStatusItemTemplate.svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -374,7 +374,7 @@
 				EBFF692FCC58B87640C7B801 /* HUDModel.swift in Sources */,
 				6F25E77540E0A2A3945CC37B /* HUDView.swift in Sources */,
 				30E639CBBCB196816D1F150B /* HUDWindowController.swift in Sources */,
-				F62DA540BE6C1A9D627AC491 /* HarpoonApp.swift in Sources */,
+				F62DA540BE6C1A9D627AC491 /* ArpoonApp.swift in Sources */,
 				D2539FD7E476D4E86CE16D6B /* HotkeyController.swift in Sources */,
 				2AF1F20BA2FBCBA7B10CA589 /* HotkeyModels.swift in Sources */,
 				05A78E103D8E41B5D27A36E5 /* JSONAssignmentStore.swift in Sources */,
@@ -467,7 +467,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Harpoon;
+				INFOPLIST_KEY_CFBundleDisplayName = Arpoon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -475,8 +475,8 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.kevingyori.Harpoon;
-				PRODUCT_NAME = Harpoon;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.kevingyori.Arpoon;
+				PRODUCT_NAME = Arpoon;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -551,7 +551,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Harpoon;
+				INFOPLIST_KEY_CFBundleDisplayName = Arpoon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -559,8 +559,8 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.kevingyori.Harpoon;
-				PRODUCT_NAME = Harpoon;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.kevingyori.Arpoon;
+				PRODUCT_NAME = Arpoon;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -568,7 +568,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		55AD41E975F714962CA58F54 /* Build configuration list for PBXNativeTarget "Harpoon" */ = {
+		55AD41E975F714962CA58F54 /* Build configuration list for PBXNativeTarget "Arpoon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D12E79A3F626277A9E84EABB /* Debug */,
@@ -577,7 +577,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		CE3FB2FA21FEB26A1F0A7AEC /* Build configuration list for PBXProject "Harpoon" */ = {
+		CE3FB2FA21FEB26A1F0A7AEC /* Build configuration list for PBXProject "Arpoon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7F79A8AF863106B6710A076F /* Debug */,

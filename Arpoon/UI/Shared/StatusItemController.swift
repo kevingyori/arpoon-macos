@@ -29,7 +29,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         button.imagePosition = .imageOnly
         button.imageScaling = .scaleProportionallyUpOrDown
         button.image?.size = NSSize(width: 12, height: 12)
-        button.toolTip = "Harpoon"
+        button.toolTip = "Arpoon"
         button.target = self
         button.action = #selector(togglePopover(_:))
     }
@@ -148,14 +148,14 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     private func statusItemImage() -> NSImage {
-        if let url = Bundle.main.url(forResource: "HarpoonStatusItemTemplate", withExtension: "pdf"),
+        if let url = Bundle.main.url(forResource: "ArpoonStatusItemTemplate", withExtension: "pdf"),
            let image = NSImage(contentsOf: url) {
             image.isTemplate = true
             image.size = NSSize(width: 12, height: 12)
             return image
         }
 
-        let fallback = NSImage(systemSymbolName: "paperclip.circle.fill", accessibilityDescription: "Harpoon") ?? NSImage()
+        let fallback = NSImage(systemSymbolName: "paperclip.circle.fill", accessibilityDescription: "Arpoon") ?? NSImage()
         fallback.isTemplate = true
         return fallback
     }

@@ -299,7 +299,7 @@ final class AppModel: ObservableObject {
         guard focusedWindow.frame != nil else {
             showMessage(
                 title: "Current window has no frame",
-                detail: "Harpoon could not determine the current window position.",
+                detail: "Arpoon could not determine the current window position.",
                 tone: .warning
             )
             return
@@ -308,7 +308,7 @@ final class AppModel: ObservableObject {
         guard let targetWindow = windowProvider.visibleWindow(from: focusedWindow, toward: direction) else {
             showMessage(
                 title: "No visible app \(direction.preposition)",
-                detail: "Harpoon could not find an exposed app window \(direction.preposition) the current window.",
+                detail: "Arpoon could not find an exposed app window \(direction.preposition) the current window.",
                 tone: .warning
             )
             return
@@ -429,7 +429,7 @@ final class AppModel: ObservableObject {
         case .launched(let appName):
             showJumpPopup(
                 title: "Launching \(appName)",
-                detail: "The app was not running, so Harpoon launched it."
+                detail: "The app was not running, so Arpoon launched it."
             )
 
         case .unavailable(let reason):

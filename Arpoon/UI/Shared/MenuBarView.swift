@@ -36,7 +36,7 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Harpoon")
+                    Text("Arpoon")
                         .font(.system(size: 19, weight: .semibold))
 
                     Text(settings.hotkeyScheme.title)

@@ -25,8 +25,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
             defer: false
         )
 
-        window.title = "Harpoon Settings"
-        window.identifier = NSUserInterfaceItemIdentifier("HarpoonSettingsWindow")
+        window.title = "Arpoon Settings"
+        window.identifier = NSUserInterfaceItemIdentifier("ArpoonSettingsWindow")
         window.isReleasedWhenClosed = false
         window.center()
         window.contentMinSize = NSSize(width: 680, height: 620)

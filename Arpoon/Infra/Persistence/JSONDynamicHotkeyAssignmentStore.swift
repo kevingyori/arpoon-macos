@@ -47,7 +47,7 @@ final class JSONDynamicHotkeyAssignmentStore: DynamicHotkeyAssignmentStore {
         )
 
         return base
-            .appendingPathComponent("Harpoon", isDirectory: true)
+            .appendingPathComponent("Arpoon", isDirectory: true)
             .appendingPathComponent("dynamic-hotkeys.json", isDirectory: false)
     }
 }

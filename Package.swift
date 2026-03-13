@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "Harpoon",
+    name: "Arpoon",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "Harpoon", targets: ["Harpoon"])
+        .executable(name: "Arpoon", targets: ["Arpoon"])
     ],
     targets: [
         .executableTarget(
-            name: "Harpoon",
-            path: "Harpoon"
+            name: "Arpoon",
+            path: "Arpoon"
         )
     ]
 )

@@ -32,7 +32,7 @@ struct SettingsView: View {
                             shortcutGroup(title: "Bind Slots", actions: HotkeyAction.bindActions)
                             shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
                         } else {
-                            Text("Use the add-hotkey shortcut while a window is focused, then press the shortcut you want Harpoon to assign.")
+                            Text("Use the add-hotkey shortcut while a window is focused, then press the shortcut you want Arpoon to assign.")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
 
@@ -56,7 +56,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Toggle("Prefer window targets when possible", isOn: $settings.preferWindowTargets)
 
-                        Text("When accessibility data is available, Harpoon stores the focused window first and falls back to the app only when needed.")
+                        Text("When accessibility data is available, Arpoon stores the focused window first and falls back to the app only when needed.")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -134,7 +134,7 @@ struct SettingsView: View {
         .frame(minWidth: 680, idealWidth: 680, minHeight: 620, idealHeight: 760)
         .background(
             WindowAccessor { window in
-                window.identifier = NSUserInterfaceItemIdentifier("HarpoonSettingsWindow")
+                window.identifier = NSUserInterfaceItemIdentifier("ArpoonSettingsWindow")
                 AppModel.shared.registerSettingsWindow(window)
             }
         )

@@ -1,54 +1,65 @@
-# Harpoon
+# Arpoon for macOS
 
-Harpoon is a native macOS utility for dynamically binding live apps or windows to shortcuts and jumping back to them instantly.
+Arpoon is a native macOS utility designed for dynamically binding live applications or specific windows to shortcuts, allowing you to jump back to them instantly. 
 
-The product direction is explicitly inspired by [ThePrimeagen's Harpoon](https://github.com/ThePrimeagen/harpoon): fast recall for a small working set, adapted here from editor buffers into macOS apps and windows.
-
-I realized this is just Harpoon for apps.
+Inspired by [ThePrimeagen's Harpoon](https://github.com/ThePrimeagen/harpoon) for text editors, this tool adapts the philosophy of "fast recall for a small working set" to the macOS desktop environment. It's essentially Arpoon, but for your macOS apps and windows.
 
 ## What It Is
 
-Harpoon is a focus-and-recall tool for macOS.
+Arpoon is a focus-and-recall tool optimized for speed and minimal mental overhead. 
 
-- Quickly bind a key to a specific running app or window.
-- Press that bound key with the super key to focus it again.
-- Treat windows as working targets, not clutter.
-- Operate as a standalone macOS utility, not something embedded inside another app.
-- Optimize for focus and z-index, not layout.
+- **Quickly bind** a specific running app or window to a shortcut.
+- **Instantly focus** it again with a single keystroke.
+- **Treat windows as working targets**, rather than clutter to be managed.
+- **Standalone macOS utility**, operating independently and natively.
+- **Optimized for focus and z-index**, prioritizing bringing the right window to the front over rearranging your screen.
 
 ## What It Is Not
 
-Harpoon is not trying to be a full window manager.
+Arpoon is **not** a full window manager.
 
-- Not a tiling manager.
+- Not a tiling manager (like Amethyst or Yabai).
 - Not an auto-layout engine.
-- Not a workspace system.
-- Not a tool that tries to prevent overlapping windows.
-- Not a product where screen geometry is the main abstraction.
+- Not a workspace/virtual desktop system.
+- Not a tool to prevent overlapping windows.
 
-Window overlap is acceptable here. What matters is getting the right thing to the front quickly and predictably.
+Window overlap is expected and acceptable. The primary goal is getting the exact window or app you need to the front as quickly and predictably as possible.
 
-## Shape Of The Product
+## Features & Default Shortcuts
 
-The intended experience is closer to a small Rectangle-like utility in delivery, but for focus routing instead of resizing.
+Arpoon supports two primary routing schemes: **Static Slots** and **Dynamic Windows**, along with directional focus.
 
-- Bind the current app or window to a shortcut.
-- Jump back to it immediately.
-- Avoid ceremony.
-- Keep the mental model small.
+### 1. Static Slots (Default)
+Bind a specific window to a numbered slot and recall it instantly.
 
-## Possible Extensions
+- **Bind to Slot 1-9:** `Cmd + Shift + 1-9`
+- **Jump to Slot 1-9:** `Cmd + 1-9`
 
-These are intentionally secondary to the core bind-and-focus flow.
+### 2. Dynamic Hotkeys
+Assign on-the-fly hotkeys to specific targets without relying on predefined slots.
 
-- Deep binds for app-specific targets like browser tabs.
+- **Add Dynamic Hotkey:** `Cmd + Shift + 0`
+
+### 3. Directional Focus
+Quickly jump between visible applications on your screen based on their spatial arrangement.
+
+- **Focus App Left:** `Cmd + Option + Left Arrow`
+- **Focus App Right:** `Cmd + Option + Right Arrow`
+- **Focus App Up:** `Cmd + Option + Up Arrow`
+- **Focus App Down:** `Cmd + Option + Down Arrow`
+
+### 4. HUD (Heads-Up Display)
+View your current bindings and active working set at a glance.
+
+- **Show HUD:** `Cmd + 0`
+- *(Optional)* Show HUD by holding the `Option` key (configurable in settings).
 
 ## Development
 
-Build and install the app with:
+Build and install the development version of the app using the provided script:
 
 ```bash
 ./scripts/install-dev.sh
 ```
 
-That builds `Harpoon.app`, installs it to `/Applications/Harpoon.app`, and opens it.
+This script will build `Arpoon.app`, install it directly into `/Applications/Arpoon.app`, and automatically launch it.
