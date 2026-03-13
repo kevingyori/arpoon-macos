@@ -22,6 +22,10 @@ enum HotkeyActionKind: String, Codable {
     case jumpSlot
     case bindSlot
     case showHUD
+    case focusVisibleAppLeft
+    case focusVisibleAppRight
+    case focusVisibleAppUp
+    case focusVisibleAppDown
     case addDynamicHotkey
 }
 
@@ -42,6 +46,14 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "bind-\(slot ?? 0)"
         case .showHUD:
             return "show-hud"
+        case .focusVisibleAppLeft:
+            return "focus-visible-app-left"
+        case .focusVisibleAppRight:
+            return "focus-visible-app-right"
+        case .focusVisibleAppUp:
+            return "focus-visible-app-up"
+        case .focusVisibleAppDown:
+            return "focus-visible-app-down"
         case .addDynamicHotkey:
             return "add-dynamic-hotkey"
         }
@@ -55,6 +67,14 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "Bind Focused Target to Slot \(slot ?? 0)"
         case .showHUD:
             return "Show HUD"
+        case .focusVisibleAppLeft:
+            return "Jump to Visible App Left"
+        case .focusVisibleAppRight:
+            return "Jump to Visible App Right"
+        case .focusVisibleAppUp:
+            return "Jump to Visible App Up"
+        case .focusVisibleAppDown:
+            return "Jump to Visible App Down"
         case .addDynamicHotkey:
             return "Add Hotkey for Focused Target"
         }
@@ -77,6 +97,26 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
                 keyCode: UInt32(kVK_ANSI_0),
                 modifiers: UInt32(cmdKey)
             )
+        case .focusVisibleAppLeft:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_LeftArrow),
+                modifiers: UInt32(cmdKey | optionKey)
+            )
+        case .focusVisibleAppRight:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_RightArrow),
+                modifiers: UInt32(cmdKey | optionKey)
+            )
+        case .focusVisibleAppUp:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_UpArrow),
+                modifiers: UInt32(cmdKey | optionKey)
+            )
+        case .focusVisibleAppDown:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_DownArrow),
+                modifiers: UInt32(cmdKey | optionKey)
+            )
         case .addDynamicHotkey:
             return HotkeyShortcut(
                 keyCode: UInt32(kVK_ANSI_0),
@@ -88,7 +128,11 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
     static let jumpActions = (1 ... 9).map { HotkeyAction(kind: .jumpSlot, slot: $0) }
     static let bindActions = (1 ... 9).map { HotkeyAction(kind: .bindSlot, slot: $0) }
     static let commonActions = [
-        HotkeyAction(kind: .showHUD, slot: nil)
+        HotkeyAction(kind: .showHUD, slot: nil),
+        HotkeyAction(kind: .focusVisibleAppLeft, slot: nil),
+        HotkeyAction(kind: .focusVisibleAppRight, slot: nil),
+        HotkeyAction(kind: .focusVisibleAppUp, slot: nil),
+        HotkeyAction(kind: .focusVisibleAppDown, slot: nil)
     ]
     static let dynamicActions = [
         HotkeyAction(kind: .addDynamicHotkey, slot: nil)
@@ -109,6 +153,14 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
         switch id {
         case "show-hud":
             self = HotkeyAction(kind: .showHUD, slot: nil)
+        case "focus-visible-app-left":
+            self = HotkeyAction(kind: .focusVisibleAppLeft, slot: nil)
+        case "focus-visible-app-right":
+            self = HotkeyAction(kind: .focusVisibleAppRight, slot: nil)
+        case "focus-visible-app-up":
+            self = HotkeyAction(kind: .focusVisibleAppUp, slot: nil)
+        case "focus-visible-app-down":
+            self = HotkeyAction(kind: .focusVisibleAppDown, slot: nil)
         case "add-dynamic-hotkey":
             self = HotkeyAction(kind: .addDynamicHotkey, slot: nil)
         default:

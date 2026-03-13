@@ -16,6 +16,10 @@ struct SettingsView: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
 
+                        Text("Visible-app navigation uses the on-screen window stack, so it requires Accessibility permission and works best when app windows are partially exposed.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+
                         Picker("Hotkey Scheme", selection: $settings.hotkeyScheme) {
                             ForEach(HotkeyScheme.allCases) { scheme in
                                 Text(scheme.title).tag(scheme)

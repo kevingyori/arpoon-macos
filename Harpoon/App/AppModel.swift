@@ -74,6 +74,18 @@ final class AppModel: ObservableObject {
         hotkeyController.onShowHUD = { [weak self] in
             self?.showHUD()
         }
+        hotkeyController.onFocusVisibleAppLeft = { [weak self] in
+            self?.jumpToVisibleApp(toward: .left)
+        }
+        hotkeyController.onFocusVisibleAppRight = { [weak self] in
+            self?.jumpToVisibleApp(toward: .right)
+        }
+        hotkeyController.onFocusVisibleAppUp = { [weak self] in
+            self?.jumpToVisibleApp(toward: .up)
+        }
+        hotkeyController.onFocusVisibleAppDown = { [weak self] in
+            self?.jumpToVisibleApp(toward: .down)
+        }
         hotkeyController.onAddDynamicHotkey = { [weak self] in
             self?.beginDynamicHotkeyCapture()
         }
@@ -263,6 +275,50 @@ final class AppModel: ObservableObject {
             model: hudOverviewModel(),
             timeout: settings.hudTimeout
         )
+    }
+
+    func jumpToVisibleApp(toward direction: SpatialNavigationDirection) {
+        guard accessibilityPermissions.isTrusted else {
+            showMessage(
+                title: "Accessibility required",
+                detail: "Grant access to navigate between visible apps.",
+                tone: .warning
+            )
+            return
+        }
+
+        guard let focusedWindow = windowProvider.focusedWindow() else {
+            showMessage(
+                title: "No focused window",
+                detail: "Focus a standard app window first.",
+                tone: .warning
+            )
+            return
+        }
+
+        guard focusedWindow.frame != nil else {
+            showMessage(
+                title: "Current window has no frame",
+                detail: "Harpoon could not determine the current window position.",
+                tone: .warning
+            )
+            return
+        }
+
+        guard let targetWindow = windowProvider.visibleWindow(from: focusedWindow, toward: direction) else {
+            showMessage(
+                title: "No visible app \(direction.preposition)",
+                detail: "Harpoon could not find an exposed app window \(direction.preposition) the current window.",
+                tone: .warning
+            )
+            return
+        }
+
+        let outcome = focusService.focus(
+            liveWindow: targetWindow,
+            strategy: .visibleLeftNavigation
+        )
+        present(outcome: outcome, fallbackLabel: targetWindow.appName)
     }
 
     func requestAccessibilityAccess() {

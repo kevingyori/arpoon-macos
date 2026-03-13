@@ -64,6 +64,68 @@ struct AccessibilityWindowProvider {
             }
     }
 
+    func visibleWindow(from reference: LiveWindow, toward direction: SpatialNavigationDirection) -> LiveWindow? {
+        guard permissionService.isTrusted,
+              let referenceFrame = reference.frame else {
+            return nil
+        }
+
+        let searchRegion = visibleRegion(from: referenceFrame, toward: direction)
+        guard !searchRegion.isNull, !searchRegion.isEmpty else {
+            return nil
+        }
+
+        let runningApps = regularRunningAppsByPID()
+        var windowLookupsByPID: [pid_t: [Int: LiveWindow]] = [:]
+        var seenPIDs: Set<pid_t> = [reference.pid]
+        var coveredRects: [CGRect] = []
+
+        for info in onScreenWindowInfos() {
+            guard let bounds = info.bounds?.cgRect, !bounds.isEmpty else {
+                continue
+            }
+
+            defer {
+                coveredRects.append(bounds)
+            }
+
+            let visibleSlice = bounds.intersection(searchRegion)
+            guard !visibleSlice.isNull, !visibleSlice.isEmpty else {
+                continue
+            }
+
+            guard !seenPIDs.contains(info.ownerPID),
+                  let app = runningApps[info.ownerPID] else {
+                continue
+            }
+
+            seenPIDs.insert(info.ownerPID)
+
+            let windowLookup = windowLookupsByPID[info.ownerPID] ?? windowLookup(for: app)
+            windowLookupsByPID[info.ownerPID] = windowLookup
+
+            guard let liveWindow = liveWindow(
+                for: info,
+                from: windowLookup,
+                fallbackBounds: info.bounds
+            ) else {
+                continue
+            }
+
+            let candidateRect = liveWindow.frame?.cgRect ?? bounds
+            let candidateSlice = candidateRect.intersection(searchRegion)
+            guard !candidateSlice.isNull, !candidateSlice.isEmpty else {
+                continue
+            }
+
+            if hasExposedSample(in: candidateSlice, coveredBy: coveredRects) {
+                return liveWindow
+            }
+        }
+
+        return nil
+    }
+
     private func windows(for app: NSRunningApplication) -> [LiveWindow] {
         guard let bundleId = app.bundleIdentifier,
               let appName = app.localizedName else {
@@ -216,6 +278,161 @@ struct AccessibilityWindowProvider {
         }
     }
 
+    private func onScreenWindowInfos() -> [OnScreenWindowInfo] {
+        guard let rawInfos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
+            return []
+        }
+
+        return rawInfos.compactMap { info in
+            guard let ownerPID = info[kCGWindowOwnerPID as String] as? pid_t,
+                  let windowNumber = info[kCGWindowNumber as String] as? Int else {
+                return nil
+            }
+
+            let alpha = (info[kCGWindowAlpha as String] as? Double) ?? 1
+            let layer = (info[kCGWindowLayer as String] as? Int) ?? 0
+            let bounds = cgBounds(from: info[kCGWindowBounds as String])
+
+            guard alpha > 0.01,
+                  let bounds,
+                  bounds.width > 2,
+                  bounds.height > 2,
+                  layer >= 0 else {
+                return nil
+            }
+
+            return OnScreenWindowInfo(
+                ownerPID: ownerPID,
+                windowID: windowNumber,
+                bounds: bounds
+            )
+        }
+    }
+
+    private func regularRunningAppsByPID() -> [pid_t: NSRunningApplication] {
+        NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular }
+            .reduce(into: [:]) { result, window in
+                result[window.processIdentifier] = window
+            }
+    }
+
+    private func windowLookup(for app: NSRunningApplication) -> [Int: LiveWindow] {
+        windows(for: app).reduce(into: [:]) { result, window in
+            guard let windowID = window.windowID else {
+                return
+            }
+
+            result[windowID] = window
+        }
+    }
+
+    private func liveWindow(
+        for info: OnScreenWindowInfo,
+        from windowLookup: [Int: LiveWindow],
+        fallbackBounds: WindowFrame?
+    ) -> LiveWindow? {
+        if let exactWindow = windowLookup[info.windowID] {
+            return exactWindow
+        }
+
+        guard let fallbackBounds else {
+            return nil
+        }
+
+        return windowLookup.values.first(where: { roughlyMatches($0.frame, fallbackBounds) })
+    }
+
+    private func visibleRegion(from frame: WindowFrame, toward direction: SpatialNavigationDirection) -> CGRect {
+        let desktopBounds = NSScreen.screens
+            .map(\.frame)
+            .reduce(CGRect.null) { partial, next in
+                partial.isNull ? next : partial.union(next)
+            }
+
+        guard !desktopBounds.isNull else {
+            return .null
+        }
+
+        switch direction {
+        case .left:
+            guard frame.x > desktopBounds.minX else {
+                return .null
+            }
+
+            return CGRect(
+                x: desktopBounds.minX,
+                y: desktopBounds.minY,
+                width: frame.x - desktopBounds.minX,
+                height: desktopBounds.height
+            )
+        case .right:
+            let startX = frame.x + frame.width
+            guard startX < desktopBounds.maxX else {
+                return .null
+            }
+
+            return CGRect(
+                x: startX,
+                y: desktopBounds.minY,
+                width: desktopBounds.maxX - startX,
+                height: desktopBounds.height
+            )
+        case .up:
+            let startY = frame.y + frame.height
+            guard startY < desktopBounds.maxY else {
+                return .null
+            }
+
+            return CGRect(
+                x: desktopBounds.minX,
+                y: startY,
+                width: desktopBounds.width,
+                height: desktopBounds.maxY - startY
+            )
+        case .down:
+            guard frame.y > desktopBounds.minY else {
+                return .null
+            }
+
+            return CGRect(
+                x: desktopBounds.minX,
+                y: desktopBounds.minY,
+                width: desktopBounds.width,
+                height: frame.y - desktopBounds.minY
+            )
+        }
+    }
+
+    private func hasExposedSample(in rect: CGRect, coveredBy coveredRects: [CGRect]) -> Bool {
+        let xs = sampleCoordinates(min: rect.minX, max: rect.maxX)
+        let ys = sampleCoordinates(min: rect.minY, max: rect.maxY)
+
+        for x in xs {
+            for y in ys {
+                let point = CGPoint(x: x, y: y)
+                if coveredRects.contains(where: { $0.contains(point) }) {
+                    continue
+                }
+
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private func sampleCoordinates(min: CGFloat, max: CGFloat) -> [CGFloat] {
+        guard max > min else {
+            return [min]
+        }
+
+        let inset = Swift.min(6, (max - min) / 4)
+        let midpoint = min + ((max - min) / 2)
+
+        return Array(Set([min + inset, midpoint, max - inset])).sorted()
+    }
+
     private func matchingWindowID(title: String?, frame: WindowFrame?, infos: [CGWindowInfo], excluding consumedIDs: Set<Int>) -> Int? {
         if let frame,
            let exactFrame = infos.first(where: { !consumedIDs.contains($0.windowID) && roughlyMatches($0.bounds, frame) && normalized($0.title) == normalized(title) }) {
@@ -274,4 +491,36 @@ private struct CGWindowInfo {
     let windowID: Int
     let title: String?
     let bounds: WindowFrame?
+}
+
+private struct OnScreenWindowInfo {
+    let ownerPID: pid_t
+    let windowID: Int
+    let bounds: WindowFrame?
+}
+
+private extension WindowFrame {
+    var cgRect: CGRect {
+        CGRect(x: x, y: y, width: width, height: height)
+    }
+}
+
+enum SpatialNavigationDirection {
+    case left
+    case right
+    case up
+    case down
+
+    var preposition: String {
+        switch self {
+        case .left:
+            return "on the left of"
+        case .right:
+            return "on the right of"
+        case .up:
+            return "above"
+        case .down:
+            return "below"
+        }
+    }
 }

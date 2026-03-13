@@ -6,6 +6,10 @@ final class HotkeyController {
     var onJump: ((Int) -> Void)?
     var onBind: ((Int) -> Void)?
     var onShowHUD: (() -> Void)?
+    var onFocusVisibleAppLeft: (() -> Void)?
+    var onFocusVisibleAppRight: (() -> Void)?
+    var onFocusVisibleAppUp: (() -> Void)?
+    var onFocusVisibleAppDown: (() -> Void)?
     var onAddDynamicHotkey: (() -> Void)?
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)?
 
@@ -91,6 +95,14 @@ final class HotkeyController {
             }
         case .showHUD:
             onShowHUD?()
+        case .focusVisibleAppLeft:
+            onFocusVisibleAppLeft?()
+        case .focusVisibleAppRight:
+            onFocusVisibleAppRight?()
+        case .focusVisibleAppUp:
+            onFocusVisibleAppUp?()
+        case .focusVisibleAppDown:
+            onFocusVisibleAppDown?()
         case .addDynamicHotkey:
             onAddDynamicHotkey?()
         }

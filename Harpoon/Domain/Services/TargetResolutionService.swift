@@ -2,6 +2,7 @@ import Foundation
 
 enum ResolutionStrategy {
     case liveSessionWindow
+    case visibleLeftNavigation
     case exactWindowID
     case exactFrame
     case exactTitle
@@ -13,6 +14,8 @@ enum ResolutionStrategy {
         switch self {
         case .liveSessionWindow:
             return "live session match"
+        case .visibleLeftNavigation:
+            return "visible-left navigation"
         case .exactWindowID:
             return "exact window match"
         case .exactFrame:
