@@ -90,22 +90,40 @@ Jump between visible applications based on where they are on screen.
 
 ## Install
 
+Arpoon is currently distributed unsigned and not notarized.
+
+### Download the app
+
+Download `Arpoon-macOS.zip` from the latest GitHub Release, then unzip it.
+
+On first launch, macOS will likely warn that it cannot verify the app. To open it:
+
+1. Right-click `Arpoon.app` and choose **Open**
+2. Click **Open** again in the system prompt
+3. If macOS still blocks it, go to **System Settings -> Privacy & Security** and allow it there
+
+This is a rougher install flow than a signed app, but the app should run normally once opened.
+
+### Build locally
+
+For local development:
+
 ```bash
 ./scripts/install-dev.sh
 ```
 
 This will:
 
-* build `Arpoon.app`
+* build a `Debug` version of `Arpoon.app`
 * install it to `/Applications/Arpoon.app`
 * launch it automatically
 
+To create the distributable `Release` ZIP for GitHub Releases:
+
+```bash
+./scripts/package-release.sh
+```
+
+This builds a `Release` app bundle and packages `Arpoon-macOS.zip` with `ditto`.
+
 ## Roadmap
-
-A proper README should probably get:
-
-* screenshots or a short demo GIF
-* install instructions beyond the dev script
-* permissions/setup notes
-* a short section on how target binding works
-* known limitations
