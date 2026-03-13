@@ -3,6 +3,8 @@ import SwiftUI
 
 @MainActor
 final class SettingsWindowController: NSWindowController, NSWindowDelegate {
+    private(set) var isPresented = false
+
     init(
         settings: SettingsStore,
         dynamicHotkeys: DynamicHotkeyStore,
@@ -44,6 +46,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     }
 
     func show() {
+        isPresented = true
         showWindow(nil)
         bringToFront()
     }
@@ -63,6 +66,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
+        isPresented = false
         window?.orderOut(nil)
     }
 }

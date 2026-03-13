@@ -286,13 +286,14 @@ final class AppModel: ObservableObject {
     }
 
     func revealSettingsWindowIfOpen() {
-        if settingsWindowController.isVisible {
+        if settingsWindowController.isPresented {
             settingsWindowController.bringToFront()
             settingsWindow = settingsWindowController.window
             return
         }
 
-        guard let settingsWindow else {
+        guard let settingsWindow,
+              settingsWindow.isVisible || settingsWindow.isMiniaturized else {
             return
         }
 

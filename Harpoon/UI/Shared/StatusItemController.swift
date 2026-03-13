@@ -62,7 +62,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         if popover.isShown {
             closePopover()
         } else {
-            appModel.revealSettingsWindowIfOpen()
             NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             focusPopoverWindow()
