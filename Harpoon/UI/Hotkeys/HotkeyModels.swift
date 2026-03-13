@@ -6,7 +6,6 @@ enum HotkeyActionKind: String, Codable {
     case jumpSlot
     case bindSlot
     case showHUD
-    case toggleSearch
 }
 
 struct HotkeyAction: Hashable, Codable, Identifiable {
@@ -26,8 +25,6 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "bind-\(slot ?? 0)"
         case .showHUD:
             return "show-hud"
-        case .toggleSearch:
-            return "toggle-search"
         }
     }
 
@@ -39,8 +36,6 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "Bind Focused Target to Slot \(slot ?? 0)"
         case .showHUD:
             return "Show HUD"
-        case .toggleSearch:
-            return "Open Search Palette"
         }
     }
 
@@ -61,19 +56,13 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
                 keyCode: UInt32(kVK_ANSI_0),
                 modifiers: UInt32(cmdKey)
             )
-        case .toggleSearch:
-            return HotkeyShortcut(
-                keyCode: UInt32(kVK_ANSI_P),
-                modifiers: UInt32(cmdKey)
-            )
         }
     }
 
     static let jumpActions = (1 ... 9).map { HotkeyAction(kind: .jumpSlot, slot: $0) }
     static let bindActions = (1 ... 9).map { HotkeyAction(kind: .bindSlot, slot: $0) }
     static let generalActions = [
-        HotkeyAction(kind: .showHUD, slot: nil),
-        HotkeyAction(kind: .toggleSearch, slot: nil)
+        HotkeyAction(kind: .showHUD, slot: nil)
     ]
     static let allCases = jumpActions + bindActions + generalActions
 
@@ -81,8 +70,6 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
         switch id {
         case "show-hud":
             self = HotkeyAction(kind: .showHUD, slot: nil)
-        case "toggle-search":
-            self = HotkeyAction(kind: .toggleSearch, slot: nil)
         default:
             let components = id.split(separator: "-", maxSplits: 1).map(String.init)
             guard components.count == 2,

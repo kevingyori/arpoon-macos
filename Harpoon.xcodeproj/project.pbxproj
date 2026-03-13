@@ -9,11 +9,9 @@
 /* Begin PBXBuildFile section */
 		05A78E103D8E41B5D27A36E5 /* JSONAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEE514431F792ADEBCAAE2EB /* JSONAssignmentStore.swift */; };
 		06218AAA2A617A1DA7FA5E47 /* MacOSFocusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5FEB74CF36FC5B570F314D /* MacOSFocusController.swift */; };
-		13AF53D106973371682907C3 /* SearchItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CFD18909098D64397DBA1F /* SearchItem.swift */; };
 		2AF1F20BA2FBCBA7B10CA589 /* HotkeyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2931A5366B019BCDD1D0AD3 /* HotkeyModels.swift */; };
 		2F714DC16AD94F1FD3ACA140 /* AccessibilityWindowProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0239BC1D4C1D6575262EBBF4 /* AccessibilityWindowProvider.swift */; };
 		30E639CBBCB196816D1F150B /* HUDWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE8A4C7C930C67EED91A618B /* HUDWindowController.swift */; };
-		34880FEC6A7EADFD8C4517F7 /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DECCA30F917757BE8CDACB0 /* SearchViewModel.swift */; };
 		3C1227511DC4CBAC77AB5F45 /* TargetCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5717F05F2F6F3FFD2507DA93 /* TargetCaptureService.swift */; };
 		48DD4F80237D03F6489B7F4E /* LiveWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA0204EA0B00DCF9047898E /* LiveWindow.swift */; };
 		4E722A7B77DB448E82700BC0 /* RunningAppProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F9A6752DB04E6D2380C4F49 /* RunningAppProvider.swift */; };
@@ -25,12 +23,10 @@
 		6F25E77540E0A2A3945CC37B /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE14BD502DC9E2CF0BA4141 /* HUDView.swift */; };
 		7D86719A7ABA5D10FF688C49 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2392903AF53E02CB7EE4D95F /* AppDelegate.swift */; };
 		804D072A35F39676B2E1BB19 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C60F821A61B2834EE715469 /* MenuBarView.swift */; };
-		89C6E0B1578BDC1B2013CCFB /* SearchPaletteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ECC05D21AAB031F0F73BA32 /* SearchPaletteController.swift */; };
 		8D8F553983ABFE0C7F81EF57 /* ControlPanelWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123E2687EE44E88F646F0BA3 /* ControlPanelWindowController.swift */; };
 		94606CA3CD8DF93BA3589F96 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D647085231A28CAC3692333 /* StatusItemController.swift */; };
 		9697DFA11BB297984FE5AB26 /* SlotAssignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F5C4D2210EDB010C4E9DE91 /* SlotAssignment.swift */; };
 		A19C984C95892A349BEBF369 /* TargetResolutionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A531B3F30F073DAEF00119 /* TargetResolutionService.swift */; };
-		ACE78F29FD0ACE415AE5C46F /* SearchPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 891853024E7C94C99539D3BE /* SearchPaletteView.swift */; };
 		AD191EE532A4368687F84190 /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF82965E5216EB73C86BE9F9 /* Target.swift */; };
 		AEB869714EC4EE911013A447 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F0897D80116B4B2A984719 /* SettingsView.swift */; };
 		B7A44A7D9B17A25C504FA115 /* LiveApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F26BA36235E22C434E30357 /* LiveApp.swift */; };
@@ -44,7 +40,6 @@
 		F62DA540BE6C1A9D627AC491 /* HarpoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6AAB04859706AB608F7D7FD /* HarpoonApp.swift */; };
 		F739A60DD2CB03A0F5CCE4AD /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD01A7337A954E8D76C359A5 /* AppModel.swift */; };
 		FB56A6DF1D91A145E4858B5D /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5168B0AA45540807CF4BF720 /* SettingsStore.swift */; };
-		FD23C6120FF8DF9ECDC7C7E6 /* SearchIndexService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E325FA264A6D86B82D7521 /* SearchIndexService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,18 +53,13 @@
 		2392903AF53E02CB7EE4D95F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2AF0FA1C0B726227F1C2A432 /* TitleMatchPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleMatchPolicy.swift; sourceTree = "<group>"; };
 		305A254A40C27349971F1337 /* StatusPopupPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusPopupPanel.swift; sourceTree = "<group>"; };
-		32E325FA264A6D86B82D7521 /* SearchIndexService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchIndexService.swift; sourceTree = "<group>"; };
 		3CA0204EA0B00DCF9047898E /* LiveWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWindow.swift; sourceTree = "<group>"; };
 		5168B0AA45540807CF4BF720 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		5717F05F2F6F3FFD2507DA93 /* TargetCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetCaptureService.swift; sourceTree = "<group>"; };
-		5ECC05D21AAB031F0F73BA32 /* SearchPaletteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPaletteController.swift; sourceTree = "<group>"; };
 		5FE14BD502DC9E2CF0BA4141 /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
 		7F9A6752DB04E6D2380C4F49 /* RunningAppProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppProvider.swift; sourceTree = "<group>"; };
 		7FA558A814BE6A520BBEAC0A /* Harpoon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Harpoon.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7FFBDA60506B753989E2D7AD /* SlotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotStore.swift; sourceTree = "<group>"; };
-		86CFD18909098D64397DBA1F /* SearchItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchItem.swift; sourceTree = "<group>"; };
-		891853024E7C94C99539D3BE /* SearchPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPaletteView.swift; sourceTree = "<group>"; };
-		8DECCA30F917757BE8CDACB0 /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
 		9F26BA36235E22C434E30357 /* LiveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveApp.swift; sourceTree = "<group>"; };
 		A6AAB04859706AB608F7D7FD /* HarpoonApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarpoonApp.swift; sourceTree = "<group>"; };
 		A9A075B98F9435C2AE390BEC /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
@@ -100,16 +90,6 @@
 				305A254A40C27349971F1337 /* StatusPopupPanel.swift */,
 			);
 			path = Shared;
-			sourceTree = "<group>";
-		};
-		1654AA4D488A9431CC737C71 /* Search */ = {
-			isa = PBXGroup;
-			children = (
-				5ECC05D21AAB031F0F73BA32 /* SearchPaletteController.swift */,
-				891853024E7C94C99539D3BE /* SearchPaletteView.swift */,
-				8DECCA30F917757BE8CDACB0 /* SearchViewModel.swift */,
-			);
-			path = Search;
 			sourceTree = "<group>";
 		};
 		1757DE7CA26A9BA1ED3A282A /* HUD */ = {
@@ -146,7 +126,6 @@
 			children = (
 				8DA5A798D45A6DA7FD18AC42 /* Hotkeys */,
 				1757DE7CA26A9BA1ED3A282A /* HUD */,
-				1654AA4D488A9431CC737C71 /* Search */,
 				7D048F4E06B5E1002218EE8D /* Settings */,
 				077B780FC7E89F373EC6E122 /* Shared */,
 			);
@@ -158,7 +137,6 @@
 			children = (
 				9F26BA36235E22C434E30357 /* LiveApp.swift */,
 				3CA0204EA0B00DCF9047898E /* LiveWindow.swift */,
-				86CFD18909098D64397DBA1F /* SearchItem.swift */,
 				0F5C4D2210EDB010C4E9DE91 /* SlotAssignment.swift */,
 				FF82965E5216EB73C86BE9F9 /* Target.swift */,
 			);
@@ -255,7 +233,6 @@
 			children = (
 				B1A709999257151CE35F1BB3 /* AssignmentStore.swift */,
 				D5EC8CDA99F6D4DF83764362 /* FocusService.swift */,
-				32E325FA264A6D86B82D7521 /* SearchIndexService.swift */,
 				7FFBDA60506B753989E2D7AD /* SlotStore.swift */,
 				5717F05F2F6F3FFD2507DA93 /* TargetCaptureService.swift */,
 				D6A531B3F30F073DAEF00119 /* TargetResolutionService.swift */,
@@ -342,11 +319,6 @@
 				06218AAA2A617A1DA7FA5E47 /* MacOSFocusController.swift in Sources */,
 				804D072A35F39676B2E1BB19 /* MenuBarView.swift in Sources */,
 				4E722A7B77DB448E82700BC0 /* RunningAppProvider.swift in Sources */,
-				FD23C6120FF8DF9ECDC7C7E6 /* SearchIndexService.swift in Sources */,
-				13AF53D106973371682907C3 /* SearchItem.swift in Sources */,
-				89C6E0B1578BDC1B2013CCFB /* SearchPaletteController.swift in Sources */,
-				ACE78F29FD0ACE415AE5C46F /* SearchPaletteView.swift in Sources */,
-				34880FEC6A7EADFD8C4517F7 /* SearchViewModel.swift in Sources */,
 				FB56A6DF1D91A145E4858B5D /* SettingsStore.swift in Sources */,
 				AEB869714EC4EE911013A447 /* SettingsView.swift in Sources */,
 				F28BC10326852F1C57AB986A /* ShortcutRecorderRow.swift in Sources */,

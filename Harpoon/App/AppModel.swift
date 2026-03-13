@@ -17,9 +17,7 @@ final class AppModel: ObservableObject {
     private let captureService: TargetCaptureService
     private let resolutionService: TargetResolutionService
     private let focusService: FocusService
-    private let searchIndexService: SearchIndexService
     private let hudController: HUDWindowController
-    private let searchController: SearchPaletteController
     private let hotkeyController: HotkeyController
     private var cancellables = Set<AnyCancellable>()
     private var liveSlotWindows: [Int: LiveWindow] = [:]
@@ -51,15 +49,7 @@ final class AppModel: ObservableObject {
             appProvider: appProvider,
             labelPolicy: labelPolicy
         )
-        searchIndexService = SearchIndexService(
-            slotStore: slotStore,
-            appProvider: appProvider,
-            windowProvider: windowProvider
-        )
         hudController = HUDWindowController()
-
-        let searchViewModel = SearchViewModel(searchIndexService: searchIndexService)
-        searchController = SearchPaletteController(viewModel: searchViewModel)
         hotkeyController = HotkeyController(settings: settings)
 
         hotkeyController.onJump = { [weak self] slot in
@@ -71,28 +61,6 @@ final class AppModel: ObservableObject {
         hotkeyController.onShowHUD = { [weak self] in
             self?.showHUD()
         }
-        hotkeyController.onToggleSearch = { [weak self] in
-            self?.toggleSearch()
-        }
-
-        searchViewModel.onJump = { [weak self] item in
-            self?.jump(to: item)
-        }
-        searchViewModel.onBind = { [weak self] item, slot in
-            self?.bind(item: item, to: slot)
-        }
-        searchViewModel.onClearSlot = { [weak self] slot in
-            self?.clear(slot: slot)
-        }
-        searchViewModel.onDismiss = { [weak self] in
-            self?.searchController.hide()
-        }
-
-        slotStore.$assignments
-            .sink { [weak self] _ in
-                self?.searchController.refresh()
-            }
-            .store(in: &cancellables)
 
         settings.$hotkeys
             .sink { [weak self] _ in
@@ -144,26 +112,6 @@ final class AppModel: ObservableObject {
         )
     }
 
-    func bind(item: SearchItem, to slot: Int) {
-        guard let target = item.target else {
-            showMessage(
-                title: "That item cannot be bound",
-                detail: "Only apps, windows, and existing slots can be bound.",
-                tone: .warning
-            )
-            return
-        }
-
-        let assignment = slotStore.bind(slot: slot, target: target)
-        updateLiveWindowCache(for: slot, item: item)
-        showMessage(
-            title: "Slot \(slot) -> \(assignment.label)",
-            detail: "Updated from the search palette.",
-            tone: .success
-        )
-        searchController.hide()
-    }
-
     func jump(to slot: Int) {
         guard let assignment = slotStore.assignment(for: slot) else {
             showMessage(
@@ -200,33 +148,6 @@ final class AppModel: ObservableObject {
         present(outcome: outcome, fallbackLabel: assignment.label)
     }
 
-    func jump(to item: SearchItem) {
-        searchController.hide()
-
-        switch item {
-        case .slot(let assignment):
-            let outcome = focusService.focus(target: assignment.target)
-            present(outcome: outcome, fallbackLabel: assignment.label)
-
-        case .app(let app):
-            let outcome = focusService.focus(target: .app(AppTarget(bundleId: app.bundleId, appName: app.appName)))
-            present(outcome: outcome, fallbackLabel: app.appName)
-
-        case .window(let window):
-            let target = WindowTarget(
-                bundleId: window.bundleId,
-                appName: window.appName,
-                pid: window.pid,
-                windowTitle: window.title,
-                windowID: window.windowID,
-                frame: window.frame,
-                capturedAt: .now
-            )
-            let outcome = focusService.focus(target: .window(target))
-            present(outcome: outcome, fallbackLabel: labelPolicy.label(for: window))
-        }
-    }
-
     func clear(slot: Int) {
         guard slotStore.assignment(for: slot) != nil else {
             showMessage(
@@ -254,10 +175,6 @@ final class AppModel: ObservableObject {
             ),
             timeout: settings.hudTimeout
         )
-    }
-
-    func toggleSearch() {
-        searchController.toggle()
     }
 
     func requestAccessibilityAccess() {
@@ -316,15 +233,6 @@ final class AppModel: ObservableObject {
         if let liveWindow {
             liveSlotWindows[slot] = liveWindow
         } else {
-            liveSlotWindows.removeValue(forKey: slot)
-        }
-    }
-
-    private func updateLiveWindowCache(for slot: Int, item: SearchItem) {
-        switch item {
-        case .window(let liveWindow):
-            liveSlotWindows[slot] = liveWindow
-        default:
             liveSlotWindows.removeValue(forKey: slot)
         }
     }

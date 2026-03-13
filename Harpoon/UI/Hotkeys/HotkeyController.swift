@@ -6,7 +6,6 @@ final class HotkeyController {
     var onJump: ((Int) -> Void)?
     var onBind: ((Int) -> Void)?
     var onShowHUD: (() -> Void)?
-    var onToggleSearch: (() -> Void)?
 
     private let settings: SettingsStore
     private let hotKeyCenter = GlobalHotKeyCenter.shared
@@ -66,8 +65,6 @@ final class HotkeyController {
             }
         case .showHUD:
             onShowHUD?()
-        case .toggleSearch:
-            onToggleSearch?()
         }
     }
 }

@@ -42,10 +42,6 @@ struct MenuBarView: View {
                 appModel.showHUD()
             }
 
-            Button("Open Search Palette") {
-                appModel.toggleSearch()
-            }
-
             Button("Request Accessibility Access") {
                 appModel.requestAccessibilityAccess()
             }

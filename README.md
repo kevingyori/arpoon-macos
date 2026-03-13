@@ -41,7 +41,6 @@ The intended experience is closer to a small Rectangle-like utility in delivery,
 
 These are intentionally secondary to the core bind-and-focus flow.
 
-- A `Cmd+K` style search surface for apps, windows, or tabs.
 - Deep binds for app-specific targets like browser tabs.
 
 ## Development

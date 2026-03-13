@@ -66,7 +66,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Text("Window capture, window search, and reliable window focus routing require Accessibility permission.")
+                Text("Window capture and reliable window focus routing require Accessibility permission.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
