@@ -4,23 +4,22 @@ struct HUDView: View {
     let model: HUDModel
 
     var body: some View {
-        Group {
-            switch model {
-            case .message(let title, let detail, let tone):
-                messageView(title: title, detail: detail, tone: tone)
+        GlassPanelSurface(cornerRadius: cornerRadius, material: .hudWindow, blendingMode: .behindWindow) {
+            Group {
+                switch model {
+                case .message(let title, let detail, let tone):
+                    messageView(title: title, detail: detail, tone: tone)
 
-            case .overview(let assignments, let accessibilityTrusted):
-                overviewView(assignments: assignments, accessibilityTrusted: accessibilityTrusted)
+                case .symbol(let systemName, let tone):
+                    symbolView(systemName: systemName, tone: tone)
+
+                case .overview(let assignments, let accessibilityTrusted):
+                    overviewView(assignments: assignments, accessibilityTrusted: accessibilityTrusted)
+                }
             }
+            .padding(containerPadding)
+            .frame(width: model.preferredWidth)
         }
-        .padding(containerPadding)
-        .frame(width: model.preferredWidth)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(Color.white.opacity(borderOpacity))
-        )
-        .shadow(color: .black.opacity(shadowOpacity), radius: shadowRadius, y: shadowYOffset)
     }
 
     @ViewBuilder
@@ -47,6 +46,14 @@ struct HUDView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func symbolView(systemName: String, tone: HUDTone) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundStyle(color(for: tone))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     @ViewBuilder
@@ -103,6 +110,8 @@ struct HUDView: View {
         switch model {
         case .message:
             return 14
+        case .symbol:
+            return 10
         case .overview:
             return 18
         }
@@ -111,58 +120,24 @@ struct HUDView: View {
     private var cornerRadius: CGFloat {
         switch model {
         case .message:
-            return 16
-        case .overview:
             return 18
-        }
-    }
-
-    private var borderOpacity: Double {
-        switch model {
-        case .message:
-            return 0.14
+        case .symbol:
+            return 23
         case .overview:
-            return 0.18
-        }
-    }
-
-    private var shadowOpacity: Double {
-        switch model {
-        case .message:
-            return 0.14
-        case .overview:
-            return 0.18
-        }
-    }
-
-    private var shadowRadius: CGFloat {
-        switch model {
-        case .message:
-            return 16
-        case .overview:
-            return 24
-        }
-    }
-
-    private var shadowYOffset: CGFloat {
-        switch model {
-        case .message:
-            return 8
-        case .overview:
-            return 12
+            return 20
         }
     }
 
     private func color(for tone: HUDTone) -> Color {
         switch tone {
         case .success:
-            return .green
+            return Color(nsColor: .controlAccentColor)
         case .warning:
             return .orange
         case .error:
             return .red
         case .neutral:
-            return .secondary
+            return Color.primary.opacity(0.82)
         }
     }
 

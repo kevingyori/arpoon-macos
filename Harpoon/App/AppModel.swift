@@ -9,6 +9,7 @@ final class AppModel: ObservableObject {
     let settings: SettingsStore
     let accessibilityPermissions: AccessibilityPermissionService
     let slotStore: SlotStore
+    let dynamicHotkeyStore: DynamicHotkeyStore
 
     private let labelPolicy: TargetLabelPolicy
     private let appProvider: RunningAppProvider
@@ -18,9 +19,13 @@ final class AppModel: ObservableObject {
     private let resolutionService: TargetResolutionService
     private let focusService: FocusService
     private let hudController: HUDWindowController
+    private let optionHoldHUDController: OptionHoldHUDController
     private let hotkeyController: HotkeyController
     private var cancellables = Set<AnyCancellable>()
     private var liveSlotWindows: [Int: LiveWindow] = [:]
+    private var liveDynamicWindows: [String: LiveWindow] = [:]
+    private weak var settingsWindow: NSWindow?
+    private var dynamicHotkeyCaptureController: DynamicHotkeyCaptureController?
     private var started = false
 
     private init() {
@@ -33,6 +38,8 @@ final class AppModel: ObservableObject {
 
         let assignmentStore = JSONAssignmentStore()
         slotStore = SlotStore(store: assignmentStore, labelPolicy: labelPolicy)
+        let dynamicAssignmentStore = JSONDynamicHotkeyAssignmentStore()
+        dynamicHotkeyStore = DynamicHotkeyStore(store: dynamicAssignmentStore, labelPolicy: labelPolicy)
         captureService = TargetCaptureService(
             appProvider: appProvider,
             windowProvider: windowProvider,
@@ -50,7 +57,8 @@ final class AppModel: ObservableObject {
             labelPolicy: labelPolicy
         )
         hudController = HUDWindowController()
-        hotkeyController = HotkeyController(settings: settings)
+        optionHoldHUDController = OptionHoldHUDController(settings: settings)
+        hotkeyController = HotkeyController(settings: settings, dynamicHotkeyStore: dynamicHotkeyStore)
 
         hotkeyController.onJump = { [weak self] slot in
             self?.jump(to: slot)
@@ -61,14 +69,34 @@ final class AppModel: ObservableObject {
         hotkeyController.onShowHUD = { [weak self] in
             self?.showHUD()
         }
+        hotkeyController.onAddDynamicHotkey = { [weak self] in
+            self?.beginDynamicHotkeyCapture()
+        }
+        hotkeyController.onDynamicHotkey = { [weak self] shortcut in
+            self?.jump(using: shortcut)
+        }
+        optionHoldHUDController.onShow = { [weak self] in
+            self?.showHeldHUD()
+        }
+        optionHoldHUDController.onHide = { [weak self] in
+            self?.hideHUD()
+        }
 
         settings.$hotkeys
             .sink { [weak self] _ in
-                guard let self, self.started else {
-                    return
-                }
+                self?.refreshHotkeysIfStarted()
+            }
+            .store(in: &cancellables)
 
-                self.hotkeyController.registerConfiguredHotkeys()
+        settings.$hotkeyScheme
+            .sink { [weak self] _ in
+                self?.refreshHotkeysIfStarted()
+            }
+            .store(in: &cancellables)
+
+        dynamicHotkeyStore.$assignments
+            .sink { [weak self] _ in
+                self?.refreshHotkeysIfStarted()
             }
             .store(in: &cancellables)
     }
@@ -80,7 +108,9 @@ final class AppModel: ObservableObject {
 
         started = true
         slotStore.load()
+        dynamicHotkeyStore.load()
         accessibilityPermissions.startMonitoring()
+        optionHoldHUDController.start()
         hotkeyController.registerConfiguredHotkeys()
     }
 
@@ -105,10 +135,9 @@ final class AppModel: ObservableObject {
             detail = "Window capture was unavailable, so the app was stored instead."
         }
 
-        showMessage(
+        showAddPopup(
             title: "Slot \(slot) -> \(assignment.label)",
-            detail: detail,
-            tone: .success
+            detail: detail
         )
     }
 
@@ -148,6 +177,44 @@ final class AppModel: ObservableObject {
         present(outcome: outcome, fallbackLabel: assignment.label)
     }
 
+    func jump(using shortcut: HotkeyShortcut) {
+        guard let assignment = dynamicHotkeyStore.assignment(for: shortcut) else {
+            showMessage(
+                title: "No hotkey for \(shortcut.displayString)",
+                detail: "Assign a target first.",
+                tone: .warning
+            )
+            return
+        }
+
+        let cacheKey = shortcut.storageKey
+
+        if let liveWindow = liveDynamicWindows[cacheKey] {
+            let liveOutcome = focusService.focus(liveWindow: liveWindow)
+            if case .focused = liveOutcome {
+                present(outcome: liveOutcome, fallbackLabel: assignment.label)
+                return
+            }
+        }
+
+        if let resolvedWindow = resolveLiveWindow(for: assignment.target) {
+            liveDynamicWindows[cacheKey] = resolvedWindow.window
+
+            let resolvedOutcome = focusService.focus(
+                liveWindow: resolvedWindow.window,
+                strategy: resolvedWindow.strategy
+            )
+
+            if case .focused = resolvedOutcome {
+                present(outcome: resolvedOutcome, fallbackLabel: assignment.label)
+                return
+            }
+        }
+
+        let outcome = focusService.focus(target: assignment.target)
+        present(outcome: outcome, fallbackLabel: assignment.label)
+    }
+
     func clear(slot: Int) {
         guard slotStore.assignment(for: slot) != nil else {
             showMessage(
@@ -167,12 +234,28 @@ final class AppModel: ObservableObject {
         )
     }
 
+    func clearDynamicHotkey(shortcut: HotkeyShortcut) {
+        guard dynamicHotkeyStore.assignment(for: shortcut) != nil else {
+            showMessage(
+                title: "\(shortcut.displayString) is already clear",
+                detail: nil,
+                tone: .warning
+            )
+            return
+        }
+
+        dynamicHotkeyStore.clear(shortcut: shortcut)
+        liveDynamicWindows.removeValue(forKey: shortcut.storageKey)
+        showMessage(
+            title: "Cleared \(shortcut.displayString)",
+            detail: nil,
+            tone: .success
+        )
+    }
+
     func showHUD() {
         hudController.show(
-            model: .overview(
-                assignments: slotStore.assignments,
-                accessibilityTrusted: accessibilityPermissions.isTrusted
-            ),
+            model: hudOverviewModel(),
             timeout: settings.hudTimeout
         )
     }
@@ -188,7 +271,47 @@ final class AppModel: ObservableObject {
         )
     }
 
+    func registerSettingsWindow(_ window: NSWindow) {
+        settingsWindow = window
+    }
+
+    func showSettings() {
+        NSApp.activate(ignoringOtherApps: true)
+
+        if let settingsWindow {
+            if settingsWindow.isMiniaturized {
+                settingsWindow.deminiaturize(nil)
+            }
+
+            settingsWindow.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        let selector = Selector(("showSettingsWindow:"))
+        _ = NSApp.sendAction(selector, to: nil, from: nil)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            self?.revealSettingsWindowIfOpen()
+        }
+    }
+
+    func revealSettingsWindowIfOpen() {
+        guard let settingsWindow else {
+            return
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        if settingsWindow.isMiniaturized {
+            settingsWindow.deminiaturize(nil)
+        }
+
+        settingsWindow.orderFrontRegardless()
+    }
+
     func setHotkeyRecordingActive(_ isActive: Bool) {
+        optionHoldHUDController.setSuppressed(isActive)
+
         if isActive {
             hotkeyController.suspend()
         } else {
@@ -196,21 +319,61 @@ final class AppModel: ObservableObject {
         }
     }
 
+    func beginDynamicHotkeyCapture() {
+        guard settings.hotkeyScheme == .dynamicWindows else {
+            showMessage(
+                title: "Dynamic hotkeys are inactive",
+                detail: "Switch the hotkey scheme in Settings first.",
+                tone: .warning
+            )
+            return
+        }
+
+        guard let outcome = captureService.captureFocusedTarget() else {
+            showMessage(
+                title: "Could not capture the current target",
+                detail: "No focused app was available.",
+                tone: .error
+            )
+            return
+        }
+
+        optionHoldHUDController.setSuppressed(true)
+        hotkeyController.suspend()
+        dynamicHotkeyCaptureController?.finish()
+        dynamicHotkeyCaptureController = nil
+
+        let controller = DynamicHotkeyCaptureController(targetLabel: labelPolicy.label(for: outcome.target))
+        controller.onShortcut = { [weak self, weak controller] shortcut in
+            guard let self, let controller else {
+                return
+            }
+
+            self.completeDynamicHotkeyCapture(shortcut: shortcut, outcome: outcome, controller: controller)
+        }
+        controller.onCancel = { [weak self] in
+            self?.dynamicHotkeyCaptureController = nil
+            self?.optionHoldHUDController.setSuppressed(false)
+            self?.hotkeyController.resume()
+        }
+
+        dynamicHotkeyCaptureController = controller
+        controller.begin()
+    }
+
     private func present(outcome: FocusOutcome, fallbackLabel: String) {
         switch outcome {
         case .focused(let label, let strategy):
             let detail = strategy.map { "Resolved via \($0.displayName)." }
-            showMessage(
+            showJumpPopup(
                 title: "Jumped to \(label ?? fallbackLabel)",
-                detail: detail,
-                tone: .success
+                detail: detail
             )
 
         case .launched(let appName):
-            showMessage(
+            showJumpPopup(
                 title: "Launching \(appName)",
-                detail: "The app was not running, so Harpoon launched it.",
-                tone: .success
+                detail: "The app was not running, so Harpoon launched it."
             )
 
         case .unavailable(let reason):
@@ -223,13 +386,109 @@ final class AppModel: ObservableObject {
     }
 
     private func showMessage(title: String, detail: String?, tone: HUDTone) {
-        guard settings.showNotificationPopups else {
+        hudController.show(
+            model: .message(title: title, detail: detail, tone: tone),
+            timeout: settings.hudTimeout
+        )
+    }
+
+    private func showAddPopup(title: String, detail: String?) {
+        guard settings.showAddPopups else {
+            return
+        }
+
+        let model: HUDModel
+
+        switch settings.addPopupStyle {
+        case .full:
+            model = .message(title: title, detail: detail, tone: .success)
+        case .minimal:
+            model = .symbol(systemName: "plus", tone: .neutral)
+        }
+
+        hudController.show(
+            model: model,
+            timeout: settings.hudTimeout
+        )
+    }
+
+    private func showJumpPopup(title: String, detail: String?) {
+        guard settings.showJumpPopups else {
             return
         }
 
         hudController.show(
-            model: .message(title: title, detail: detail, tone: tone),
+            model: .message(title: title, detail: detail, tone: .success),
             timeout: settings.hudTimeout
+        )
+    }
+
+    private func completeDynamicHotkeyCapture(
+        shortcut: HotkeyShortcut,
+        outcome: CaptureOutcome,
+        controller: DynamicHotkeyCaptureController
+    ) {
+        if let error = validationErrorForDynamicShortcut(shortcut) {
+            controller.showError(error)
+            return
+        }
+
+        let assignment = dynamicHotkeyStore.bind(shortcut: shortcut, target: outcome.target)
+        updateDynamicLiveWindowCache(for: shortcut, liveWindow: outcome.liveWindow)
+
+        controller.finish()
+        dynamicHotkeyCaptureController = nil
+        optionHoldHUDController.setSuppressed(false)
+        hotkeyController.resume()
+
+        let detail: String
+        switch outcome.source {
+        case .window:
+            detail = "Bound the focused window to \(shortcut.displayString)."
+        case .appFallback:
+            detail = "Window capture was unavailable, so the app was stored on \(shortcut.displayString)."
+        }
+
+        showAddPopup(
+            title: "\(shortcut.displayString) -> \(assignment.label)",
+            detail: detail
+        )
+    }
+
+    private func validationErrorForDynamicShortcut(_ shortcut: HotkeyShortcut) -> String? {
+        for action in HotkeyAction.activeActions(for: .dynamicWindows) {
+            guard let configuredShortcut = settings.shortcut(for: action) else {
+                continue
+            }
+
+            if configuredShortcut == shortcut {
+                return "Already assigned to \(action.title)."
+            }
+        }
+
+        return nil
+    }
+
+    private func refreshHotkeysIfStarted() {
+        guard started else {
+            return
+        }
+
+        hotkeyController.registerConfiguredHotkeys()
+    }
+
+    private func showHeldHUD() {
+        hudController.showPersistent(model: hudOverviewModel())
+    }
+
+    private func hideHUD() {
+        hudController.hide()
+    }
+
+    private func hudOverviewModel() -> HUDModel {
+        .overview(
+            assignments: slotStore.assignments,
+            accessibilityTrusted: accessibilityPermissions.isTrusted
         )
     }
 
@@ -238,6 +497,14 @@ final class AppModel: ObservableObject {
             liveSlotWindows[slot] = liveWindow
         } else {
             liveSlotWindows.removeValue(forKey: slot)
+        }
+    }
+
+    private func updateDynamicLiveWindowCache(for shortcut: HotkeyShortcut, liveWindow: LiveWindow?) {
+        if let liveWindow {
+            liveDynamicWindows[shortcut.storageKey] = liveWindow
+        } else {
+            liveDynamicWindows.removeValue(forKey: shortcut.storageKey)
         }
     }
 

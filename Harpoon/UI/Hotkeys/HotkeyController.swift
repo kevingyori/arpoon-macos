@@ -6,13 +6,17 @@ final class HotkeyController {
     var onJump: ((Int) -> Void)?
     var onBind: ((Int) -> Void)?
     var onShowHUD: (() -> Void)?
+    var onAddDynamicHotkey: (() -> Void)?
+    var onDynamicHotkey: ((HotkeyShortcut) -> Void)?
 
     private let settings: SettingsStore
+    private let dynamicHotkeyStore: DynamicHotkeyStore
     private let hotKeyCenter = GlobalHotKeyCenter.shared
     private var suspended = false
 
-    init(settings: SettingsStore) {
+    init(settings: SettingsStore, dynamicHotkeyStore: DynamicHotkeyStore) {
         self.settings = settings
+        self.dynamicHotkeyStore = dynamicHotkeyStore
     }
 
     func registerConfiguredHotkeys() {
@@ -21,15 +25,37 @@ final class HotkeyController {
         }
 
         hotKeyCenter.unregisterAll()
+        var registeredShortcuts = Set<HotkeyShortcut>()
 
-        for action in HotkeyAction.allCases {
+        for action in HotkeyAction.activeActions(for: settings.hotkeyScheme) {
             guard let shortcut = settings.shortcut(for: action) else {
+                continue
+            }
+
+            guard registeredShortcuts.insert(shortcut).inserted else {
                 continue
             }
 
             hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
                 Task { @MainActor in
                     self?.dispatch(action)
+                }
+            }
+        }
+
+        guard settings.hotkeyScheme == .dynamicWindows else {
+            return
+        }
+
+        for assignment in dynamicHotkeyStore.assignments {
+            let shortcut = assignment.shortcut
+            guard registeredShortcuts.insert(shortcut).inserted else {
+                continue
+            }
+
+            hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
+                Task { @MainActor in
+                    self?.onDynamicHotkey?(shortcut)
                 }
             }
         }
@@ -65,6 +91,8 @@ final class HotkeyController {
             }
         case .showHUD:
             onShowHUD?()
+        case .addDynamicHotkey:
+            onAddDynamicHotkey?()
         }
     }
 }

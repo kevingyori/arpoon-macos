@@ -1,10 +1,12 @@
 import AppKit
+import QuartzCore
 import SwiftUI
 
 @MainActor
 final class HUDWindowController {
     private let panel: NSPanel
     private var dismissTask: DispatchWorkItem?
+    private var visible = false
 
     init() {
         panel = NSPanel(
@@ -17,6 +19,7 @@ final class HUDWindowController {
         panel.level = .statusBar
         panel.isFloatingPanel = true
         panel.hasShadow = true
+        panel.animationBehavior = .utilityWindow
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hidesOnDeactivate = false
@@ -26,19 +29,63 @@ final class HUDWindowController {
 
     func show(model: HUDModel, timeout: Double) {
         dismissTask?.cancel()
+        dismissTask = nil
+        present(model: model)
 
+        let task = DispatchWorkItem { [weak self] in
+            self?.hide()
+        }
+        dismissTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: task)
+    }
+
+    func showPersistent(model: HUDModel) {
+        dismissTask?.cancel()
+        dismissTask = nil
+        present(model: model)
+    }
+
+    func hide() {
+        dismissTask?.cancel()
+        dismissTask = nil
+        
+        guard visible else {
+            panel.orderOut(nil)
+            return
+        }
+
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.16
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            panel.animator().alphaValue = 0
+        }, completionHandler: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.panel.orderOut(nil)
+                self?.visible = false
+            }
+        })
+    }
+
+    private func present(model: HUDModel) {
         let width = model.preferredWidth
         let height = model.preferredHeight
         panel.setContentSize(NSSize(width: width, height: height))
         panel.contentViewController = NSHostingController(rootView: HUDView(model: model))
         positionPanel(width: width, height: height)
-        panel.orderFrontRegardless()
 
-        let task = DispatchWorkItem { [weak panel] in
-            panel?.orderOut(nil)
+        if !visible {
+            panel.alphaValue = 0
+            panel.orderFrontRegardless()
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                panel.animator().alphaValue = 1
+            }
+            visible = true
+        } else {
+            panel.alphaValue = 1
+            panel.orderFrontRegardless()
         }
-        dismissTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: task)
     }
 
     private func positionPanel(width: Double, height: Double) {

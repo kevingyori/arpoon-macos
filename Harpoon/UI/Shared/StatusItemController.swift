@@ -2,25 +2,22 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class StatusItemController: NSObject, NSWindowDelegate {
+final class StatusItemController: NSObject, NSPopoverDelegate {
     private let statusItem: NSStatusItem
-    private let panel: StatusPopupPanel
+    private let popover: NSPopover
     private let appModel: AppModel
-    private let panelSize = NSSize(width: 360, height: 520)
+    private let popoverSize = NSSize(width: 372, height: 500)
+    private var globalClickMonitor: Any?
+    private var localEventMonitor: Any?
 
     init(appModel: AppModel) {
         self.appModel = appModel
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        panel = StatusPopupPanel(
-            contentRect: NSRect(origin: .zero, size: panelSize),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
+        popover = NSPopover()
         super.init()
 
         configureStatusItem()
-        configurePanel()
+        configurePopover()
     }
 
     private func configureStatusItem() {
@@ -28,34 +25,32 @@ final class StatusItemController: NSObject, NSWindowDelegate {
             return
         }
 
-        button.image = NSImage(systemSymbolName: "paperclip.circle.fill", accessibilityDescription: "Harpoon")
+        button.image = statusItemImage()
         button.imagePosition = .imageOnly
+        button.imageScaling = .scaleProportionallyUpOrDown
+        button.image?.size = NSSize(width: 15, height: 15)
         button.toolTip = "Harpoon"
         button.target = self
         button.action = #selector(togglePopover(_:))
     }
 
-    private func configurePanel() {
-        panel.delegate = self
-        panel.isReleasedWhenClosed = false
-        panel.hasShadow = true
-        panel.hidesOnDeactivate = false
-        panel.backgroundColor = .windowBackgroundColor
-        panel.isOpaque = false
-        panel.level = .floating
-        panel.collectionBehavior = [.moveToActiveSpace, .transient]
-        panel.contentViewController = NSHostingController(
+    private func configurePopover() {
+        popover.behavior = .transient
+        popover.delegate = self
+        popover.animates = true
+        popover.contentSize = popoverSize
+        popover.contentViewController = NSHostingController(
             rootView: MenuBarView(
                 appModel: appModel,
+                dismissPopover: { [weak self] in
+                    self?.closePopover()
+                },
                 slotStore: appModel.slotStore,
+                dynamicHotkeys: appModel.dynamicHotkeyStore,
                 settings: appModel.settings,
                 permissions: appModel.accessibilityPermissions
             )
         )
-
-        panel.contentView?.wantsLayer = true
-        panel.contentView?.layer?.cornerRadius = 14
-        panel.contentView?.layer?.masksToBounds = true
     }
 
     @objc
@@ -64,40 +59,92 @@ final class StatusItemController: NSObject, NSWindowDelegate {
             return
         }
 
-        if panel.isVisible {
-            panel.orderOut(sender)
+        if popover.isShown {
+            closePopover()
         } else {
-            showPanel(anchoredTo: button)
+            appModel.revealSettingsWindowIfOpen()
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
     }
 
-    func windowDidResignKey(_ notification: Notification) {
-        panel.orderOut(nil)
+    func popoverDidShow(_ notification: Notification) {
+        startDismissMonitoring()
     }
 
-    private func showPanel(anchoredTo button: NSStatusBarButton) {
-        guard let buttonWindow = button.window else {
+    func popoverDidClose(_ notification: Notification) {
+        stopDismissMonitoring()
+    }
+
+    private func closePopover() {
+        popover.performClose(nil)
+    }
+
+    private func startDismissMonitoring() {
+        stopDismissMonitoring()
+
+        globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
+            Task { @MainActor in
+                self?.closePopover()
+            }
+        }
+
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown, .keyDown]) { [weak self] event in
+            self?.handleLocalDismissEvent(event)
+            return event
+        }
+    }
+
+    private func stopDismissMonitoring() {
+        if let globalClickMonitor {
+            NSEvent.removeMonitor(globalClickMonitor)
+            self.globalClickMonitor = nil
+        }
+
+        if let localEventMonitor {
+            NSEvent.removeMonitor(localEventMonitor)
+            self.localEventMonitor = nil
+        }
+    }
+
+    private func handleLocalDismissEvent(_ event: NSEvent) {
+        if event.type == .keyDown, event.keyCode == 53 {
+            closePopover()
             return
         }
 
+        guard popover.isShown else {
+            return
+        }
+
+        if isEventInsideStatusButton(event) {
+            return
+        }
+
+        if let popoverWindow = popover.contentViewController?.view.window, event.window !== popoverWindow {
+            closePopover()
+        }
+    }
+
+    private func isEventInsideStatusButton(_ event: NSEvent) -> Bool {
+        guard let button = statusItem.button, let window = button.window else {
+            return false
+        }
+
         let localRect = button.convert(button.bounds, to: nil)
-        let buttonFrameOnScreen = buttonWindow.convertToScreen(localRect)
-        let visibleFrame = buttonWindow.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
+        let screenRect = window.convertToScreen(localRect)
+        return screenRect.contains(NSEvent.mouseLocation)
+    }
 
-        var origin = CGPoint(
-            x: round(buttonFrameOnScreen.midX - panelSize.width / 2),
-            y: round(buttonFrameOnScreen.minY - panelSize.height - 8)
-        )
+    private func statusItemImage() -> NSImage {
+        if let url = Bundle.main.url(forResource: "HarpoonStatusItemTemplate", withExtension: "pdf"),
+           let image = NSImage(contentsOf: url) {
+            image.isTemplate = true
+            image.size = NSSize(width: 15, height: 15)
+            return image
+        }
 
-        origin.x = min(
-            max(origin.x, visibleFrame.minX + 8),
-            visibleFrame.maxX - panelSize.width - 8
-        )
-
-        origin.y = max(origin.y, visibleFrame.minY + 8)
-
-        panel.setFrame(NSRect(origin: origin, size: panelSize), display: false)
-        NSApp.activate(ignoringOtherApps: true)
-        panel.makeKeyAndOrderFront(nil)
+        let fallback = NSImage(systemSymbolName: "paperclip.circle.fill", accessibilityDescription: "Harpoon") ?? NSImage()
+        fallback.isTemplate = true
+        return fallback
     }
 }

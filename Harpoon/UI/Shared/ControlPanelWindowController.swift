@@ -7,7 +7,9 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         let hostingController = NSHostingController(
             rootView: MenuBarView(
                 appModel: appModel,
+                dismissPopover: {},
                 slotStore: appModel.slotStore,
+                dynamicHotkeys: appModel.dynamicHotkeyStore,
                 settings: appModel.settings,
                 permissions: appModel.accessibilityPermissions
             )

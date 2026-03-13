@@ -2,10 +2,27 @@ import AppKit
 import Carbon
 import Foundation
 
+enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
+    case staticSlots
+    case dynamicWindows
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .staticSlots:
+            return "Static Slots"
+        case .dynamicWindows:
+            return "Dynamic Windows"
+        }
+    }
+}
+
 enum HotkeyActionKind: String, Codable {
     case jumpSlot
     case bindSlot
     case showHUD
+    case addDynamicHotkey
 }
 
 struct HotkeyAction: Hashable, Codable, Identifiable {
@@ -25,6 +42,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "bind-\(slot ?? 0)"
         case .showHUD:
             return "show-hud"
+        case .addDynamicHotkey:
+            return "add-dynamic-hotkey"
         }
     }
 
@@ -36,6 +55,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "Bind Focused Target to Slot \(slot ?? 0)"
         case .showHUD:
             return "Show HUD"
+        case .addDynamicHotkey:
+            return "Add Hotkey for Focused Target"
         }
     }
 
@@ -56,20 +77,40 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
                 keyCode: UInt32(kVK_ANSI_0),
                 modifiers: UInt32(cmdKey)
             )
+        case .addDynamicHotkey:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_0),
+                modifiers: UInt32(cmdKey | shiftKey)
+            )
         }
     }
 
     static let jumpActions = (1 ... 9).map { HotkeyAction(kind: .jumpSlot, slot: $0) }
     static let bindActions = (1 ... 9).map { HotkeyAction(kind: .bindSlot, slot: $0) }
-    static let generalActions = [
+    static let commonActions = [
         HotkeyAction(kind: .showHUD, slot: nil)
     ]
-    static let allCases = jumpActions + bindActions + generalActions
+    static let dynamicActions = [
+        HotkeyAction(kind: .addDynamicHotkey, slot: nil)
+    ]
+    static let generalActions = commonActions + dynamicActions
+    static let allCases = jumpActions + bindActions + commonActions + dynamicActions
+
+    static func activeActions(for scheme: HotkeyScheme) -> [HotkeyAction] {
+        switch scheme {
+        case .staticSlots:
+            return jumpActions + bindActions + commonActions
+        case .dynamicWindows:
+            return dynamicActions + commonActions
+        }
+    }
 
     init?(id: String) {
         switch id {
         case "show-hud":
             self = HotkeyAction(kind: .showHUD, slot: nil)
+        case "add-dynamic-hotkey":
+            self = HotkeyAction(kind: .addDynamicHotkey, slot: nil)
         default:
             let components = id.split(separator: "-", maxSplits: 1).map(String.init)
             guard components.count == 2,
@@ -132,6 +173,10 @@ struct HotkeyShortcut: Hashable, Codable {
 
     var displayString: String {
         "\(modifierSymbols)\(Self.keyLabel(for: keyCode))"
+    }
+
+    var storageKey: String {
+        "\(modifiers)-\(keyCode)"
     }
 
     private var modifierSymbols: String {

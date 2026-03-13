@@ -8,6 +8,7 @@ struct HarpoonApp: App {
         Settings {
             SettingsView(
                 settings: AppModel.shared.settings,
+                dynamicHotkeys: AppModel.shared.dynamicHotkeyStore,
                 permissions: AppModel.shared.accessibilityPermissions
             )
         }

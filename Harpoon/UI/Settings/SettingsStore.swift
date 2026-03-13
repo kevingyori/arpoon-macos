@@ -1,6 +1,13 @@
 import Combine
 import Foundation
 
+enum AddPopupStyle: String, CaseIterable, Identifiable {
+    case full
+    case minimal
+
+    var id: Self { self }
+}
+
 @MainActor
 final class SettingsStore: ObservableObject {
     @Published private(set) var hotkeys: [HotkeyAction: HotkeyShortcut] {
@@ -19,12 +26,32 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(fallbackToAppOnJump, forKey: Keys.fallbackToAppOnJump) }
     }
 
+    @Published var hotkeyScheme: HotkeyScheme {
+        didSet { defaults.set(hotkeyScheme.rawValue, forKey: Keys.hotkeyScheme) }
+    }
+
     @Published var hudTimeout: Double {
         didSet { defaults.set(hudTimeout, forKey: Keys.hudTimeout) }
     }
 
-    @Published var showNotificationPopups: Bool {
-        didSet { defaults.set(showNotificationPopups, forKey: Keys.showNotificationPopups) }
+    @Published var showJumpPopups: Bool {
+        didSet { defaults.set(showJumpPopups, forKey: Keys.showJumpPopups) }
+    }
+
+    @Published var showAddPopups: Bool {
+        didSet { defaults.set(showAddPopups, forKey: Keys.showAddPopups) }
+    }
+
+    @Published var addPopupStyle: AddPopupStyle {
+        didSet { defaults.set(addPopupStyle.rawValue, forKey: Keys.addPopupStyle) }
+    }
+
+    @Published var showHUDOnOptionHold: Bool {
+        didSet { defaults.set(showHUDOnOptionHold, forKey: Keys.showHUDOnOptionHold) }
+    }
+
+    @Published var optionHoldDuration: Double {
+        didSet { defaults.set(optionHoldDuration, forKey: Keys.optionHoldDuration) }
     }
 
     private let defaults: UserDefaults
@@ -36,6 +63,7 @@ final class SettingsStore: ObservableObject {
         preferWindowTargets = defaults.object(forKey: Keys.preferWindowTargets) as? Bool ?? true
         launchAppsOnJump = defaults.object(forKey: Keys.launchAppsOnJump) as? Bool ?? true
         fallbackToAppOnJump = defaults.object(forKey: Keys.fallbackToAppOnJump) as? Bool ?? true
+        hotkeyScheme = HotkeyScheme(rawValue: defaults.string(forKey: Keys.hotkeyScheme) ?? "") ?? .staticSlots
 
         if defaults.object(forKey: Keys.hudTimeout) == nil {
             hudTimeout = 2.2
@@ -43,7 +71,17 @@ final class SettingsStore: ObservableObject {
             hudTimeout = defaults.double(forKey: Keys.hudTimeout)
         }
 
-        showNotificationPopups = defaults.object(forKey: Keys.showNotificationPopups) as? Bool ?? true
+        let legacyPopupsEnabled = defaults.object(forKey: Keys.showNotificationPopups) as? Bool ?? true
+        showJumpPopups = defaults.object(forKey: Keys.showJumpPopups) as? Bool ?? legacyPopupsEnabled
+        showAddPopups = defaults.object(forKey: Keys.showAddPopups) as? Bool ?? legacyPopupsEnabled
+        addPopupStyle = AddPopupStyle(rawValue: defaults.string(forKey: Keys.addPopupStyle) ?? "") ?? .full
+        showHUDOnOptionHold = defaults.object(forKey: Keys.showHUDOnOptionHold) as? Bool ?? false
+
+        if defaults.object(forKey: Keys.optionHoldDuration) == nil {
+            optionHoldDuration = 0.45
+        } else {
+            optionHoldDuration = defaults.double(forKey: Keys.optionHoldDuration)
+        }
     }
 
     func shortcut(for action: HotkeyAction) -> HotkeyShortcut? {
@@ -109,7 +147,13 @@ private enum Keys {
     static let preferWindowTargets = "preferWindowTargets"
     static let launchAppsOnJump = "launchAppsOnJump"
     static let fallbackToAppOnJump = "fallbackToAppOnJump"
+    static let hotkeyScheme = "hotkeyScheme"
     static let hudTimeout = "hudTimeout"
+    static let showJumpPopups = "showJumpPopups"
+    static let showAddPopups = "showAddPopups"
+    static let addPopupStyle = "addPopupStyle"
+    static let showHUDOnOptionHold = "showHUDOnOptionHold"
+    static let optionHoldDuration = "optionHoldDuration"
     static let showNotificationPopups = "showNotificationPopups"
 }
 

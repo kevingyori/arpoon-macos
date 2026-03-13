@@ -1,6 +1,6 @@
 import AppKit
 
-final class StatusPopupPanel: NSPanel {
+final class GlassKeyPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 }
