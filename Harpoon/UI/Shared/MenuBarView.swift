@@ -69,7 +69,9 @@ struct MenuBarView: View {
 
                 Button("Settings") {
                     dismissPopover()
-                    appModel.showSettings()
+                    Task { @MainActor in
+                        appModel.showSettings()
+                    }
                 }
 
                 if !permissions.isTrusted {

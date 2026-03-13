@@ -3,6 +3,11 @@ import Carbon
 import QuartzCore
 import SwiftUI
 
+private enum DynamicHotkeyCaptureLayout {
+    static let contentWidth: CGFloat = 280
+    static let minimumSize = NSSize(width: 280, height: 96)
+}
+
 @MainActor
 final class DynamicHotkeyCaptureController {
     var onShortcut: ((HotkeyShortcut) -> Void)?
@@ -10,13 +15,15 @@ final class DynamicHotkeyCaptureController {
 
     private let state: DynamicHotkeyCaptureState
     private let panel: GlassKeyPanel
+    private let targetFrame: WindowFrame?
     private var eventMonitor: Any?
 
-    init(targetLabel: String) {
+    init(targetLabel: String, targetFrame: WindowFrame?) {
         state = DynamicHotkeyCaptureState(targetLabel: targetLabel)
+        self.targetFrame = targetFrame
 
         panel = GlassKeyPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 348, height: 156),
+            contentRect: NSRect(origin: .zero, size: DynamicHotkeyCaptureLayout.minimumSize),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -37,6 +44,7 @@ final class DynamicHotkeyCaptureController {
     func begin() {
         state.errorMessage = nil
         startRecording()
+        updatePanelSize()
         positionPanel()
         NSApp.activate(ignoringOtherApps: true)
         panel.alphaValue = 0
@@ -50,6 +58,7 @@ final class DynamicHotkeyCaptureController {
 
     func showError(_ message: String) {
         state.errorMessage = message
+        updatePanelSize(animated: true)
     }
 
     func finish() {
@@ -109,7 +118,7 @@ final class DynamicHotkeyCaptureController {
     }
 
     private func positionPanel() {
-        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main else {
+        guard let screen = preferredScreen() else {
             panel.center()
             return
         }
@@ -122,6 +131,45 @@ final class DynamicHotkeyCaptureController {
         )
 
         panel.setFrameOrigin(origin)
+    }
+
+    private func updatePanelSize(animated: Bool = false) {
+        guard let view = panel.contentViewController?.view else {
+            return
+        }
+
+        view.layoutSubtreeIfNeeded()
+
+        let fittingSize = view.fittingSize
+        let targetSize = NSSize(
+            width: max(DynamicHotkeyCaptureLayout.minimumSize.width, ceil(fittingSize.width)),
+            height: max(DynamicHotkeyCaptureLayout.minimumSize.height, ceil(fittingSize.height))
+        )
+
+        let currentFrame = panel.frame
+        let targetFrame = NSRect(
+            x: round(currentFrame.midX - (targetSize.width / 2)),
+            y: round(currentFrame.midY - (targetSize.height / 2)),
+            width: targetSize.width,
+            height: targetSize.height
+        )
+
+        panel.setFrame(targetFrame, display: true, animate: animated)
+    }
+
+    private func preferredScreen() -> NSScreen? {
+        if let targetFrame {
+            let midpoint = CGPoint(
+                x: targetFrame.x + (targetFrame.width / 2),
+                y: targetFrame.y + (targetFrame.height / 2)
+            )
+
+            if let screen = NSScreen.screens.first(where: { $0.frame.contains(midpoint) }) {
+                return screen
+            }
+        }
+
+        return NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main
     }
 }
 
@@ -140,22 +188,23 @@ private struct DynamicHotkeyCaptureView: View {
 
     var body: some View {
         GlassPanelSurface(cornerRadius: 18, material: .hudWindow, blendingMode: .behindWindow) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "keyboard")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.secondary)
-                        .frame(width: 20, height: 20)
+                        .frame(width: 18, height: 18)
 
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 5) {
                         Text("Press a shortcut")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.system(size: 15, weight: .semibold))
 
                         Text(state.targetLabel)
                             .font(.system(size: 12.5, weight: .medium))
-                            .lineLimit(2)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
 
-                        Text("Harpoon will assign the next shortcut you press. Escape cancels.")
+                        Text("The next shortcut assigns this target. Escape cancels.")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -167,8 +216,9 @@ private struct DynamicHotkeyCaptureView: View {
                         .foregroundStyle(.orange)
                 }
             }
-            .padding(16)
-            .frame(width: 348, height: 156, alignment: .topLeading)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 13)
+            .frame(width: DynamicHotkeyCaptureLayout.contentWidth, alignment: .topLeading)
         }
     }
 }

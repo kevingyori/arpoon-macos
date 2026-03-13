@@ -28,14 +28,14 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         button.image = statusItemImage()
         button.imagePosition = .imageOnly
         button.imageScaling = .scaleProportionallyUpOrDown
-        button.image?.size = NSSize(width: 15, height: 15)
+        button.image?.size = NSSize(width: 12, height: 12)
         button.toolTip = "Harpoon"
         button.target = self
         button.action = #selector(togglePopover(_:))
     }
 
     private func configurePopover() {
-        popover.behavior = .transient
+        popover.behavior = .applicationDefined
         popover.delegate = self
         popover.animates = true
         popover.contentSize = popoverSize
@@ -63,12 +63,15 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             closePopover()
         } else {
             appModel.revealSettingsWindowIfOpen()
+            NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            focusPopoverWindow()
         }
     }
 
     func popoverDidShow(_ notification: Notification) {
         startDismissMonitoring()
+        focusPopoverWindow()
     }
 
     func popoverDidClose(_ notification: Notification) {
@@ -77,6 +80,16 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     private func closePopover() {
         popover.performClose(nil)
+    }
+
+    private func focusPopoverWindow() {
+        guard let window = popover.contentViewController?.view.window else {
+            return
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        window.makeMain()
     }
 
     private func startDismissMonitoring() {
@@ -139,7 +152,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         if let url = Bundle.main.url(forResource: "HarpoonStatusItemTemplate", withExtension: "pdf"),
            let image = NSImage(contentsOf: url) {
             image.isTemplate = true
-            image.size = NSSize(width: 15, height: 15)
+            image.size = NSSize(width: 12, height: 12)
             return image
         }
 

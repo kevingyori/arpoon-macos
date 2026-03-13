@@ -21,6 +21,11 @@ final class AppModel: ObservableObject {
     private let hudController: HUDWindowController
     private let optionHoldHUDController: OptionHoldHUDController
     private let hotkeyController: HotkeyController
+    private lazy var settingsWindowController = SettingsWindowController(
+        settings: settings,
+        dynamicHotkeys: dynamicHotkeyStore,
+        permissions: accessibilityPermissions
+    )
     private var cancellables = Set<AnyCancellable>()
     private var liveSlotWindows: [Int: LiveWindow] = [:]
     private var liveDynamicWindows: [String: LiveWindow] = [:]
@@ -276,26 +281,17 @@ final class AppModel: ObservableObject {
     }
 
     func showSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-
-        if let settingsWindow {
-            if settingsWindow.isMiniaturized {
-                settingsWindow.deminiaturize(nil)
-            }
-
-            settingsWindow.makeKeyAndOrderFront(nil)
-            return
-        }
-
-        let selector = Selector(("showSettingsWindow:"))
-        _ = NSApp.sendAction(selector, to: nil, from: nil)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-            self?.revealSettingsWindowIfOpen()
-        }
+        settingsWindowController.show()
+        settingsWindow = settingsWindowController.window
     }
 
     func revealSettingsWindowIfOpen() {
+        if settingsWindowController.isVisible {
+            settingsWindowController.bringToFront()
+            settingsWindow = settingsWindowController.window
+            return
+        }
+
         guard let settingsWindow else {
             return
         }
@@ -343,7 +339,10 @@ final class AppModel: ObservableObject {
         dynamicHotkeyCaptureController?.finish()
         dynamicHotkeyCaptureController = nil
 
-        let controller = DynamicHotkeyCaptureController(targetLabel: labelPolicy.label(for: outcome.target))
+        let controller = DynamicHotkeyCaptureController(
+            targetLabel: labelPolicy.label(for: outcome.target),
+            targetFrame: frame(for: outcome)
+        )
         controller.onShortcut = { [weak self, weak controller] shortcut in
             guard let self, let controller else {
                 return
@@ -464,6 +463,18 @@ final class AppModel: ObservableObject {
             if configuredShortcut == shortcut {
                 return "Already assigned to \(action.title)."
             }
+        }
+
+        return nil
+    }
+
+    private func frame(for outcome: CaptureOutcome) -> WindowFrame? {
+        if let frame = outcome.liveWindow?.frame {
+            return frame
+        }
+
+        if case .window(let target) = outcome.target {
+            return target.frame
         }
 
         return nil
