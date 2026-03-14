@@ -13,8 +13,14 @@ struct HUDView: View {
                 case .symbol(let systemName, let tone):
                     symbolView(systemName: systemName, tone: tone)
 
-                case .overview(let assignments, let accessibilityTrusted):
-                    overviewView(assignments: assignments, accessibilityTrusted: accessibilityTrusted)
+                case .overview(let title, let subtitle, let emptyTitle, let entries, let accessibilityTrusted):
+                    overviewView(
+                        title: title,
+                        subtitle: subtitle,
+                        emptyTitle: emptyTitle,
+                        entries: entries,
+                        accessibilityTrusted: accessibilityTrusted
+                    )
                 }
             }
             .padding(containerPadding)
@@ -57,13 +63,19 @@ struct HUDView: View {
     }
 
     @ViewBuilder
-    private func overviewView(assignments: [SlotAssignment], accessibilityTrusted: Bool) -> some View {
+    private func overviewView(
+        title: String,
+        subtitle: String,
+        emptyTitle: String,
+        entries: [HUDOverviewEntry],
+        accessibilityTrusted: Bool
+    ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Slots")
+                Text(title)
                     .font(.system(size: 17, weight: .semibold))
 
-                Text("Your current working set.")
+                Text(subtitle)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -74,26 +86,23 @@ struct HUDView: View {
                     .foregroundStyle(.orange)
             }
 
-            if assignments.isEmpty {
-                Text("No slots bound yet.")
+            if entries.isEmpty {
+                Text(emptyTitle)
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(assignments) { assignment in
+                ForEach(entries) { entry in
                     HStack(spacing: 10) {
-                        Text("\(assignment.slot)")
-                            .font(.system(size: 12, weight: .bold))
-                            .frame(width: 22, height: 22)
-                            .background(Circle().fill(Color.secondary.opacity(0.16)))
+                        leadingBadge(for: entry)
 
-                        AppIconView(bundleId: assignment.bundleId)
+                        AppIconView(bundleId: entry.bundleId)
 
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(assignment.label)
+                            Text(entry.title)
                                 .font(.system(size: 13, weight: .medium))
                                 .lineLimit(1)
 
-                            Text(assignment.target.kindDescription)
+                            Text(entry.detail)
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
                         }
@@ -104,6 +113,23 @@ struct HUDView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func leadingBadge(for entry: HUDOverviewEntry) -> some View {
+        switch entry.leadingStyle {
+        case .circle:
+            Text(entry.leadingText)
+                .font(.system(size: 12, weight: .bold))
+                .frame(width: 22, height: 22)
+                .background(Circle().fill(Color.secondary.opacity(0.16)))
+        case .capsule:
+            Text(entry.leadingText)
+                .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(Color.secondary.opacity(0.14)))
+        }
     }
 
     private var containerPadding: CGFloat {
@@ -151,28 +177,6 @@ struct HUDView: View {
             return "xmark.octagon.fill"
         case .neutral:
             return "paperclip.circle.fill"
-        }
-    }
-}
-
-private extension SlotAssignment {
-    var bundleId: String {
-        switch target {
-        case .app(let target):
-            return target.bundleId
-        case .window(let target):
-            return target.bundleId
-        }
-    }
-}
-
-private extension Target {
-    var kindDescription: String {
-        switch self {
-        case .app:
-            return "App target"
-        case .window:
-            return "Window target"
         }
     }
 }

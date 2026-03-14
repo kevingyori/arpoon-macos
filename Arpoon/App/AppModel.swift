@@ -554,10 +554,42 @@ final class AppModel: ObservableObject {
     }
 
     private func hudOverviewModel() -> HUDModel {
-        .overview(
-            assignments: slotStore.assignments,
-            accessibilityTrusted: accessibilityPermissions.isTrusted
-        )
+        switch settings.hotkeyScheme {
+        case .staticSlots:
+            return .overview(
+                title: "Slots",
+                subtitle: "Your current working set.",
+                emptyTitle: "No slots bound yet.",
+                entries: slotStore.assignments.map { assignment in
+                    HUDOverviewEntry(
+                        id: String(assignment.id),
+                        leadingText: "\(assignment.slot)",
+                        leadingStyle: .circle,
+                        bundleId: assignment.bundleId,
+                        title: assignment.label,
+                        detail: assignment.target.kindDescription
+                    )
+                },
+                accessibilityTrusted: accessibilityPermissions.isTrusted
+            )
+        case .dynamicWindows:
+            return .overview(
+                title: "Hotkeys",
+                subtitle: "Your current dynamic window bindings.",
+                emptyTitle: "No dynamic hotkeys assigned yet.",
+                entries: dynamicHotkeyStore.assignments.map { assignment in
+                    HUDOverviewEntry(
+                        id: assignment.id,
+                        leadingText: assignment.shortcut.displayString,
+                        leadingStyle: .capsule,
+                        bundleId: assignment.bundleId,
+                        title: assignment.label,
+                        detail: assignment.target.kindDescription
+                    )
+                },
+                accessibilityTrusted: accessibilityPermissions.isTrusted
+            )
+        }
     }
 
     private func updateLiveWindowCache(for slot: Int, liveWindow: LiveWindow?) {
@@ -586,6 +618,39 @@ final class AppModel: ObservableObject {
             return (liveWindow, strategy)
         default:
             return nil
+        }
+    }
+}
+
+private extension SlotAssignment {
+    var bundleId: String {
+        switch target {
+        case .app(let target):
+            return target.bundleId
+        case .window(let target):
+            return target.bundleId
+        }
+    }
+}
+
+private extension DynamicHotkeyAssignment {
+    var bundleId: String {
+        switch target {
+        case .app(let target):
+            return target.bundleId
+        case .window(let target):
+            return target.bundleId
+        }
+    }
+}
+
+private extension Target {
+    var kindDescription: String {
+        switch self {
+        case .app:
+            return "App target"
+        case .window:
+            return "Window target"
         }
     }
 }
