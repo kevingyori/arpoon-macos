@@ -7,15 +7,17 @@ final class SlotStore: ObservableObject {
 
     private let store: AssignmentStore
     private let labelPolicy: TargetLabelPolicy
+    private var persistenceTask: Task<Void, Never>?
 
     init(store: AssignmentStore, labelPolicy: TargetLabelPolicy) {
         self.store = store
         self.labelPolicy = labelPolicy
     }
 
-    func load() {
+    func load() async {
         do {
-            assignments = try store.loadAssignments().sorted { $0.slot < $1.slot }
+            let loaded = try await store.loadAssignments()
+            assignments = loaded.sorted { $0.slot < $1.slot }
         } catch {
             assignments = []
         }
@@ -53,10 +55,14 @@ final class SlotStore: ObservableObject {
     }
 
     private func persist() {
-        do {
-            try store.saveAssignments(assignments)
-        } catch {
-            // Keep the in-memory model authoritative for the current session.
+        let assignments = self.assignments
+        persistenceTask?.cancel()
+        persistenceTask = Task {
+            do {
+                try await store.saveAssignments(assignments)
+            } catch {
+                // Keep the in-memory model authoritative for the current session.
+            }
         }
     }
 }

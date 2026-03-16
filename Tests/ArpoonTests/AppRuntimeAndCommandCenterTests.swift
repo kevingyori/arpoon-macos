@@ -186,11 +186,11 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
 private final class InMemoryAssignmentStore: AssignmentStore {
     private var assignments: [SlotAssignment] = []
 
-    func loadAssignments() throws -> [SlotAssignment] {
+    func loadAssignments() async throws -> [SlotAssignment] {
         assignments
     }
 
-    func saveAssignments(_ assignments: [SlotAssignment]) throws {
+    func saveAssignments(_ assignments: [SlotAssignment]) async throws {
         self.assignments = assignments
     }
 }
@@ -198,11 +198,11 @@ private final class InMemoryAssignmentStore: AssignmentStore {
 private final class InMemoryDynamicHotkeyAssignmentStore: DynamicHotkeyAssignmentStore {
     private var assignments: [DynamicHotkeyAssignment] = []
 
-    func loadAssignments() throws -> [DynamicHotkeyAssignment] {
+    func loadAssignments() async throws -> [DynamicHotkeyAssignment] {
         assignments
     }
 
-    func saveAssignments(_ assignments: [DynamicHotkeyAssignment]) throws {
+    func saveAssignments(_ assignments: [DynamicHotkeyAssignment]) async throws {
         self.assignments = assignments
     }
 }

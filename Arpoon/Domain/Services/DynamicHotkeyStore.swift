@@ -7,15 +7,17 @@ final class DynamicHotkeyStore: ObservableObject {
 
     private let store: DynamicHotkeyAssignmentStore
     private let labelPolicy: TargetLabelPolicy
+    private var persistenceTask: Task<Void, Never>?
 
     init(store: DynamicHotkeyAssignmentStore, labelPolicy: TargetLabelPolicy) {
         self.store = store
         self.labelPolicy = labelPolicy
     }
 
-    func load() {
+    func load() async {
         do {
-            assignments = try store.loadAssignments().sorted(by: Self.sort)
+            let loaded = try await store.loadAssignments()
+            assignments = loaded.sorted(by: Self.sort)
         } catch {
             assignments = []
         }
@@ -53,10 +55,14 @@ final class DynamicHotkeyStore: ObservableObject {
     }
 
     private func persist() {
-        do {
-            try store.saveAssignments(assignments)
-        } catch {
-            // Keep the in-memory model authoritative for the current session.
+        let assignments = self.assignments
+        persistenceTask?.cancel()
+        persistenceTask = Task {
+            do {
+                try await store.saveAssignments(assignments)
+            } catch {
+                // Keep the in-memory model authoritative for the current session.
+            }
         }
     }
 
