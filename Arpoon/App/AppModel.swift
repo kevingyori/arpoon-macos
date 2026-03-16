@@ -155,8 +155,10 @@ final class AppModel: ObservableObject {
         }
 
         started = true
-        slotStore.load()
-        dynamicHotkeyStore.load()
-        runtimeCoordinator.start()
+        Task {
+            await slotStore.load()
+            await dynamicHotkeyStore.load()
+            runtimeCoordinator.start()
+        }
     }
 }

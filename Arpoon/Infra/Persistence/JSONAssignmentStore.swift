@@ -17,25 +17,31 @@ final class JSONAssignmentStore: AssignmentStore {
         decoder.dateDecodingStrategy = .iso8601
     }
 
-    func loadAssignments() throws -> [SlotAssignment] {
+    func loadAssignments() async throws -> [SlotAssignment] {
         let url = try fileURL()
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            return []
-        }
+        let decoder = self.decoder
+        return try await Task.detached {
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                return []
+            }
 
-        let data = try Data(contentsOf: url)
-        return try decoder.decode(Payload.self, from: data).slots
+            let data = try Data(contentsOf: url)
+            return try decoder.decode(Payload.self, from: data).slots
+        }.value
     }
 
-    func saveAssignments(_ assignments: [SlotAssignment]) throws {
+    func saveAssignments(_ assignments: [SlotAssignment]) async throws {
         let url = try fileURL()
-        try FileManager.default.createDirectory(
-            at: url.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
+        let encoder = self.encoder
+        try await Task.detached {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
 
-        let data = try encoder.encode(Payload(slots: assignments))
-        try data.write(to: url, options: .atomic)
+            let data = try encoder.encode(Payload(slots: assignments))
+            try data.write(to: url, options: .atomic)
+        }.value
     }
 
     private func fileURL() throws -> URL {

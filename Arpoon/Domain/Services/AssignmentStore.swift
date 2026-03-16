@@ -1,6 +1,6 @@
 import Foundation
 
 protocol AssignmentStore {
-    func loadAssignments() throws -> [SlotAssignment]
-    func saveAssignments(_ assignments: [SlotAssignment]) throws
+    func loadAssignments() async throws -> [SlotAssignment]
+    func saveAssignments(_ assignments: [SlotAssignment]) async throws
 }
