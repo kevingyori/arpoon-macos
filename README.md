@@ -13,7 +13,7 @@ What I wanted was much simpler:
 * keep a small working set of apps and windows close at hand
 * optimize for **focus**, not layout
 
-That’s basically [ThePrimeagen's Harpoon](https://github.com/ThePrimeagen/harpoon), but for macOS apps and windows.
+That’s basically [ThePrimeagen's Harpoon](https://github.com/ThePrimeagen/harpoon), but for macOS apps/windows.
 
 ## What it is
 
