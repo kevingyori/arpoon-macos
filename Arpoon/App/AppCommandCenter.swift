@@ -353,14 +353,8 @@ final class AppCommandCenter {
     }
 
     func validationErrorForDynamicShortcut(_ shortcut: HotkeyShortcut) -> String? {
-        for action in HotkeyAction.activeActions(for: .dynamicWindows) {
-            guard let configuredShortcut = settings.shortcut(for: action) else {
-                continue
-            }
-
-            if configuredShortcut == shortcut {
-                return "Already assigned to \(action.title)."
-            }
+        if let action = settings.action(for: shortcut), action.isActive(in: .dynamicWindows) {
+            return "Already assigned to \(action.title)."
         }
 
         return nil

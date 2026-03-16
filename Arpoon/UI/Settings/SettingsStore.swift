@@ -11,8 +11,13 @@ enum AddPopupStyle: String, CaseIterable, Identifiable {
 @MainActor
 final class SettingsStore: ObservableObject {
     @Published private(set) var hotkeys: [HotkeyAction: HotkeyShortcut] {
-        didSet { persistHotkeys() }
+        didSet {
+            persistHotkeys()
+            rebuildReverseHotkeys()
+        }
     }
+
+    private var reverseHotkeys: [HotkeyShortcut: HotkeyAction] = [:]
 
     @Published var preferWindowTargets: Bool {
         didSet { defaults.set(preferWindowTargets, forKey: Keys.preferWindowTargets) }
@@ -58,7 +63,9 @@ final class SettingsStore: ObservableObject {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        hotkeys = Self.loadHotkeys(from: defaults)
+        let loadedHotkeys = Self.loadHotkeys(from: defaults)
+        hotkeys = loadedHotkeys
+        rebuildReverseHotkeys()
 
         preferWindowTargets = defaults.object(forKey: Keys.preferWindowTargets) as? Bool ?? true
         launchAppsOnJump = defaults.object(forKey: Keys.launchAppsOnJump) as? Bool ?? true
@@ -88,13 +95,17 @@ final class SettingsStore: ObservableObject {
         hotkeys[action]
     }
 
+    func action(for shortcut: HotkeyShortcut) -> HotkeyAction? {
+        reverseHotkeys[shortcut]
+    }
+
     @discardableResult
     func setShortcut(_ shortcut: HotkeyShortcut, for action: HotkeyAction) -> HotkeyUpdateResult {
         guard shortcut.modifiers != 0 else {
             return .requiresModifier
         }
 
-        if let duplicate = hotkeys.first(where: { $0.key != action && $0.value == shortcut })?.key {
+        if let duplicate = reverseHotkeys[shortcut], duplicate != action {
             return .duplicate(duplicate)
         }
 
@@ -118,6 +129,10 @@ final class SettingsStore: ObservableObject {
         if let encoded = try? JSONEncoder().encode(payload) {
             defaults.set(encoded, forKey: Keys.hotkeys)
         }
+    }
+
+    private func rebuildReverseHotkeys() {
+        reverseHotkeys = Dictionary(uniqueKeysWithValues: hotkeys.map { ($1, $0) })
     }
 
     private static func loadHotkeys(from defaults: UserDefaults) -> [HotkeyAction: HotkeyShortcut] {

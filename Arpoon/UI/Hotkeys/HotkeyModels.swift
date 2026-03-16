@@ -140,12 +140,34 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
     static let generalActions = commonActions + dynamicActions
     static let allCases = jumpActions + bindActions + commonActions + dynamicActions
 
+    static let staticSlotsActions = jumpActions + bindActions + commonActions
+    static let dynamicWindowsActions = dynamicActions + commonActions
+
     static func activeActions(for scheme: HotkeyScheme) -> [HotkeyAction] {
         switch scheme {
         case .staticSlots:
-            return jumpActions + bindActions + commonActions
+            return staticSlotsActions
         case .dynamicWindows:
-            return dynamicActions + commonActions
+            return dynamicWindowsActions
+        }
+    }
+
+    func isActive(in scheme: HotkeyScheme) -> Bool {
+        switch scheme {
+        case .staticSlots:
+            switch kind {
+            case .jumpSlot, .bindSlot, .showHUD, .focusVisibleAppLeft, .focusVisibleAppRight, .focusVisibleAppUp, .focusVisibleAppDown:
+                return true
+            case .addDynamicHotkey:
+                return false
+            }
+        case .dynamicWindows:
+            switch kind {
+            case .addDynamicHotkey, .showHUD, .focusVisibleAppLeft, .focusVisibleAppRight, .focusVisibleAppUp, .focusVisibleAppDown:
+                return true
+            case .jumpSlot, .bindSlot:
+                return false
+            }
         }
     }
 
