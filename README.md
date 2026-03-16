@@ -1,6 +1,6 @@
 # Arpoon for macOS
 
-Built in an evening and a morning with Codex after watching [Theo talk about his own window manager setup](https://www.youtube.com/watch?v=EUE8N6mqtGg) and realizing I didn’t actually want a window manager.
+Built in a prompt after watching [Theo talk about his own terminal/wm setup](https://www.youtube.com/watch?v=EUE8N6mqtGg) and realizing I didn’t actually want a window manager.
 
 I’d already done the usual tour: Amethyst, yabai, AeroSpace, and i3 on Linux. They’re all good tools. But after enough time with them, I had to admit something obvious: I never really took advantage of the tiling part.
 
