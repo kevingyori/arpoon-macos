@@ -138,7 +138,7 @@ final class SettingsStore: ObservableObject {
     }
 
     private static func defaultHotkeys() -> [HotkeyAction: HotkeyShortcut] {
-        Dictionary(uniqueKeysWithValues: HotkeyAction.allCases.map { ($0, $0.defaultShortcut) })
+        HotkeyAction.allCases.reduce(into: [HotkeyAction: HotkeyShortcut]()) { result, action in result[action] = action.defaultShortcut }
     }
 }
 
