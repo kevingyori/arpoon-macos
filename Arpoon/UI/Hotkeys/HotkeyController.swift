@@ -2,7 +2,24 @@ import Carbon
 import Foundation
 
 @MainActor
-final class HotkeyController {
+protocol HotkeyControlling: AnyObject {
+    var onJump: ((Int) -> Void)? { get set }
+    var onBind: ((Int) -> Void)? { get set }
+    var onShowHUD: (() -> Void)? { get set }
+    var onFocusVisibleAppLeft: (() -> Void)? { get set }
+    var onFocusVisibleAppRight: (() -> Void)? { get set }
+    var onFocusVisibleAppUp: (() -> Void)? { get set }
+    var onFocusVisibleAppDown: (() -> Void)? { get set }
+    var onAddDynamicHotkey: (() -> Void)? { get set }
+    var onDynamicHotkey: ((HotkeyShortcut) -> Void)? { get set }
+
+    func apply(configuration: HotkeyConfiguration)
+    func suspend()
+    func resume()
+}
+
+@MainActor
+final class HotkeyController: HotkeyControlling {
     var onJump: ((Int) -> Void)?
     var onBind: ((Int) -> Void)?
     var onShowHUD: (() -> Void)?
@@ -13,29 +30,34 @@ final class HotkeyController {
     var onAddDynamicHotkey: (() -> Void)?
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)?
 
-    private let settings: SettingsStore
-    private let dynamicHotkeyStore: DynamicHotkeyStore
     private let hotKeyCenter = GlobalHotKeyCenter.shared
+    private var configuration: HotkeyConfiguration?
     private var suspended = false
 
-    init(settings: SettingsStore, dynamicHotkeyStore: DynamicHotkeyStore) {
-        self.settings = settings
-        self.dynamicHotkeyStore = dynamicHotkeyStore
+    init() {
     }
 
-    func registerConfiguredHotkeys() {
+    func apply(configuration: HotkeyConfiguration) {
+        self.configuration = configuration
+        registerConfiguredHotkeys()
+    }
+
+    private func registerConfiguredHotkeys() {
         guard !suspended else {
+            return
+        }
+
+        guard let configuration else {
+            hotKeyCenter.unregisterAll()
             return
         }
 
         hotKeyCenter.unregisterAll()
         var registeredShortcuts = Set<HotkeyShortcut>()
 
-        for action in HotkeyAction.activeActions(for: settings.hotkeyScheme) {
-            guard let shortcut = settings.shortcut(for: action) else {
-                continue
-            }
-
+        for binding in configuration.actionBindings {
+            let action = binding.action
+            let shortcut = binding.shortcut
             guard registeredShortcuts.insert(shortcut).inserted else {
                 continue
             }
@@ -47,12 +69,11 @@ final class HotkeyController {
             }
         }
 
-        guard settings.hotkeyScheme == .dynamicWindows else {
+        guard configuration.scheme == .dynamicWindows else {
             return
         }
 
-        for assignment in dynamicHotkeyStore.assignments {
-            let shortcut = assignment.shortcut
+        for shortcut in configuration.dynamicShortcuts {
             guard registeredShortcuts.insert(shortcut).inserted else {
                 continue
             }

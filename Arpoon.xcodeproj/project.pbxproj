@@ -7,279 +7,315 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		05A78E103D8E41B5D27A36E5 /* JSONAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEE514431F792ADEBCAAE2EB /* JSONAssignmentStore.swift */; };
-		05D50BD690EF26BC93CA55A9 /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 815CD2319D883170A05F7F62 /* WindowAccessor.swift */; };
-		06218AAA2A617A1DA7FA5E47 /* MacOSFocusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5FEB74CF36FC5B570F314D /* MacOSFocusController.swift */; };
-		104890336F2E7C398F853461 /* JSONDynamicHotkeyAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34DA69DC61E1B544AC336F1A /* JSONDynamicHotkeyAssignmentStore.swift */; };
-		2AF1F20BA2FBCBA7B10CA589 /* HotkeyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2931A5366B019BCDD1D0AD3 /* HotkeyModels.swift */; };
-		2F714DC16AD94F1FD3ACA140 /* AccessibilityWindowProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0239BC1D4C1D6575262EBBF4 /* AccessibilityWindowProvider.swift */; };
-		30E639CBBCB196816D1F150B /* HUDWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE8A4C7C930C67EED91A618B /* HUDWindowController.swift */; };
-		3C1227511DC4CBAC77AB5F45 /* TargetCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5717F05F2F6F3FFD2507DA93 /* TargetCaptureService.swift */; };
-		40B6D382062E500A8461BF10 /* DynamicHotkeyCaptureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5922C8091648D158698EF21E /* DynamicHotkeyCaptureController.swift */; };
-		48DD4F80237D03F6489B7F4E /* LiveWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA0204EA0B00DCF9047898E /* LiveWindow.swift */; };
-		4E722A7B77DB448E82700BC0 /* RunningAppProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F9A6752DB04E6D2380C4F49 /* RunningAppProvider.swift */; };
-		4FFBB5C06AB9E481F46037B2 /* SlotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FFBDA60506B753989E2D7AD /* SlotStore.swift */; };
-		50D5020DD5EFBA696A259BBC /* FocusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5EC8CDA99F6D4DF83764362 /* FocusService.swift */; };
-		54D50415DCF1C4723A1D0EDA /* AccessibilityPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAF14157E2EF64E6A2D25500 /* AccessibilityPermissionService.swift */; };
-		56F8194B3D50B9C4B667194D /* TitleMatchPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AF0FA1C0B726227F1C2A432 /* TitleMatchPolicy.swift */; };
-		587F0E3F8BB12BF9B7832E7E /* GlassPanelSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0151AC910921C404CAA19B0 /* GlassPanelSurface.swift */; };
-		62FFC1FC23CAA11C9F13AEDC /* TargetLabelPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82D9A0A317583DBAFC0A6B4 /* TargetLabelPolicy.swift */; };
-		6F25E77540E0A2A3945CC37B /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE14BD502DC9E2CF0BA4141 /* HUDView.swift */; };
-		7D86719A7ABA5D10FF688C49 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2392903AF53E02CB7EE4D95F /* AppDelegate.swift */; };
-		804D072A35F39676B2E1BB19 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C60F821A61B2834EE715469 /* MenuBarView.swift */; };
-		8B5E031702419FAF0E5AACC2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C1978E8AF124F60AC7E79518 /* Assets.xcassets */; };
-		8D8F553983ABFE0C7F81EF57 /* ControlPanelWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123E2687EE44E88F646F0BA3 /* ControlPanelWindowController.swift */; };
-		920443D3D90D2E13CD445571 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4166BE7C5DE84F48960EE360 /* SettingsWindowController.swift */; };
-		93F6AE5AA101841233164C0E /* DynamicHotkeyAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BCC5BFF1BF6C5571D7B9B3 /* DynamicHotkeyAssignmentStore.swift */; };
-		94606CA3CD8DF93BA3589F96 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D647085231A28CAC3692333 /* StatusItemController.swift */; };
-		9697DFA11BB297984FE5AB26 /* SlotAssignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F5C4D2210EDB010C4E9DE91 /* SlotAssignment.swift */; };
-		A19C984C95892A349BEBF369 /* TargetResolutionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A531B3F30F073DAEF00119 /* TargetResolutionService.swift */; };
-		A5D725712DC612D4BEEE6BA7 /* GlassKeyPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7815EDD7AD7BAD40BA02158 /* GlassKeyPanel.swift */; };
-		A94B9206229B78859DF35F20 /* DynamicHotkeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A7039C86B860CABD1683DE /* DynamicHotkeyStore.swift */; };
-		AD191EE532A4368687F84190 /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF82965E5216EB73C86BE9F9 /* Target.swift */; };
-		AEB869714EC4EE911013A447 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F0897D80116B4B2A984719 /* SettingsView.swift */; };
-		B7A44A7D9B17A25C504FA115 /* LiveApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F26BA36235E22C434E30357 /* LiveApp.swift */; };
-		BDC72B6B01E89967F64BD5D7 /* ArpoonStatusItemTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 049361054E1D5E7A98E60A78 /* ArpoonStatusItemTemplate.pdf */; };
-		C96F98E2E7599161A42CED83 /* AppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A075B98F9435C2AE390BEC /* AppIconView.swift */; };
-		D2539FD7E476D4E86CE16D6B /* HotkeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7963CA73414E9D7E95A7F5A /* HotkeyController.swift */; };
-		D5AFA5955E9BA7D393037148 /* AssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A709999257151CE35F1BB3 /* AssignmentStore.swift */; };
-		DBC6B85E8342B8DFBE0D0B90 /* DynamicHotkeyAssignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77E9084276C14F37ACC3BAA6 /* DynamicHotkeyAssignment.swift */; };
-		E0AB442BF98215E0E1B84D7F /* GlobalHotKeyCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066CE7FB55408ED1D8335586 /* GlobalHotKeyCenter.swift */; };
-		EBFF692FCC58B87640C7B801 /* HUDModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80BD6F3A5184C37C9B55940 /* HUDModel.swift */; };
-		EDD3CF9C6628F993F9F6F73F /* OptionHoldHUDController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FBF841046B2DBB9E5F41CC /* OptionHoldHUDController.swift */; };
-		F28BC10326852F1C57AB986A /* ShortcutRecorderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B037224AB5C6D29DD46DD072 /* ShortcutRecorderRow.swift */; };
-		F2FB48C9BC875B145A27E7F6 /* ArpoonStatusItemTemplate.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3A2F581419C2D8220F626DED /* ArpoonStatusItemTemplate.svg */; };
-		F62DA540BE6C1A9D627AC491 /* ArpoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6AAB04859706AB608F7D7FD /* ArpoonApp.swift */; };
-		F739A60DD2CB03A0F5CCE4AD /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD01A7337A954E8D76C359A5 /* AppModel.swift */; };
-		FB56A6DF1D91A145E4858B5D /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5168B0AA45540807CF4BF720 /* SettingsStore.swift */; };
+		13FA5D0D68BACCB7EB9F2CE7 /* TargetLabelPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88E5BAFB7FDE9C156B430C0 /* TargetLabelPolicy.swift */; };
+		16642193E70A6B5078EFB9F7 /* OptionHoldHUDController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB188FD750342ECE5E9FB625 /* OptionHoldHUDController.swift */; };
+		1812F9F59DAE5237B3AE36DB /* AppRuntimeAndCommandCenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B53C3057E7053F99C0F372 /* AppRuntimeAndCommandCenterTests.swift */; };
+		1A2D1D1658AB9CE857DCA79A /* LiveApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E5B9DCF658738AB7452E44 /* LiveApp.swift */; };
+		1B76314DCD041755C8D0C141 /* ArpoonStatusItemTemplate.svg in Resources */ = {isa = PBXBuildFile; fileRef = A1790640F3DF20A4E2B1CC22 /* ArpoonStatusItemTemplate.svg */; };
+		1F3184FAFE38CE167B1E3C75 /* FocusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D514ABF921ABA84FFB18328E /* FocusService.swift */; };
+		235E80AFBF670A194238F275 /* ArpoonStatusItemTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 68AEB03F38EF54D9513E4CF5 /* ArpoonStatusItemTemplate.pdf */; };
+		2A1D9B565730F496589D12BA /* HotkeyConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5A64B1C9DBA2FCC947296B /* HotkeyConfiguration.swift */; };
+		2B069C3A43608C4D04062093 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9D68426CD3319B171227149 /* AppDelegate.swift */; };
+		32039FD3926E4C1F86770852 /* ArpoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD456FB635AF6FDEE03A08B1 /* ArpoonApp.swift */; };
+		36EA5450D2470A1B5267FE50 /* JSONAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */; };
+		398CB1C61A08E2A0C176DB68 /* TargetResolutionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDE3692B52A17217431C179 /* TargetResolutionService.swift */; };
+		401EA32A105A4BB4A0B14DD4 /* AppCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD52F4C9348C005FE5C5A08 /* AppCommands.swift */; };
+		4160CDE0B0628E277D6647C0 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F4F3F4E1BEDA6AF3FFC9B0 /* SettingsStore.swift */; };
+		4D0E1320F01A3F88C75763F6 /* RunningAppProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17CE934774DE9C989208E72 /* RunningAppProvider.swift */; };
+		4D635DA54127EB3A109278DC /* DynamicHotkeyAssignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC562A82A67514B70A2118BB /* DynamicHotkeyAssignment.swift */; };
+		540B50E4A8B5A9DC67729CDF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E4ACBED9F2036A080DB28F2B /* Assets.xcassets */; };
+		5C911AF18107BCC7D73AC646 /* ControlPanelWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41905081B395CDD394D2AA53 /* ControlPanelWindowController.swift */; };
+		5ECDC9A47F44A42DD6EFED09 /* AccessibilityWindowProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B687024CB78678408B17760 /* AccessibilityWindowProvider.swift */; };
+		5FA1F9D27C2D7F21A4723FF3 /* HUDModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B97A00D0FDB29D8F6E9689 /* HUDModel.swift */; };
+		629FB4ED326CA88FB79ABFEC /* DynamicHotkeyCaptureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8F4F2C611B928F9C0091CF1 /* DynamicHotkeyCaptureController.swift */; };
+		6354CD3B899625C4B3F076F0 /* HotkeyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3372F40080D612325EA9AC /* HotkeyModels.swift */; };
+		69D091A0BBB3392F4310D75E /* GlobalHotKeyCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E004B849CDF768E17F8D99F /* GlobalHotKeyCenter.swift */; };
+		6A94941401A94E958E3C602E /* ShortcutRecorderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF01F9A38CAA7ACBA0710F27 /* ShortcutRecorderRow.swift */; };
+		6B90D3954744FF1C41BB0198 /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77998A385542B61F7DD8F33 /* WindowAccessor.swift */; };
+		6F785BB75FD225694BFADD6F /* GlassPanelSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2742A046F84717DE703BC81 /* GlassPanelSurface.swift */; };
+		71D97E17941BCE9244AAD5E2 /* LiveWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61885319E1A75B41FA73D79F /* LiveWindow.swift */; };
+		76E657F1B2A158817D3FCBF2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBA207003F95549BF992D88 /* SettingsView.swift */; };
+		784B9C89CCC1217E264D8E0C /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3CF14EAC864AE6E4AD4C8D0 /* StatusItemController.swift */; };
+		7AE7207E8FF85A238A9278E7 /* SlotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB706286B84913284F0EB019 /* SlotStore.swift */; };
+		7DA7F576F8FC43B0E74227E0 /* TargetCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C8F4DD8F9D8025F85BB55B /* TargetCaptureService.swift */; };
+		96E4ABFD981DD96933A21FA8 /* HotkeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2363CE8C260D5533D61859B9 /* HotkeyController.swift */; };
+		9DE815D05021D4EE95B15C60 /* AppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AAD3A15928D6ADAB7AB19D4 /* AppIconView.swift */; };
+		9F856AE252B361E194FE7FBD /* SlotAssignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101332250301C279FAACB183 /* SlotAssignment.swift */; };
+		A716B26FB64E27C11A0E3BBC /* DynamicHotkeyAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2753ABB84682EBD417F90765 /* DynamicHotkeyAssignmentStore.swift */; };
+		A7B6AA50EBBDABC471872CC7 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A707DE71C1F2EB1D638D3F /* SettingsWindowController.swift */; };
+		ABD8909B3A2C804EF588B3E4 /* AppRuntimeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71600255BD0E1A41BF6BF8D2 /* AppRuntimeCoordinator.swift */; };
+		B874421BE5815DED193456F7 /* MacOSFocusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9E5DEE440535264242E9CC /* MacOSFocusController.swift */; };
+		C8B51BB2E595C171DEEF3060 /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6A6383ECCC5D131E07E2A /* HUDView.swift */; };
+		C9F8E99657C7478E15C9FAB8 /* AppCommandCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEDE966A407E8911B6157CF /* AppCommandCenter.swift */; };
+		CA927B35F5BAA71E7AF88408 /* HUDWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C4534FC70FA0A3E238FC7F /* HUDWindowController.swift */; };
+		CBA8168B90EDE12ED96E39E0 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06882F59C8D449A2357EF8D9 /* AppModel.swift */; };
+		DCE1DBDAFA16133794336049 /* DynamicHotkeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8CCCF8D06F1AADFB5BAE6B /* DynamicHotkeyStore.swift */; };
+		E2C03D8AB7A05A073621DCCC /* AssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD964FEC1316C403F9B81B6 /* AssignmentStore.swift */; };
+		E2C83BB20C9D1C447F5524A3 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEC90199DF96151C50695B /* MenuBarView.swift */; };
+		EC5794C38568ADC951637709 /* GlassKeyPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505037AA2B824883562E0B6A /* GlassKeyPanel.swift */; };
+		F1517272CCFF4ECFE33A6A1E /* AccessibilityPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 550E15860054C4A1346D279B /* AccessibilityPermissionService.swift */; };
+		F1FCE7AC94145226D8B20476 /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = E59D5B08B432400809F73F6E /* Target.swift */; };
+		F765943EAB72F590B73BCC44 /* JSONDynamicHotkeyAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C8AA0643B06F6D2FE9EDD23 /* JSONDynamicHotkeyAssignmentStore.swift */; };
+		FFA23E1801DBED48460E1D55 /* TitleMatchPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20576B0C4205419731150495 /* TitleMatchPolicy.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		F8DE778A276FDAD3454013E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8149C74C1C476487051AEFE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1D4396A83E7A4CD31A19A8BF;
+			remoteInfo = Arpoon;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		0239BC1D4C1D6575262EBBF4 /* AccessibilityWindowProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityWindowProvider.swift; sourceTree = "<group>"; };
-		049361054E1D5E7A98E60A78 /* ArpoonStatusItemTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = ArpoonStatusItemTemplate.pdf; sourceTree = "<group>"; };
-		066CE7FB55408ED1D8335586 /* GlobalHotKeyCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyCenter.swift; sourceTree = "<group>"; };
-		0B5FEB74CF36FC5B570F314D /* MacOSFocusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSFocusController.swift; sourceTree = "<group>"; };
-		0C60F821A61B2834EE715469 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
-		0F5C4D2210EDB010C4E9DE91 /* SlotAssignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotAssignment.swift; sourceTree = "<group>"; };
-		123E2687EE44E88F646F0BA3 /* ControlPanelWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanelWindowController.swift; sourceTree = "<group>"; };
-		1D647085231A28CAC3692333 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
-		2392903AF53E02CB7EE4D95F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		2AF0FA1C0B726227F1C2A432 /* TitleMatchPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleMatchPolicy.swift; sourceTree = "<group>"; };
-		34DA69DC61E1B544AC336F1A /* JSONDynamicHotkeyAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDynamicHotkeyAssignmentStore.swift; sourceTree = "<group>"; };
-		3A2F581419C2D8220F626DED /* ArpoonStatusItemTemplate.svg */ = {isa = PBXFileReference; path = ArpoonStatusItemTemplate.svg; sourceTree = "<group>"; };
-		3CA0204EA0B00DCF9047898E /* LiveWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWindow.swift; sourceTree = "<group>"; };
-		4166BE7C5DE84F48960EE360 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
-		5168B0AA45540807CF4BF720 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
-		5717F05F2F6F3FFD2507DA93 /* TargetCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetCaptureService.swift; sourceTree = "<group>"; };
-		5922C8091648D158698EF21E /* DynamicHotkeyCaptureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyCaptureController.swift; sourceTree = "<group>"; };
-		5FE14BD502DC9E2CF0BA4141 /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
-		77E9084276C14F37ACC3BAA6 /* DynamicHotkeyAssignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyAssignment.swift; sourceTree = "<group>"; };
-		7F9A6752DB04E6D2380C4F49 /* RunningAppProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppProvider.swift; sourceTree = "<group>"; };
-		7FA558A814BE6A520BBEAC0A /* Arpoon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Arpoon.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		7FFBDA60506B753989E2D7AD /* SlotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotStore.swift; sourceTree = "<group>"; };
-		815CD2319D883170A05F7F62 /* WindowAccessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
-		9F26BA36235E22C434E30357 /* LiveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveApp.swift; sourceTree = "<group>"; };
-		A0151AC910921C404CAA19B0 /* GlassPanelSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanelSurface.swift; sourceTree = "<group>"; };
-		A2A7039C86B860CABD1683DE /* DynamicHotkeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyStore.swift; sourceTree = "<group>"; };
-		A6AAB04859706AB608F7D7FD /* ArpoonApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArpoonApp.swift; sourceTree = "<group>"; };
-		A7815EDD7AD7BAD40BA02158 /* GlassKeyPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKeyPanel.swift; sourceTree = "<group>"; };
-		A9A075B98F9435C2AE390BEC /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
-		AEE514431F792ADEBCAAE2EB /* JSONAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONAssignmentStore.swift; sourceTree = "<group>"; };
-		B037224AB5C6D29DD46DD072 /* ShortcutRecorderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorderRow.swift; sourceTree = "<group>"; };
-		B1A709999257151CE35F1BB3 /* AssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentStore.swift; sourceTree = "<group>"; };
-		B82D9A0A317583DBAFC0A6B4 /* TargetLabelPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetLabelPolicy.swift; sourceTree = "<group>"; };
-		C0FBF841046B2DBB9E5F41CC /* OptionHoldHUDController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionHoldHUDController.swift; sourceTree = "<group>"; };
-		C1978E8AF124F60AC7E79518 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		C9BCC5BFF1BF6C5571D7B9B3 /* DynamicHotkeyAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyAssignmentStore.swift; sourceTree = "<group>"; };
-		CD01A7337A954E8D76C359A5 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
-		D2931A5366B019BCDD1D0AD3 /* HotkeyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyModels.swift; sourceTree = "<group>"; };
-		D5EC8CDA99F6D4DF83764362 /* FocusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusService.swift; sourceTree = "<group>"; };
-		D6A531B3F30F073DAEF00119 /* TargetResolutionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetResolutionService.swift; sourceTree = "<group>"; };
-		DE8A4C7C930C67EED91A618B /* HUDWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDWindowController.swift; sourceTree = "<group>"; };
-		E80BD6F3A5184C37C9B55940 /* HUDModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDModel.swift; sourceTree = "<group>"; };
-		EAF14157E2EF64E6A2D25500 /* AccessibilityPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermissionService.swift; sourceTree = "<group>"; };
-		F0F0897D80116B4B2A984719 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		F7963CA73414E9D7E95A7F5A /* HotkeyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyController.swift; sourceTree = "<group>"; };
-		FF82965E5216EB73C86BE9F9 /* Target.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Target.swift; sourceTree = "<group>"; };
+		06882F59C8D449A2357EF8D9 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		0B687024CB78678408B17760 /* AccessibilityWindowProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityWindowProvider.swift; sourceTree = "<group>"; };
+		0CEDE966A407E8911B6157CF /* AppCommandCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCommandCenter.swift; sourceTree = "<group>"; };
+		101332250301C279FAACB183 /* SlotAssignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotAssignment.swift; sourceTree = "<group>"; };
+		11A707DE71C1F2EB1D638D3F /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		12B97A00D0FDB29D8F6E9689 /* HUDModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDModel.swift; sourceTree = "<group>"; };
+		1D3372F40080D612325EA9AC /* HotkeyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyModels.swift; sourceTree = "<group>"; };
+		20576B0C4205419731150495 /* TitleMatchPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleMatchPolicy.swift; sourceTree = "<group>"; };
+		2363CE8C260D5533D61859B9 /* HotkeyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyController.swift; sourceTree = "<group>"; };
+		2753ABB84682EBD417F90765 /* DynamicHotkeyAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyAssignmentStore.swift; sourceTree = "<group>"; };
+		3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONAssignmentStore.swift; sourceTree = "<group>"; };
+		41905081B395CDD394D2AA53 /* ControlPanelWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanelWindowController.swift; sourceTree = "<group>"; };
+		505037AA2B824883562E0B6A /* GlassKeyPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKeyPanel.swift; sourceTree = "<group>"; };
+		550E15860054C4A1346D279B /* AccessibilityPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermissionService.swift; sourceTree = "<group>"; };
+		5AD964FEC1316C403F9B81B6 /* AssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentStore.swift; sourceTree = "<group>"; };
+		5E004B849CDF768E17F8D99F /* GlobalHotKeyCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyCenter.swift; sourceTree = "<group>"; };
+		61885319E1A75B41FA73D79F /* LiveWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWindow.swift; sourceTree = "<group>"; };
+		68AEB03F38EF54D9513E4CF5 /* ArpoonStatusItemTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = ArpoonStatusItemTemplate.pdf; sourceTree = "<group>"; };
+		6BDE3692B52A17217431C179 /* TargetResolutionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetResolutionService.swift; sourceTree = "<group>"; };
+		6C8AA0643B06F6D2FE9EDD23 /* JSONDynamicHotkeyAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDynamicHotkeyAssignmentStore.swift; sourceTree = "<group>"; };
+		71600255BD0E1A41BF6BF8D2 /* AppRuntimeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRuntimeCoordinator.swift; sourceTree = "<group>"; };
+		7C9E5DEE440535264242E9CC /* MacOSFocusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSFocusController.swift; sourceTree = "<group>"; };
+		82C4534FC70FA0A3E238FC7F /* HUDWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDWindowController.swift; sourceTree = "<group>"; };
+		83B6A6383ECCC5D131E07E2A /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
+		8DAEC90199DF96151C50695B /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		962EED9020BCE6D2782B239D /* ArpoonTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ArpoonTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AAD3A15928D6ADAB7AB19D4 /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
+		A1790640F3DF20A4E2B1CC22 /* ArpoonStatusItemTemplate.svg */ = {isa = PBXFileReference; path = ArpoonStatusItemTemplate.svg; sourceTree = "<group>"; };
+		A1F4F3F4E1BEDA6AF3FFC9B0 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		A77998A385542B61F7DD8F33 /* WindowAccessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
+		A8F4F2C611B928F9C0091CF1 /* DynamicHotkeyCaptureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyCaptureController.swift; sourceTree = "<group>"; };
+		B3CF14EAC864AE6E4AD4C8D0 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		B8E5B9DCF658738AB7452E44 /* LiveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveApp.swift; sourceTree = "<group>"; };
+		BB706286B84913284F0EB019 /* SlotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotStore.swift; sourceTree = "<group>"; };
+		BD456FB635AF6FDEE03A08B1 /* ArpoonApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArpoonApp.swift; sourceTree = "<group>"; };
+		C0032085E6AA0107B3150B23 /* Arpoon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Arpoon.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C17CE934774DE9C989208E72 /* RunningAppProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppProvider.swift; sourceTree = "<group>"; };
+		C3C8F4DD8F9D8025F85BB55B /* TargetCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetCaptureService.swift; sourceTree = "<group>"; };
+		CB188FD750342ECE5E9FB625 /* OptionHoldHUDController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionHoldHUDController.swift; sourceTree = "<group>"; };
+		D514ABF921ABA84FFB18328E /* FocusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusService.swift; sourceTree = "<group>"; };
+		D88E5BAFB7FDE9C156B430C0 /* TargetLabelPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetLabelPolicy.swift; sourceTree = "<group>"; };
+		E4ACBED9F2036A080DB28F2B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E59D5B08B432400809F73F6E /* Target.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Target.swift; sourceTree = "<group>"; };
+		E7B53C3057E7053F99C0F372 /* AppRuntimeAndCommandCenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRuntimeAndCommandCenterTests.swift; sourceTree = "<group>"; };
+		E9D68426CD3319B171227149 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		EF01F9A38CAA7ACBA0710F27 /* ShortcutRecorderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorderRow.swift; sourceTree = "<group>"; };
+		F2742A046F84717DE703BC81 /* GlassPanelSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanelSurface.swift; sourceTree = "<group>"; };
+		FAD52F4C9348C005FE5C5A08 /* AppCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCommands.swift; sourceTree = "<group>"; };
+		FBBA207003F95549BF992D88 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		FC562A82A67514B70A2118BB /* DynamicHotkeyAssignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyAssignment.swift; sourceTree = "<group>"; };
+		FE5A64B1C9DBA2FCC947296B /* HotkeyConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyConfiguration.swift; sourceTree = "<group>"; };
+		FE8CCCF8D06F1AADFB5BAE6B /* DynamicHotkeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		077B780FC7E89F373EC6E122 /* Shared */ = {
+		00A640EAC6FA5D8745723F1A = {
 			isa = PBXGroup;
 			children = (
-				A9A075B98F9435C2AE390BEC /* AppIconView.swift */,
-				123E2687EE44E88F646F0BA3 /* ControlPanelWindowController.swift */,
-				A7815EDD7AD7BAD40BA02158 /* GlassKeyPanel.swift */,
-				A0151AC910921C404CAA19B0 /* GlassPanelSurface.swift */,
-				0C60F821A61B2834EE715469 /* MenuBarView.swift */,
-				1D647085231A28CAC3692333 /* StatusItemController.swift */,
-				815CD2319D883170A05F7F62 /* WindowAccessor.swift */,
+				1BC9FB8030E74ADD046B8D55 /* Arpoon */,
+				36E01247CD01B6558BE9CA14 /* ArpoonTests */,
+				C58D499BDE76E6F2A70FD8F2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		097250B75DBA02A3FA8B6D35 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				9AAD3A15928D6ADAB7AB19D4 /* AppIconView.swift */,
+				41905081B395CDD394D2AA53 /* ControlPanelWindowController.swift */,
+				505037AA2B824883562E0B6A /* GlassKeyPanel.swift */,
+				F2742A046F84717DE703BC81 /* GlassPanelSurface.swift */,
+				8DAEC90199DF96151C50695B /* MenuBarView.swift */,
+				B3CF14EAC864AE6E4AD4C8D0 /* StatusItemController.swift */,
+				A77998A385542B61F7DD8F33 /* WindowAccessor.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
 		};
-		1757DE7CA26A9BA1ED3A282A /* HUD */ = {
+		1BC9FB8030E74ADD046B8D55 /* Arpoon */ = {
 			isa = PBXGroup;
 			children = (
-				E80BD6F3A5184C37C9B55940 /* HUDModel.swift */,
-				5FE14BD502DC9E2CF0BA4141 /* HUDView.swift */,
-				DE8A4C7C930C67EED91A618B /* HUDWindowController.swift */,
-				C0FBF841046B2DBB9E5F41CC /* OptionHoldHUDController.swift */,
-			);
-			path = HUD;
-			sourceTree = "<group>";
-		};
-		1EB85578F3D587DCAD1CEC93 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				7FA558A814BE6A520BBEAC0A /* Arpoon.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		1F6E45A04AC6F3BBCF61A2B3 /* Arpoon */ = {
-			isa = PBXGroup;
-			children = (
-				C1978E8AF124F60AC7E79518 /* Assets.xcassets */,
-				E42F709CA109BDB23FC74A24 /* App */,
-				60CC28B623AE08C495FB15E6 /* Domain */,
-				93A4DA822FFBAA0D1824E06F /* Infra */,
-				FB433E1C5785AB1D3D74D775 /* Resources */,
-				399A98B63194409FBFD837D4 /* UI */,
+				E4ACBED9F2036A080DB28F2B /* Assets.xcassets */,
+				45BDB761C0CA25720159773F /* App */,
+				8F031198F5568CB2C933C4B7 /* Domain */,
+				6461DD0F8DA212473CE781DA /* Infra */,
+				FABAB3F52E127C50DA80D568 /* Resources */,
+				D25CDBB097518DAC32A7C351 /* UI */,
 			);
 			path = Arpoon;
 			sourceTree = "<group>";
 		};
-		399A98B63194409FBFD837D4 /* UI */ = {
+		36E01247CD01B6558BE9CA14 /* ArpoonTests */ = {
 			isa = PBXGroup;
 			children = (
-				8DA5A798D45A6DA7FD18AC42 /* Hotkeys */,
-				1757DE7CA26A9BA1ED3A282A /* HUD */,
-				7D048F4E06B5E1002218EE8D /* Settings */,
-				077B780FC7E89F373EC6E122 /* Shared */,
+				E7B53C3057E7053F99C0F372 /* AppRuntimeAndCommandCenterTests.swift */,
 			);
-			path = UI;
+			name = ArpoonTests;
+			path = Tests/ArpoonTests;
 			sourceTree = "<group>";
 		};
-		45BBFF5B3D7A9B1D1E34F287 /* Models */ = {
+		45BDB761C0CA25720159773F /* App */ = {
 			isa = PBXGroup;
 			children = (
-				77E9084276C14F37ACC3BAA6 /* DynamicHotkeyAssignment.swift */,
-				9F26BA36235E22C434E30357 /* LiveApp.swift */,
-				3CA0204EA0B00DCF9047898E /* LiveWindow.swift */,
-				0F5C4D2210EDB010C4E9DE91 /* SlotAssignment.swift */,
-				FF82965E5216EB73C86BE9F9 /* Target.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		60CC28B623AE08C495FB15E6 /* Domain */ = {
-			isa = PBXGroup;
-			children = (
-				45BBFF5B3D7A9B1D1E34F287 /* Models */,
-				DEC5F0887B3AE0D8D0A3A34D /* Policies */,
-				E501552A112AA631EAEEA34D /* Services */,
-			);
-			path = Domain;
-			sourceTree = "<group>";
-		};
-		63720ECBF0E2BFBFF93EBFCE /* Persistence */ = {
-			isa = PBXGroup;
-			children = (
-				AEE514431F792ADEBCAAE2EB /* JSONAssignmentStore.swift */,
-				34DA69DC61E1B544AC336F1A /* JSONDynamicHotkeyAssignmentStore.swift */,
-			);
-			path = Persistence;
-			sourceTree = "<group>";
-		};
-		7D048F4E06B5E1002218EE8D /* Settings */ = {
-			isa = PBXGroup;
-			children = (
-				5168B0AA45540807CF4BF720 /* SettingsStore.swift */,
-				F0F0897D80116B4B2A984719 /* SettingsView.swift */,
-				4166BE7C5DE84F48960EE360 /* SettingsWindowController.swift */,
-				B037224AB5C6D29DD46DD072 /* ShortcutRecorderRow.swift */,
-			);
-			path = Settings;
-			sourceTree = "<group>";
-		};
-		8DA5A798D45A6DA7FD18AC42 /* Hotkeys */ = {
-			isa = PBXGroup;
-			children = (
-				5922C8091648D158698EF21E /* DynamicHotkeyCaptureController.swift */,
-				066CE7FB55408ED1D8335586 /* GlobalHotKeyCenter.swift */,
-				F7963CA73414E9D7E95A7F5A /* HotkeyController.swift */,
-				D2931A5366B019BCDD1D0AD3 /* HotkeyModels.swift */,
-			);
-			path = Hotkeys;
-			sourceTree = "<group>";
-		};
-		93A4DA822FFBAA0D1824E06F /* Infra */ = {
-			isa = PBXGroup;
-			children = (
-				AE35556B023E0B4A116B6B13 /* MacOS */,
-				63720ECBF0E2BFBFF93EBFCE /* Persistence */,
-			);
-			path = Infra;
-			sourceTree = "<group>";
-		};
-		AE35556B023E0B4A116B6B13 /* MacOS */ = {
-			isa = PBXGroup;
-			children = (
-				EAF14157E2EF64E6A2D25500 /* AccessibilityPermissionService.swift */,
-				0239BC1D4C1D6575262EBBF4 /* AccessibilityWindowProvider.swift */,
-				0B5FEB74CF36FC5B570F314D /* MacOSFocusController.swift */,
-				7F9A6752DB04E6D2380C4F49 /* RunningAppProvider.swift */,
-			);
-			path = MacOS;
-			sourceTree = "<group>";
-		};
-		C85CB0C9FF75E2A20B516922 = {
-			isa = PBXGroup;
-			children = (
-				1F6E45A04AC6F3BBCF61A2B3 /* Arpoon */,
-				1EB85578F3D587DCAD1CEC93 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		DEC5F0887B3AE0D8D0A3A34D /* Policies */ = {
-			isa = PBXGroup;
-			children = (
-				B82D9A0A317583DBAFC0A6B4 /* TargetLabelPolicy.swift */,
-				2AF0FA1C0B726227F1C2A432 /* TitleMatchPolicy.swift */,
-			);
-			path = Policies;
-			sourceTree = "<group>";
-		};
-		E42F709CA109BDB23FC74A24 /* App */ = {
-			isa = PBXGroup;
-			children = (
-				2392903AF53E02CB7EE4D95F /* AppDelegate.swift */,
-				CD01A7337A954E8D76C359A5 /* AppModel.swift */,
-				A6AAB04859706AB608F7D7FD /* ArpoonApp.swift */,
+				0CEDE966A407E8911B6157CF /* AppCommandCenter.swift */,
+				FAD52F4C9348C005FE5C5A08 /* AppCommands.swift */,
+				E9D68426CD3319B171227149 /* AppDelegate.swift */,
+				06882F59C8D449A2357EF8D9 /* AppModel.swift */,
+				71600255BD0E1A41BF6BF8D2 /* AppRuntimeCoordinator.swift */,
+				BD456FB635AF6FDEE03A08B1 /* ArpoonApp.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
 		};
-		E501552A112AA631EAEEA34D /* Services */ = {
+		495067E1CF35C833002B9D9E /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				B1A709999257151CE35F1BB3 /* AssignmentStore.swift */,
-				C9BCC5BFF1BF6C5571D7B9B3 /* DynamicHotkeyAssignmentStore.swift */,
-				A2A7039C86B860CABD1683DE /* DynamicHotkeyStore.swift */,
-				D5EC8CDA99F6D4DF83764362 /* FocusService.swift */,
-				7FFBDA60506B753989E2D7AD /* SlotStore.swift */,
-				5717F05F2F6F3FFD2507DA93 /* TargetCaptureService.swift */,
-				D6A531B3F30F073DAEF00119 /* TargetResolutionService.swift */,
+				5AD964FEC1316C403F9B81B6 /* AssignmentStore.swift */,
+				2753ABB84682EBD417F90765 /* DynamicHotkeyAssignmentStore.swift */,
+				FE8CCCF8D06F1AADFB5BAE6B /* DynamicHotkeyStore.swift */,
+				D514ABF921ABA84FFB18328E /* FocusService.swift */,
+				BB706286B84913284F0EB019 /* SlotStore.swift */,
+				C3C8F4DD8F9D8025F85BB55B /* TargetCaptureService.swift */,
+				6BDE3692B52A17217431C179 /* TargetResolutionService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
 		};
-		FB433E1C5785AB1D3D74D775 /* Resources */ = {
+		6461DD0F8DA212473CE781DA /* Infra */ = {
 			isa = PBXGroup;
 			children = (
-				049361054E1D5E7A98E60A78 /* ArpoonStatusItemTemplate.pdf */,
-				3A2F581419C2D8220F626DED /* ArpoonStatusItemTemplate.svg */,
+				8531128A241220D6CD25A9DA /* MacOS */,
+				BEE3E9E1C774BC5775E6D6F9 /* Persistence */,
+			);
+			path = Infra;
+			sourceTree = "<group>";
+		};
+		7022C9D04B668C2D08FEC15D /* Policies */ = {
+			isa = PBXGroup;
+			children = (
+				D88E5BAFB7FDE9C156B430C0 /* TargetLabelPolicy.swift */,
+				20576B0C4205419731150495 /* TitleMatchPolicy.swift */,
+			);
+			path = Policies;
+			sourceTree = "<group>";
+		};
+		76402ABA0EB3919A82AE100F /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				A1F4F3F4E1BEDA6AF3FFC9B0 /* SettingsStore.swift */,
+				FBBA207003F95549BF992D88 /* SettingsView.swift */,
+				11A707DE71C1F2EB1D638D3F /* SettingsWindowController.swift */,
+				EF01F9A38CAA7ACBA0710F27 /* ShortcutRecorderRow.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		79AC2A31B7B9A035F29A0DAE /* Hotkeys */ = {
+			isa = PBXGroup;
+			children = (
+				A8F4F2C611B928F9C0091CF1 /* DynamicHotkeyCaptureController.swift */,
+				5E004B849CDF768E17F8D99F /* GlobalHotKeyCenter.swift */,
+				FE5A64B1C9DBA2FCC947296B /* HotkeyConfiguration.swift */,
+				2363CE8C260D5533D61859B9 /* HotkeyController.swift */,
+				1D3372F40080D612325EA9AC /* HotkeyModels.swift */,
+			);
+			path = Hotkeys;
+			sourceTree = "<group>";
+		};
+		8531128A241220D6CD25A9DA /* MacOS */ = {
+			isa = PBXGroup;
+			children = (
+				550E15860054C4A1346D279B /* AccessibilityPermissionService.swift */,
+				0B687024CB78678408B17760 /* AccessibilityWindowProvider.swift */,
+				7C9E5DEE440535264242E9CC /* MacOSFocusController.swift */,
+				C17CE934774DE9C989208E72 /* RunningAppProvider.swift */,
+			);
+			path = MacOS;
+			sourceTree = "<group>";
+		};
+		8F031198F5568CB2C933C4B7 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				91F2E7C2A30332727FF31B1A /* Models */,
+				7022C9D04B668C2D08FEC15D /* Policies */,
+				495067E1CF35C833002B9D9E /* Services */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		91F2E7C2A30332727FF31B1A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FC562A82A67514B70A2118BB /* DynamicHotkeyAssignment.swift */,
+				B8E5B9DCF658738AB7452E44 /* LiveApp.swift */,
+				61885319E1A75B41FA73D79F /* LiveWindow.swift */,
+				101332250301C279FAACB183 /* SlotAssignment.swift */,
+				E59D5B08B432400809F73F6E /* Target.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		9724CFF93B3E0D59AFD352D7 /* HUD */ = {
+			isa = PBXGroup;
+			children = (
+				12B97A00D0FDB29D8F6E9689 /* HUDModel.swift */,
+				83B6A6383ECCC5D131E07E2A /* HUDView.swift */,
+				82C4534FC70FA0A3E238FC7F /* HUDWindowController.swift */,
+				CB188FD750342ECE5E9FB625 /* OptionHoldHUDController.swift */,
+			);
+			path = HUD;
+			sourceTree = "<group>";
+		};
+		BEE3E9E1C774BC5775E6D6F9 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */,
+				6C8AA0643B06F6D2FE9EDD23 /* JSONDynamicHotkeyAssignmentStore.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		C58D499BDE76E6F2A70FD8F2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C0032085E6AA0107B3150B23 /* Arpoon.app */,
+				962EED9020BCE6D2782B239D /* ArpoonTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D25CDBB097518DAC32A7C351 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				79AC2A31B7B9A035F29A0DAE /* Hotkeys */,
+				9724CFF93B3E0D59AFD352D7 /* HUD */,
+				76402ABA0EB3919A82AE100F /* Settings */,
+				097250B75DBA02A3FA8B6D35 /* Shared */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		FABAB3F52E127C50DA80D568 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				68AEB03F38EF54D9513E4CF5 /* ArpoonStatusItemTemplate.pdf */,
+				A1790640F3DF20A4E2B1CC22 /* ArpoonStatusItemTemplate.svg */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -287,12 +323,12 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		ACAEBBAAAC398FF0E279E8A3 /* Arpoon */ = {
+		1D4396A83E7A4CD31A19A8BF /* Arpoon */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 55AD41E975F714962CA58F54 /* Build configuration list for PBXNativeTarget "Arpoon" */;
+			buildConfigurationList = 9F80E264FA9BF3FBE6CAFC40 /* Build configuration list for PBXNativeTarget "Arpoon" */;
 			buildPhases = (
-				00E376F22C5A5456212BD7AB /* Sources */,
-				F089DC23318169D73100AB04 /* Resources */,
+				CA55D3ADE4A66EF3DDCA43B3 /* Sources */,
+				4B4EF7F48D9FFE0A32E2ECA7 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -302,24 +338,42 @@
 			packageProductDependencies = (
 			);
 			productName = Arpoon;
-			productReference = 7FA558A814BE6A520BBEAC0A /* Arpoon.app */;
+			productReference = C0032085E6AA0107B3150B23 /* Arpoon.app */;
 			productType = "com.apple.product-type.application";
+		};
+		EFA725749EA60D9D892C3890 /* ArpoonTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C658E9850D5F3D0C5D4625AF /* Build configuration list for PBXNativeTarget "ArpoonTests" */;
+			buildPhases = (
+				2C44AB082487FEC71B2BF095 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4A0AC2BFACE6BFE83402EF65 /* PBXTargetDependency */,
+			);
+			name = ArpoonTests;
+			packageProductDependencies = (
+			);
+			productName = ArpoonTests;
+			productReference = 962EED9020BCE6D2782B239D /* ArpoonTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		4BADD125D7FA4C1F594A9C76 /* Project object */ = {
+		E8149C74C1C476487051AEFE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					ACAEBBAAAC398FF0E279E8A3 = {
+					1D4396A83E7A4CD31A19A8BF = {
 						DevelopmentTeam = "";
 					};
 				};
 			};
-			buildConfigurationList = CE3FB2FA21FEB26A1F0A7AEC /* Build configuration list for PBXProject "Arpoon" */;
+			buildConfigurationList = E8B7F7625C1F733C63173F4C /* Build configuration list for PBXProject "Arpoon" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -327,84 +381,105 @@
 				Base,
 				en,
 			);
-			mainGroup = C85CB0C9FF75E2A20B516922;
+			mainGroup = 00A640EAC6FA5D8745723F1A;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				ACAEBBAAAC398FF0E279E8A3 /* Arpoon */,
+				1D4396A83E7A4CD31A19A8BF /* Arpoon */,
+				EFA725749EA60D9D892C3890 /* ArpoonTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		F089DC23318169D73100AB04 /* Resources */ = {
+		4B4EF7F48D9FFE0A32E2ECA7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8B5E031702419FAF0E5AACC2 /* Assets.xcassets in Resources */,
-				BDC72B6B01E89967F64BD5D7 /* ArpoonStatusItemTemplate.pdf in Resources */,
-				F2FB48C9BC875B145A27E7F6 /* ArpoonStatusItemTemplate.svg in Resources */,
+				235E80AFBF670A194238F275 /* ArpoonStatusItemTemplate.pdf in Resources */,
+				1B76314DCD041755C8D0C141 /* ArpoonStatusItemTemplate.svg in Resources */,
+				540B50E4A8B5A9DC67729CDF /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		00E376F22C5A5456212BD7AB /* Sources */ = {
+		2C44AB082487FEC71B2BF095 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				54D50415DCF1C4723A1D0EDA /* AccessibilityPermissionService.swift in Sources */,
-				2F714DC16AD94F1FD3ACA140 /* AccessibilityWindowProvider.swift in Sources */,
-				7D86719A7ABA5D10FF688C49 /* AppDelegate.swift in Sources */,
-				C96F98E2E7599161A42CED83 /* AppIconView.swift in Sources */,
-				F739A60DD2CB03A0F5CCE4AD /* AppModel.swift in Sources */,
-				D5AFA5955E9BA7D393037148 /* AssignmentStore.swift in Sources */,
-				8D8F553983ABFE0C7F81EF57 /* ControlPanelWindowController.swift in Sources */,
-				DBC6B85E8342B8DFBE0D0B90 /* DynamicHotkeyAssignment.swift in Sources */,
-				93F6AE5AA101841233164C0E /* DynamicHotkeyAssignmentStore.swift in Sources */,
-				40B6D382062E500A8461BF10 /* DynamicHotkeyCaptureController.swift in Sources */,
-				A94B9206229B78859DF35F20 /* DynamicHotkeyStore.swift in Sources */,
-				50D5020DD5EFBA696A259BBC /* FocusService.swift in Sources */,
-				A5D725712DC612D4BEEE6BA7 /* GlassKeyPanel.swift in Sources */,
-				587F0E3F8BB12BF9B7832E7E /* GlassPanelSurface.swift in Sources */,
-				E0AB442BF98215E0E1B84D7F /* GlobalHotKeyCenter.swift in Sources */,
-				EBFF692FCC58B87640C7B801 /* HUDModel.swift in Sources */,
-				6F25E77540E0A2A3945CC37B /* HUDView.swift in Sources */,
-				30E639CBBCB196816D1F150B /* HUDWindowController.swift in Sources */,
-				F62DA540BE6C1A9D627AC491 /* ArpoonApp.swift in Sources */,
-				D2539FD7E476D4E86CE16D6B /* HotkeyController.swift in Sources */,
-				2AF1F20BA2FBCBA7B10CA589 /* HotkeyModels.swift in Sources */,
-				05A78E103D8E41B5D27A36E5 /* JSONAssignmentStore.swift in Sources */,
-				104890336F2E7C398F853461 /* JSONDynamicHotkeyAssignmentStore.swift in Sources */,
-				B7A44A7D9B17A25C504FA115 /* LiveApp.swift in Sources */,
-				48DD4F80237D03F6489B7F4E /* LiveWindow.swift in Sources */,
-				06218AAA2A617A1DA7FA5E47 /* MacOSFocusController.swift in Sources */,
-				804D072A35F39676B2E1BB19 /* MenuBarView.swift in Sources */,
-				EDD3CF9C6628F993F9F6F73F /* OptionHoldHUDController.swift in Sources */,
-				4E722A7B77DB448E82700BC0 /* RunningAppProvider.swift in Sources */,
-				FB56A6DF1D91A145E4858B5D /* SettingsStore.swift in Sources */,
-				AEB869714EC4EE911013A447 /* SettingsView.swift in Sources */,
-				920443D3D90D2E13CD445571 /* SettingsWindowController.swift in Sources */,
-				F28BC10326852F1C57AB986A /* ShortcutRecorderRow.swift in Sources */,
-				9697DFA11BB297984FE5AB26 /* SlotAssignment.swift in Sources */,
-				4FFBB5C06AB9E481F46037B2 /* SlotStore.swift in Sources */,
-				94606CA3CD8DF93BA3589F96 /* StatusItemController.swift in Sources */,
-				AD191EE532A4368687F84190 /* Target.swift in Sources */,
-				3C1227511DC4CBAC77AB5F45 /* TargetCaptureService.swift in Sources */,
-				62FFC1FC23CAA11C9F13AEDC /* TargetLabelPolicy.swift in Sources */,
-				A19C984C95892A349BEBF369 /* TargetResolutionService.swift in Sources */,
-				56F8194B3D50B9C4B667194D /* TitleMatchPolicy.swift in Sources */,
-				05D50BD690EF26BC93CA55A9 /* WindowAccessor.swift in Sources */,
+				1812F9F59DAE5237B3AE36DB /* AppRuntimeAndCommandCenterTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CA55D3ADE4A66EF3DDCA43B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F1517272CCFF4ECFE33A6A1E /* AccessibilityPermissionService.swift in Sources */,
+				5ECDC9A47F44A42DD6EFED09 /* AccessibilityWindowProvider.swift in Sources */,
+				C9F8E99657C7478E15C9FAB8 /* AppCommandCenter.swift in Sources */,
+				401EA32A105A4BB4A0B14DD4 /* AppCommands.swift in Sources */,
+				2B069C3A43608C4D04062093 /* AppDelegate.swift in Sources */,
+				9DE815D05021D4EE95B15C60 /* AppIconView.swift in Sources */,
+				CBA8168B90EDE12ED96E39E0 /* AppModel.swift in Sources */,
+				ABD8909B3A2C804EF588B3E4 /* AppRuntimeCoordinator.swift in Sources */,
+				32039FD3926E4C1F86770852 /* ArpoonApp.swift in Sources */,
+				E2C03D8AB7A05A073621DCCC /* AssignmentStore.swift in Sources */,
+				5C911AF18107BCC7D73AC646 /* ControlPanelWindowController.swift in Sources */,
+				4D635DA54127EB3A109278DC /* DynamicHotkeyAssignment.swift in Sources */,
+				A716B26FB64E27C11A0E3BBC /* DynamicHotkeyAssignmentStore.swift in Sources */,
+				629FB4ED326CA88FB79ABFEC /* DynamicHotkeyCaptureController.swift in Sources */,
+				DCE1DBDAFA16133794336049 /* DynamicHotkeyStore.swift in Sources */,
+				1F3184FAFE38CE167B1E3C75 /* FocusService.swift in Sources */,
+				EC5794C38568ADC951637709 /* GlassKeyPanel.swift in Sources */,
+				6F785BB75FD225694BFADD6F /* GlassPanelSurface.swift in Sources */,
+				69D091A0BBB3392F4310D75E /* GlobalHotKeyCenter.swift in Sources */,
+				5FA1F9D27C2D7F21A4723FF3 /* HUDModel.swift in Sources */,
+				C8B51BB2E595C171DEEF3060 /* HUDView.swift in Sources */,
+				CA927B35F5BAA71E7AF88408 /* HUDWindowController.swift in Sources */,
+				2A1D9B565730F496589D12BA /* HotkeyConfiguration.swift in Sources */,
+				96E4ABFD981DD96933A21FA8 /* HotkeyController.swift in Sources */,
+				6354CD3B899625C4B3F076F0 /* HotkeyModels.swift in Sources */,
+				36EA5450D2470A1B5267FE50 /* JSONAssignmentStore.swift in Sources */,
+				F765943EAB72F590B73BCC44 /* JSONDynamicHotkeyAssignmentStore.swift in Sources */,
+				1A2D1D1658AB9CE857DCA79A /* LiveApp.swift in Sources */,
+				71D97E17941BCE9244AAD5E2 /* LiveWindow.swift in Sources */,
+				B874421BE5815DED193456F7 /* MacOSFocusController.swift in Sources */,
+				E2C83BB20C9D1C447F5524A3 /* MenuBarView.swift in Sources */,
+				16642193E70A6B5078EFB9F7 /* OptionHoldHUDController.swift in Sources */,
+				4D0E1320F01A3F88C75763F6 /* RunningAppProvider.swift in Sources */,
+				4160CDE0B0628E277D6647C0 /* SettingsStore.swift in Sources */,
+				76E657F1B2A158817D3FCBF2 /* SettingsView.swift in Sources */,
+				A7B6AA50EBBDABC471872CC7 /* SettingsWindowController.swift in Sources */,
+				6A94941401A94E958E3C602E /* ShortcutRecorderRow.swift in Sources */,
+				9F856AE252B361E194FE7FBD /* SlotAssignment.swift in Sources */,
+				7AE7207E8FF85A238A9278E7 /* SlotStore.swift in Sources */,
+				784B9C89CCC1217E264D8E0C /* StatusItemController.swift in Sources */,
+				F1FCE7AC94145226D8B20476 /* Target.swift in Sources */,
+				7DA7F576F8FC43B0E74227E0 /* TargetCaptureService.swift in Sources */,
+				13FA5D0D68BACCB7EB9F2CE7 /* TargetLabelPolicy.swift in Sources */,
+				398CB1C61A08E2A0C176DB68 /* TargetResolutionService.swift in Sources */,
+				FFA23E1801DBED48460E1D55 /* TitleMatchPolicy.swift in Sources */,
+				6B90D3954744FF1C41BB0198 /* WindowAccessor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		4A0AC2BFACE6BFE83402EF65 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1D4396A83E7A4CD31A19A8BF /* Arpoon */;
+			targetProxy = F8DE778A276FDAD3454013E3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		16F9463F26EBD3C9FC627351 /* Release */ = {
+		0A3163F35768B18018FA3D5C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -460,7 +535,24 @@
 			};
 			name = Release;
 		};
-		3B0A2E69AF35F48B2AAB3219 /* Release */ = {
+		1AB68ACA69BD39148BA1CE9C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.kevingyori.ArpoonTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Arpoon.app/Contents/MacOS/Arpoon";
+			};
+			name = Debug;
+		};
+		644E0DFE5DA4338E8422B079 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -481,7 +573,24 @@
 			};
 			name = Release;
 		};
-		7F79A8AF863106B6710A076F /* Debug */ = {
+		7A240B03181114E7A12315A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.kevingyori.ArpoonTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Arpoon.app/Contents/MacOS/Arpoon";
+			};
+			name = Release;
+		};
+		BFD968B9E98541DAD95796B4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -544,7 +653,7 @@
 			};
 			name = Debug;
 		};
-		D12E79A3F626277A9E84EABB /* Debug */ = {
+		D3D76F772BE29B55D31236B5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -568,25 +677,34 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		55AD41E975F714962CA58F54 /* Build configuration list for PBXNativeTarget "Arpoon" */ = {
+		9F80E264FA9BF3FBE6CAFC40 /* Build configuration list for PBXNativeTarget "Arpoon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D12E79A3F626277A9E84EABB /* Debug */,
-				3B0A2E69AF35F48B2AAB3219 /* Release */,
+				D3D76F772BE29B55D31236B5 /* Debug */,
+				644E0DFE5DA4338E8422B079 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		CE3FB2FA21FEB26A1F0A7AEC /* Build configuration list for PBXProject "Arpoon" */ = {
+		C658E9850D5F3D0C5D4625AF /* Build configuration list for PBXNativeTarget "ArpoonTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7F79A8AF863106B6710A076F /* Debug */,
-				16F9463F26EBD3C9FC627351 /* Release */,
+				1AB68ACA69BD39148BA1CE9C /* Debug */,
+				7A240B03181114E7A12315A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E8B7F7625C1F733C63173F4C /* Build configuration list for PBXProject "Arpoon" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BFD968B9E98541DAD95796B4 /* Debug */,
+				0A3163F35768B18018FA3D5C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 4BADD125D7FA4C1F594A9C76 /* Project object */;
+	rootObject = E8149C74C1C476487051AEFE /* Project object */;
 }

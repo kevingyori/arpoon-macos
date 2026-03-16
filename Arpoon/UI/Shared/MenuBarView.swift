@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MenuBarView: View {
-    let appModel: AppModel
+    let commands: AppCommands
     let dismissPopover: () -> Void
 
     @ObservedObject var slotStore: SlotStore
@@ -64,19 +64,17 @@ struct MenuBarView: View {
             HStack(spacing: 8) {
                 Button("Show HUD") {
                     dismissPopover()
-                    appModel.showHUD()
+                    commands.showHUD()
                 }
 
                 Button("Settings") {
                     dismissPopover()
-                    Task { @MainActor in
-                        appModel.showSettings()
-                    }
+                    commands.showSettings()
                 }
 
                 if !permissions.isTrusted {
                     Button("Accessibility") {
-                        appModel.requestAccessibilityAccess()
+                        commands.requestAccessibilityAccess()
                     }
                 }
             }
@@ -133,10 +131,10 @@ struct MenuBarView: View {
                     assignmentRow(
                         primaryAction: {
                             dismissPopover()
-                            appModel.jump(to: assignment.slot)
+                            commands.jumpToSlot(assignment.slot)
                         },
                         clearAction: {
-                            appModel.clear(slot: assignment.slot)
+                            commands.clearSlot(assignment.slot)
                         },
                         leading: {
                             Text("\(assignment.slot)")
@@ -168,10 +166,10 @@ struct MenuBarView: View {
                     assignmentRow(
                         primaryAction: {
                             dismissPopover()
-                            appModel.jump(using: assignment.shortcut)
+                            commands.jumpToDynamicHotkey(assignment.shortcut)
                         },
                         clearAction: {
-                            appModel.clearDynamicHotkey(shortcut: assignment.shortcut)
+                            commands.clearDynamicHotkey(assignment.shortcut)
                         },
                         leading: {
                             Text(assignment.shortcut.displayString)

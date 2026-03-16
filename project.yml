@@ -22,3 +22,13 @@ targets:
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
         DEVELOPMENT_TEAM: ""
+  ArpoonTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests/ArpoonTests
+    dependencies:
+      - target: Arpoon
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES

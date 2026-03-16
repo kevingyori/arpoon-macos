@@ -1,15 +1,12 @@
 import ApplicationServices
+import AppKit
 import Combine
 import Foundation
 
 @MainActor
 final class AccessibilityPermissionService: ObservableObject {
     @Published private(set) var isTrusted = AXIsProcessTrusted()
-    private var refreshTask: Task<Void, Never>?
-
-    deinit {
-        refreshTask?.cancel()
-    }
+    private var cancellables = Set<AnyCancellable>()
 
     func refresh() {
         isTrusted = AXIsProcessTrusted()
@@ -18,16 +15,15 @@ final class AccessibilityPermissionService: ObservableObject {
     func startMonitoring() {
         refresh()
 
-        guard refreshTask == nil else {
+        guard cancellables.isEmpty else {
             return
         }
 
-        refreshTask = Task { @MainActor [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(1))
+        NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
+            .sink { [weak self] _ in
                 self?.refresh()
             }
-        }
+            .store(in: &cancellables)
     }
 
     func requestAccess() {

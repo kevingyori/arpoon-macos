@@ -8,13 +8,15 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     init(
         settings: SettingsStore,
         dynamicHotkeys: DynamicHotkeyStore,
-        permissions: AccessibilityPermissionService
+        permissions: AccessibilityPermissionService,
+        commands: AppCommands
     ) {
         let hostingController = NSHostingController(
             rootView: SettingsView(
                 settings: settings,
                 dynamicHotkeys: dynamicHotkeys,
-                permissions: permissions
+                permissions: permissions,
+                commands: commands
             )
         )
 

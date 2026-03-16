@@ -41,7 +41,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popover.contentSize = popoverSize
         popover.contentViewController = NSHostingController(
             rootView: MenuBarView(
-                appModel: appModel,
+                commands: appModel.commands,
                 dismissPopover: { [weak self] in
                     self?.closePopover()
                 },

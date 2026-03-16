@@ -1,7 +1,17 @@
+import Combine
 import AppKit
 
 @MainActor
-final class OptionHoldHUDController {
+protocol OptionHoldHUDControlling: AnyObject {
+    var onShow: (() -> Void)? { get set }
+    var onHide: (() -> Void)? { get set }
+
+    func start()
+    func setSuppressed(_ isSuppressed: Bool)
+}
+
+@MainActor
+final class OptionHoldHUDController: OptionHoldHUDControlling {
     var onShow: (() -> Void)?
     var onHide: (() -> Void)?
 
@@ -12,12 +22,45 @@ final class OptionHoldHUDController {
     private var optionPressed = false
     private var hudVisible = false
     private var suppressed = false
+    private var settingsCancellable: AnyCancellable?
 
     init(settings: SettingsStore) {
         self.settings = settings
     }
 
     func start() {
+        guard settingsCancellable == nil else {
+            return
+        }
+
+        settingsCancellable = settings.$showHUDOnOptionHold
+            .removeDuplicates()
+            .sink { [weak self] isEnabled in
+                self?.setMonitoringEnabled(isEnabled)
+            }
+    }
+
+    func setSuppressed(_ isSuppressed: Bool) {
+        suppressed = isSuppressed
+
+        if isSuppressed {
+            cancelHold()
+            hideHUDIfNeeded()
+        }
+    }
+
+    private func setMonitoringEnabled(_ isEnabled: Bool) {
+        if isEnabled {
+            startMonitoring()
+        } else {
+            optionPressed = false
+            cancelHold()
+            hideHUDIfNeeded()
+            stopMonitoring()
+        }
+    }
+
+    private func startMonitoring() {
         guard localMonitor == nil, globalMonitor == nil else {
             return
         }
@@ -34,12 +77,15 @@ final class OptionHoldHUDController {
         }
     }
 
-    func setSuppressed(_ isSuppressed: Bool) {
-        suppressed = isSuppressed
+    private func stopMonitoring() {
+        if let localMonitor {
+            NSEvent.removeMonitor(localMonitor)
+            self.localMonitor = nil
+        }
 
-        if isSuppressed {
-            cancelHold()
-            hideHUDIfNeeded()
+        if let globalMonitor {
+            NSEvent.removeMonitor(globalMonitor)
+            self.globalMonitor = nil
         }
     }
 

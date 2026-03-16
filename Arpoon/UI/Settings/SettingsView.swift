@@ -5,6 +5,7 @@ struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
     @ObservedObject var permissions: AccessibilityPermissionService
+    let commands: AppCommands
     @State private var activeRecorderID: String?
 
     var body: some View {
@@ -118,7 +119,7 @@ struct SettingsView: View {
                             Spacer()
 
                             Button("Request Access") {
-                                AppModel.shared.requestAccessibilityAccess()
+                                commands.requestAccessibilityAccess()
                             }
                         }
 
@@ -135,14 +136,14 @@ struct SettingsView: View {
         .background(
             WindowAccessor { window in
                 window.identifier = NSUserInterfaceItemIdentifier("ArpoonSettingsWindow")
-                AppModel.shared.registerSettingsWindow(window)
+                commands.registerSettingsWindow(window)
             }
         )
         .onChange(of: activeRecorderID) { _, newValue in
-            AppModel.shared.setHotkeyRecordingActive(newValue != nil)
+            commands.setHotkeyRecordingActive(newValue != nil)
         }
         .onDisappear {
-            AppModel.shared.setHotkeyRecordingActive(false)
+            commands.setHotkeyRecordingActive(false)
         }
     }
 
@@ -210,11 +211,11 @@ struct SettingsView: View {
                             .background(Capsule().fill(Color.secondary.opacity(0.12)))
 
                         Button("Jump") {
-                            AppModel.shared.jump(using: assignment.shortcut)
+                            commands.jumpToDynamicHotkey(assignment.shortcut)
                         }
 
                         Button("Clear") {
-                            AppModel.shared.clearDynamicHotkey(shortcut: assignment.shortcut)
+                            commands.clearDynamicHotkey(assignment.shortcut)
                         }
                     }
                 }
