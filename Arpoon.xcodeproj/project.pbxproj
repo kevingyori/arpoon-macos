@@ -45,6 +45,7 @@
 		96E4ABFD981DD96933A21FA8 /* HotkeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2363CE8C260D5533D61859B9 /* HotkeyController.swift */; };
 		9DE815D05021D4EE95B15C60 /* AppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AAD3A15928D6ADAB7AB19D4 /* AppIconView.swift */; };
 		9F856AE252B361E194FE7FBD /* SlotAssignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101332250301C279FAACB183 /* SlotAssignment.swift */; };
+		A607FACB95A42631CD3D33A1 /* GridBindingSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 473B09F7B81CEC7F4E3590D8 /* GridBindingSelectionController.swift */; };
 		A716B26FB64E27C11A0E3BBC /* DynamicHotkeyAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2753ABB84682EBD417F90765 /* DynamicHotkeyAssignmentStore.swift */; };
 		A7B6AA50EBBDABC471872CC7 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A707DE71C1F2EB1D638D3F /* SettingsWindowController.swift */; };
 		ABD8909B3A2C804EF588B3E4 /* AppRuntimeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71600255BD0E1A41BF6BF8D2 /* AppRuntimeCoordinator.swift */; };
@@ -92,6 +93,7 @@
 		3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONAssignmentStore.swift; sourceTree = "<group>"; };
 		3ED5401E57F41E387FF0D2DD /* GridSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridSettingsPane.swift; sourceTree = "<group>"; };
 		41905081B395CDD394D2AA53 /* ControlPanelWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanelWindowController.swift; sourceTree = "<group>"; };
+		473B09F7B81CEC7F4E3590D8 /* GridBindingSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridBindingSelectionController.swift; sourceTree = "<group>"; };
 		505037AA2B824883562E0B6A /* GlassKeyPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKeyPanel.swift; sourceTree = "<group>"; };
 		550E15860054C4A1346D279B /* AccessibilityPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermissionService.swift; sourceTree = "<group>"; };
 		5AD964FEC1316C403F9B81B6 /* AssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentStore.swift; sourceTree = "<group>"; };
@@ -294,6 +296,7 @@
 		9724CFF93B3E0D59AFD352D7 /* HUD */ = {
 			isa = PBXGroup;
 			children = (
+				473B09F7B81CEC7F4E3590D8 /* GridBindingSelectionController.swift */,
 				12B97A00D0FDB29D8F6E9689 /* HUDModel.swift */,
 				83B6A6383ECCC5D131E07E2A /* HUDView.swift */,
 				82C4534FC70FA0A3E238FC7F /* HUDWindowController.swift */,
@@ -459,6 +462,7 @@
 				EC5794C38568ADC951637709 /* GlassKeyPanel.swift in Sources */,
 				6F785BB75FD225694BFADD6F /* GlassPanelSurface.swift in Sources */,
 				69D091A0BBB3392F4310D75E /* GlobalHotKeyCenter.swift in Sources */,
+				A607FACB95A42631CD3D33A1 /* GridBindingSelectionController.swift in Sources */,
 				0470A504CF41752F752B9F1D /* GridLayerStore.swift in Sources */,
 				515CBF0E379C4ED526DDCB37 /* GridModels.swift in Sources */,
 				DFA003D74830497F4C84519A /* GridSession.swift in Sources */,

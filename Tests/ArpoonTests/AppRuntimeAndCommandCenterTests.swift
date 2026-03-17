@@ -198,18 +198,23 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         let target = Target.app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
         let capture = FakeCaptureService()
         capture.outcome = CaptureOutcome(target: target, source: .appFallback, liveWindow: nil)
+        let binder = FakeGridBindingSelectionController()
 
         let commandCenter = makeCommandCenter(
             gridStore: gridStore,
             gridSession: gridSession,
             captureService: capture
         )
+        commandCenter.gridBindingSelectionControllerFactory = { _ in binder }
 
         commandCenter.bindFocusedTargetToGridCurrentContext()
+        binder.onConfirm?()
 
         let updatedLayer = try XCTUnwrap(gridStore.layers.first)
         XCTAssertEqual(updatedLayer.group(for: browserColumn).activeBinding?.target, target)
         XCTAssertTrue(updatedLayer.group(for: terminalColumn).bindings.isEmpty)
+        XCTAssertEqual(binder.beginCount, 1)
+        XCTAssertEqual(binder.finishCount, 1)
     }
 
     func testGridJumpUsesCurrentToolAcrossLayers() async throws {
@@ -274,6 +279,38 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         commandCenter.jumpToGridLayer(1)
 
         XCTAssertNil(hud.lastModel)
+    }
+
+    func testGridBindSelectionCanMoveBeforeConfirming() async throws {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+
+        let browserColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .browser))
+        let secondLayerID = try XCTUnwrap(gridStore.layers.dropFirst().first?.id)
+        let target = Target.app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
+        let capture = FakeCaptureService()
+        capture.outcome = CaptureOutcome(target: target, source: .appFallback, liveWindow: nil)
+        let binder = FakeGridBindingSelectionController()
+
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            captureService: capture
+        )
+        commandCenter.gridBindingSelectionControllerFactory = { _ in binder }
+
+        commandCenter.bindFocusedTargetToGridCurrentContext()
+        binder.onMove?(.down)
+        binder.onMove?(.right)
+        binder.onMove?(.right)
+        binder.onConfirm?()
+
+        let secondLayer = try XCTUnwrap(gridStore.layer(id: secondLayerID))
+        XCTAssertEqual(gridSession.currentLayerID, secondLayerID)
+        XCTAssertEqual(gridSession.currentColumnID, browserColumn.id)
+        XCTAssertEqual(secondLayer.group(for: browserColumn).activeBinding?.target, target)
     }
 
     func testGridLeftRightMovesAcrossColumnsAndAllowsEmptySelection() async throws {
@@ -927,4 +964,26 @@ private final class FakeHUDPresenter: HUDPresenting {
     }
 
     func hide() {}
+}
+
+private final class FakeGridBindingSelectionController: GridBindingSelectionPresenting {
+    var onMove: ((GridBindingSelectionMove) -> Void)?
+    var onConfirm: (() -> Void)?
+    var onCancel: (() -> Void)?
+
+    private(set) var beginCount = 0
+    private(set) var finishCount = 0
+    private(set) var models: [HUDModel] = []
+
+    func begin() {
+        beginCount += 1
+    }
+
+    func update(model: HUDModel) {
+        models.append(model)
+    }
+
+    func finish() {
+        finishCount += 1
+    }
 }

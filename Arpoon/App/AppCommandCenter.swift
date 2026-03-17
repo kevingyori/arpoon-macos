@@ -63,6 +63,7 @@ extension SettingsWindowController: SettingsWindowPresenting {}
 final class AppCommandCenter {
     var settingsWindowPresenterProvider: (() -> (any SettingsWindowPresenting)?)?
     var requestGridProjectRename: ((String) -> String?)?
+    var gridBindingSelectionControllerFactory: ((HUDModel) -> any GridBindingSelectionPresenting)?
 
     private let settings: SettingsStore
     private let accessibilityPermissions: any AccessibilityPermissionMonitoring
@@ -84,6 +85,7 @@ final class AppCommandCenter {
     private var lastObservedExternalFocusSignature: String?
     private weak var settingsWindow: NSWindow?
     private var dynamicHotkeyCaptureController: DynamicHotkeyCaptureController?
+    private var gridBindingSelectionController: (any GridBindingSelectionPresenting)?
 
     init(
         settings: SettingsStore,
@@ -358,7 +360,7 @@ final class AppCommandCenter {
 
     func bindFocusedTargetToGridCurrentContext() {
         syncGridSession()
-        guard let layer = currentGridLayer() else {
+        guard currentGridLayer() != nil else {
             showGridHint(
                 title: "The Grid has no projects yet",
                 detail: "Open The Grid settings to add a project layer.",
@@ -368,7 +370,7 @@ final class AppCommandCenter {
             return
         }
 
-        guard let tool = gridSession.currentTool(in: gridStore.columns) else {
+        guard gridSession.currentTool(in: gridStore.columns) != nil else {
             showGridHint(
                 title: "The Grid has no active column",
                 detail: "Select or add a column in The Grid first.",
@@ -377,7 +379,18 @@ final class AppCommandCenter {
             )
             return
         }
-        captureGridBinding(layerID: layer.id, tool: tool, bindingID: layer.group(for: tool).activeBinding?.id)
+
+        guard let outcome = captureService.captureFocusedTarget() else {
+            showGridHint(
+                title: "Couldn’t capture the current target",
+                detail: "Focus an app or window and try again.",
+                tone: .warning,
+                movement: .neutral
+            )
+            return
+        }
+
+        beginGridBindingSelection(with: outcome)
     }
 
     func captureGridBinding(layerID: String, tool: GridToolColumn, bindingID: String?) {
@@ -868,6 +881,91 @@ final class AppCommandCenter {
         settings.showJumpPopups
     }
 
+    private func beginGridBindingSelection(with outcome: CaptureOutcome) {
+        endGridBindingSelection()
+
+        let targetLabel = labelPolicy.label(for: outcome.target)
+        let model = gridBindingSelectionModel(targetLabel: targetLabel, movement: .neutral)
+        let controller = gridBindingSelectionControllerFactory?(model) ?? GridBindingSelectionController(model: model)
+
+        controller.onMove = { [weak self] direction in
+            self?.moveGridBindingSelection(direction, targetLabel: targetLabel)
+        }
+        controller.onConfirm = { [weak self] in
+            self?.confirmGridBindingSelection(outcome: outcome, targetLabel: targetLabel)
+        }
+        controller.onCancel = { [weak self] in
+            self?.endGridBindingSelection()
+        }
+
+        gridBindingSelectionController = controller
+        setHotkeyRecordingActive(true)
+        controller.begin()
+    }
+
+    private func moveGridBindingSelection(_ direction: GridBindingSelectionMove, targetLabel: String) {
+        syncGridSession()
+
+        let movement: GridSelectionChange
+        switch direction {
+        case .up:
+            movement = gridSession.selectAdjacentLayer(step: -1, in: gridStore.layers) ?? .neutral
+        case .down:
+            movement = gridSession.selectAdjacentLayer(step: 1, in: gridStore.layers) ?? .neutral
+        case .left:
+            if let destination = adjacentGridColumn(step: -1) {
+                movement = gridSession.selectColumn(id: destination.id, in: gridStore.columns)
+            } else {
+                movement = .neutral
+            }
+        case .right:
+            if let destination = adjacentGridColumn(step: 1) {
+                movement = gridSession.selectColumn(id: destination.id, in: gridStore.columns)
+            } else {
+                movement = .neutral
+            }
+        }
+
+        gridBindingSelectionController?.update(
+            model: gridBindingSelectionModel(targetLabel: targetLabel, movement: movement)
+        )
+    }
+
+    private func confirmGridBindingSelection(outcome: CaptureOutcome, targetLabel: String) {
+        syncGridSession()
+        guard let layer = currentGridLayer(),
+              let tool = gridSession.currentTool(in: gridStore.columns) else {
+            endGridBindingSelection()
+            return
+        }
+
+        let bindingID = layer.group(for: tool).activeBinding?.id
+        guard let binding = gridStore.replaceBinding(
+            layerID: layer.id,
+            tool: tool,
+            bindingID: bindingID,
+            target: outcome.target
+        ) else {
+            endGridBindingSelection()
+            return
+        }
+
+        updateGridLiveWindowCache(for: binding.id, liveWindow: outcome.liveWindow)
+        endGridBindingSelection()
+        showGridHint(
+            title: "\(targetLabel) saved to \(tool.title)",
+            detail: gridCaptureDetail(for: outcome, tool: tool),
+            tone: .success,
+            movement: .neutral
+        )
+    }
+
+    private func endGridBindingSelection() {
+        gridBindingSelectionController?.finish()
+        gridBindingSelectionController = nil
+        setHotkeyRecordingActive(false)
+    }
+
     private func completeDynamicHotkeyCapture(
         shortcut: HotkeyShortcut,
         outcome: CaptureOutcome,
@@ -1058,7 +1156,7 @@ final class AppCommandCenter {
             return
         }
 
-        guard let destination = adjacentGridColumn(in: layer, step: step) else {
+        guard let destination = adjacentGridColumn(step: step) else {
             showGridHint(
                 title: "\(layer.name) has no columns yet",
                 detail: "Add a column in The Grid settings first.",
@@ -1117,7 +1215,7 @@ final class AppCommandCenter {
         }
     }
 
-    private func adjacentGridColumn(in layer: GridLayer, step: Int) -> GridToolColumn? {
+    private func adjacentGridColumn(step: Int) -> GridToolColumn? {
         guard !gridStore.columns.isEmpty else {
             return nil
         }
@@ -1130,6 +1228,18 @@ final class AppCommandCenter {
     private func positiveModulo(_ value: Int, _ modulus: Int) -> Int {
         let remainder = value % modulus
         return remainder >= 0 ? remainder : remainder + modulus
+    }
+
+    private func gridBindingSelectionModel(targetLabel: String, movement: GridSelectionChange) -> HUDModel {
+        gridMinimapModel(
+            movement: movement,
+            hint: GridHUDHint(
+                title: "Bind \(targetLabel)",
+                detail: "Arrows, WASD, or HJKL move. Enter or Space binds. Escape cancels.",
+                tone: .neutral
+            ),
+            detailMode: .expanded
+        )
     }
 
     private func standaloneGridTarget(from target: Target) -> Target {
