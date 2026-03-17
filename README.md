@@ -22,7 +22,8 @@ The important difference is that Arpoon does not move windows around. It only ch
 
 So instead of a flat list of bindings, it becomes more like a project map.
 
-<img src="images/Screenshot_1.png" height="400" alt="Menu bar popup">
+[![Arpoon demo](images/hud-screenshot.png)](images/arpoon-demo.mp4)
+_click image to view short demo of grid navigation_
 
 ## What it is
 
