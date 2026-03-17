@@ -57,7 +57,7 @@ enum GridShortcutPreset: String, CaseIterable, Identifiable {
             shortcuts[HotkeyAction(kind: .gridFocusTerminal, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_T))
             shortcuts[HotkeyAction(kind: .gridFocusIDE, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_I))
             shortcuts[HotkeyAction(kind: .gridFocusBrowser, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_O))
-            shortcuts[HotkeyAction(kind: .gridBindCurrent, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_A))
+            shortcuts[HotkeyAction(kind: .gridBindCurrent, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_F))
             shortcuts[HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_A))
         case .gamer:
             shortcuts[HotkeyAction(kind: .gridPreviousLayer, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_W))
@@ -67,7 +67,7 @@ enum GridShortcutPreset: String, CaseIterable, Identifiable {
             shortcuts[HotkeyAction(kind: .gridFocusTerminal, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_Q))
             shortcuts[HotkeyAction(kind: .gridFocusIDE, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_I))
             shortcuts[HotkeyAction(kind: .gridFocusBrowser, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_E))
-            shortcuts[HotkeyAction(kind: .gridBindCurrent, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_F))
+            shortcuts[HotkeyAction(kind: .gridBindCurrent, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_F))
             shortcuts[HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_A))
         }
 
@@ -299,8 +299,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             )
         case .gridBindCurrent:
             return HotkeyShortcut(
-                keyCode: UInt32(kVK_ANSI_A),
-                modifiers: UInt32(optionKey)
+                keyCode: UInt32(kVK_ANSI_F),
+                modifiers: UInt32(optionKey | shiftKey)
             )
         case .gridShowHUD:
             return HotkeyShortcut(

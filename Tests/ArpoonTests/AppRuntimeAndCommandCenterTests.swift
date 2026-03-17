@@ -244,6 +244,38 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(gridSession.currentTool(in: gridStore.columns), browserColumn)
     }
 
+    func testGridJumpRespectsShowJumpPopupsSetting() async throws {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+
+        let browserOne = Target.app(AppTarget(bundleId: "com.example.browser.one", appName: "Browser One"))
+        let firstLayerID = try XCTUnwrap(gridStore.layers.first?.id)
+        let browserColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .browser))
+        _ = gridStore.replaceBinding(layerID: firstLayerID, tool: browserColumn, bindingID: nil, target: browserOne)
+
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+        _ = gridSession.selectTool(browserColumn, in: gridStore.columns)
+
+        let settings = makeSettings()
+        settings.showJumpPopups = false
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Browser One", strategy: nil)
+        let hud = FakeHUDPresenter()
+
+        let commandCenter = makeCommandCenter(
+            settings: settings,
+            gridStore: gridStore,
+            gridSession: gridSession,
+            focusService: focus,
+            hudPresenter: hud
+        )
+
+        commandCenter.jumpToGridLayer(1)
+
+        XCTAssertNil(hud.lastModel)
+    }
+
     func testGridLeftRightMovesAcrossColumnsAndAllowsEmptySelection() async throws {
         let gridStore = makeGridStore()
         let gridSession = GridSession()
@@ -394,7 +426,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
         XCTAssertEqual(
             settings.shortcut(for: HotkeyAction(kind: .gridBindCurrent, slot: nil)),
-            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(optionKey))
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(optionKey | shiftKey))
         )
         XCTAssertEqual(
             settings.shortcut(for: HotkeyAction(kind: .gridFocusTerminal, slot: nil)),
@@ -413,7 +445,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
         XCTAssertEqual(
             settings.shortcut(for: HotkeyAction(kind: .gridBindCurrent, slot: nil)),
-            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(optionKey))
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(optionKey | shiftKey))
         )
         XCTAssertEqual(
             settings.shortcut(for: HotkeyAction(kind: .gridFocusTerminal, slot: nil)),
@@ -669,6 +701,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
     }
 
     private func makeCommandCenter(
+        settings: SettingsStore? = nil,
         slotStore: SlotStore? = nil,
         dynamicStore: DynamicHotkeyStore? = nil,
         gridStore: GridStore? = nil,
@@ -681,7 +714,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         hudPresenter: FakeHUDPresenter = FakeHUDPresenter()
     ) -> AppCommandCenter {
         AppCommandCenter(
-            settings: makeSettings(),
+            settings: settings ?? makeSettings(),
             accessibilityPermissions: FakePermissionService(),
             slotStore: slotStore ?? makeSlotStore(),
             dynamicHotkeyStore: dynamicStore ?? makeDynamicHotkeyStore(),

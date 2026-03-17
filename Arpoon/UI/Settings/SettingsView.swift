@@ -250,7 +250,9 @@ private struct GeneralSettingsPane: View {
                     VStack(spacing: 0) {
                         settingsToggle(
                             "Show jump popups",
-                            description: "Display a HUD when a jump action succeeds.",
+                            description: settings.hotkeyScheme == .grid
+                                ? "Display the Grid minimap when Grid navigation succeeds."
+                                : "Display a HUD when a jump action succeeds.",
                             isOn: $settings.showJumpPopups
                         )
 
@@ -258,9 +260,12 @@ private struct GeneralSettingsPane: View {
 
                         settingsToggle(
                             "Show add popups",
-                            description: "Display confirmation when a new target or shortcut is added.",
+                            description: settings.hotkeyScheme == .grid
+                                ? "Grid binding uses its own minimap feedback. This toggle is handled automatically in Grid mode."
+                                : "Display confirmation when a new target or shortcut is added.",
                             isOn: $settings.showAddPopups
                         )
+                        .disabled(settings.hotkeyScheme == .grid)
 
                         Divider()
 
@@ -275,19 +280,8 @@ private struct GeneralSettingsPane: View {
                             .pickerStyle(.segmented)
                             .labelsHidden()
                             .frame(width: controlColumnWidth)
-                            .disabled(!settings.showAddPopups)
+                            .disabled(!settings.showAddPopups || settings.hotkeyScheme == .grid)
                         }
-
-                        Divider()
-
-                        sliderRow(
-                            title: "Dismiss after",
-                            description: "Set how long HUD overlays stay visible before they fade away.",
-                            value: $settings.hudTimeout,
-                            range: 1.0 ... 5.0,
-                            step: 0.2,
-                            format: "%.1fs"
-                        )
 
                         Divider()
 
@@ -321,8 +315,19 @@ private struct GeneralSettingsPane: View {
                             value: $settings.optionHoldDuration,
                             range: 0.25 ... 1.0,
                             step: 0.05,
-                            format: "%.2fs",
+                            valueText: String(format: "%.2fs", settings.optionHoldDuration),
                             isEnabled: settings.showHUDOnOptionHold
+                        )
+
+                        Divider()
+
+                        sliderRow(
+                            title: "Dismiss after",
+                            description: "Set how long HUD overlays stay visible before they fade away.",
+                            value: $settings.hudTimeout,
+                            range: 0.1 ... 5.0,
+                            step: 0.1,
+                            valueText: hudTimeoutText(settings.hudTimeout)
                         )
                     }
                 }
@@ -535,7 +540,7 @@ private struct GeneralSettingsPane: View {
         value: Binding<Double>,
         range: ClosedRange<Double>,
         step: Double,
-        format: String,
+        valueText: String,
         isEnabled: Bool = true
     ) -> some View {
         controlRow(title: title, description: description) {
@@ -543,7 +548,7 @@ private struct GeneralSettingsPane: View {
                 Slider(value: value, in: range, step: step)
                     .frame(width: 170)
 
-                Text(String(format: format, value.wrappedValue))
+                Text(valueText)
                     .font(.system(size: 12, weight: .medium, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .frame(width: 52, alignment: .trailing)
@@ -567,4 +572,11 @@ private struct GeneralSettingsPane: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
+    private func hudTimeoutText(_ value: Double) -> String {
+        if value < 1 {
+            return "\(Int((value * 1000).rounded()))ms"
+        }
+
+        return String(format: "%.1fs", value)
+    }
 }

@@ -836,6 +836,9 @@ final class AppCommandCenter {
     ) {
         switch outcome {
         case .focused:
+            guard settings.showJumpPopups else {
+                return
+            }
             hudController.show(
                 model: gridMinimapModel(movement: movement, hint: nil, detailMode: .compact),
                 timeout: gridHUDTimeout
@@ -858,7 +861,11 @@ final class AppCommandCenter {
     }
 
     private var gridHUDTimeout: Double {
-        min(1.1, max(0.6, settings.hudTimeout * 0.45))
+        min(1.1, max(0.1, settings.hudTimeout * 0.45))
+    }
+
+    private var showsGridJumpHUD: Bool {
+        settings.showJumpPopups
     }
 
     private func completeDynamicHotkeyCapture(
@@ -1088,6 +1095,9 @@ final class AppCommandCenter {
         let group = layer.group(for: tool)
 
         guard let binding = group.activeBinding else {
+            guard showsGridJumpHUD else {
+                return
+            }
             hudController.show(
                 model: gridMinimapModel(movement: movement, hint: nil, detailMode: .compact),
                 timeout: gridHUDTimeout
