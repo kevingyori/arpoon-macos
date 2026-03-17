@@ -158,7 +158,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         let gridStore = makeGridStore()
         let gridSession = GridSession()
         await gridStore.load()
-        gridSession.sync(layers: gridStore.layers)
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
 
         let commandCenter = makeCommandCenter(
             gridStore: gridStore,
@@ -187,11 +187,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         let gridStore = makeGridStore()
         let gridSession = GridSession()
         await gridStore.load()
-        gridSession.sync(layers: gridStore.layers)
-        let firstLayer = try XCTUnwrap(gridStore.layers.first)
-        let browserColumn = try XCTUnwrap(firstLayer.defaultColumn(kind: .browser))
-        let terminalColumn = try XCTUnwrap(firstLayer.defaultColumn(kind: .terminal))
-        _ = gridSession.selectTool(browserColumn, in: firstLayer)
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+        let browserColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .browser))
+        let terminalColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .terminal))
+        _ = gridSession.selectTool(browserColumn, in: gridStore.columns)
 
         let target = Target.app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
         let capture = FakeCaptureService()
@@ -219,12 +218,12 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         let browserTwo = Target.app(AppTarget(bundleId: "com.example.browser.two", appName: "Browser Two"))
         let firstLayerID = try XCTUnwrap(gridStore.layers.first?.id)
         let secondLayerID = try XCTUnwrap(gridStore.layers.dropFirst().first?.id)
-        let browserColumn = try XCTUnwrap(gridStore.layers.first?.defaultColumn(kind: .browser))
+        let browserColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .browser))
         _ = gridStore.replaceBinding(layerID: firstLayerID, tool: browserColumn, bindingID: nil, target: browserOne)
         _ = gridStore.replaceBinding(layerID: secondLayerID, tool: browserColumn, bindingID: nil, target: browserTwo)
 
-        gridSession.sync(layers: gridStore.layers)
-        _ = gridSession.selectTool(browserColumn, in: gridStore.layers.first)
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+        _ = gridSession.selectTool(browserColumn, in: gridStore.columns)
 
         let focus = FakeFocusService()
         focus.targetOutcome = .focused(label: "Browser Two", strategy: nil)
@@ -239,7 +238,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
 
         XCTAssertEqual(focus.focusedTargets.last, browserTwo)
         XCTAssertEqual(gridSession.currentLayerID, secondLayerID)
-        XCTAssertEqual(gridSession.currentTool(in: gridStore.layer(id: secondLayerID)), browserColumn)
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.columns), browserColumn)
     }
 
     func testGridLeftRightMovesAcrossColumnsAndAllowsEmptySelection() async throws {
@@ -249,16 +248,16 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
 
         let layer = try XCTUnwrap(gridStore.layers.first)
         let layerID = layer.id
-        let ideColumn = try XCTUnwrap(layer.defaultColumn(kind: .ide))
-        let browserColumn = try XCTUnwrap(layer.defaultColumn(kind: .browser))
-        let customColumn = try XCTUnwrap(gridStore.addCustomColumn(layerID: layerID))
+        let ideColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .ide))
+        let browserColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .browser))
+        let customColumn = try XCTUnwrap(gridStore.addCustomColumn())
 
         let browserTarget = Target.app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
         let docsTarget = Target.app(AppTarget(bundleId: "com.example.docs", appName: "Docs"))
         _ = gridStore.replaceBinding(layerID: layerID, tool: browserColumn, bindingID: nil, target: browserTarget)
         _ = gridStore.replaceBinding(layerID: layerID, tool: customColumn, bindingID: nil, target: docsTarget)
 
-        gridSession.sync(layers: gridStore.layers)
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
 
         let focus = FakeFocusService()
         focus.targetOutcome = .focused(label: "Focused", strategy: nil)
@@ -270,20 +269,20 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
 
         commandCenter.moveToNextBoundGridApp()
-        XCTAssertEqual(gridSession.currentTool(in: gridStore.layers.first), ideColumn)
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.columns), ideColumn)
         XCTAssertNil(focus.focusedTargets.last)
 
         commandCenter.moveToNextBoundGridApp()
         XCTAssertEqual(focus.focusedTargets.last, browserTarget)
-        XCTAssertEqual(gridSession.currentTool(in: gridStore.layers.first), browserColumn)
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.columns), browserColumn)
 
         commandCenter.moveToNextBoundGridApp()
         XCTAssertEqual(focus.focusedTargets.last, docsTarget)
-        XCTAssertEqual(gridSession.currentTool(in: gridStore.layers.first), customColumn)
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.columns), customColumn)
 
         commandCenter.moveToPreviousBoundGridApp()
         XCTAssertEqual(focus.focusedTargets.last, browserTarget)
-        XCTAssertEqual(gridSession.currentTool(in: gridStore.layers.first), browserColumn)
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.columns), browserColumn)
     }
 
     func testGridStorePersistsCustomColumnsAlongsideDefaults() async throws {
@@ -291,19 +290,17 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
 
         await store.load()
 
-        let layer = try XCTUnwrap(store.layers.first)
-        let customColumn = try XCTUnwrap(store.addCustomColumn(layerID: layer.id))
-        store.renameColumn(layerID: layer.id, columnID: GridToolColumn.terminal.id, name: "Shells")
-        store.setColumnIcon(layerID: layer.id, columnID: GridToolColumn.browser.id, iconSymbol: "safari")
-        store.renameColumn(layerID: layer.id, columnID: customColumn.id, name: "Docs")
-        store.setColumnIcon(layerID: layer.id, columnID: customColumn.id, iconSymbol: "book")
+        let customColumn = try XCTUnwrap(store.addCustomColumn())
+        store.renameColumn(columnID: GridToolColumn.terminal.id, name: "Shells")
+        store.setColumnIcon(columnID: GridToolColumn.browser.id, iconSymbol: "safari")
+        store.renameColumn(columnID: customColumn.id, name: "Docs")
+        store.setColumnIcon(columnID: customColumn.id, iconSymbol: "book")
 
-        let updatedLayer = try XCTUnwrap(store.layers.first)
-        XCTAssertEqual(updatedLayer.defaultColumn(kind: .terminal)?.title, "Shells")
-        XCTAssertEqual(updatedLayer.defaultColumn(kind: .browser)?.iconSymbol, "safari")
-        XCTAssertEqual(updatedLayer.columns.count, 4)
-        XCTAssertEqual(updatedLayer.column(id: customColumn.id)?.title, "Docs")
-        XCTAssertEqual(updatedLayer.column(id: customColumn.id)?.iconSymbol, "book")
+        XCTAssertEqual(store.defaultColumn(kind: .terminal)?.title, "Shells")
+        XCTAssertEqual(store.defaultColumn(kind: .browser)?.iconSymbol, "safari")
+        XCTAssertEqual(store.columns.count, 4)
+        XCTAssertEqual(store.column(id: customColumn.id)?.title, "Docs")
+        XCTAssertEqual(store.column(id: customColumn.id)?.iconSymbol, "book")
     }
 
     func testGridStandaloneAppShortcutJumpsToSharedAppTarget() async throws {

@@ -231,7 +231,7 @@ final class AppModel: ObservableObject {
             await slotStore.load()
             await dynamicHotkeyStore.load()
             await gridStore.load()
-            gridSession.sync(layers: gridStore.layers)
+            gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
             runtimeCoordinator.start()
         }
     }

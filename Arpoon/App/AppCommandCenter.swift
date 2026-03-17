@@ -308,7 +308,7 @@ final class AppCommandCenter {
 
     func focusGridTool(_ tool: GridToolColumn) {
         syncGridSession()
-        let movement = gridSession.selectTool(tool, in: currentGridLayer())
+        let movement = gridSession.selectTool(tool, in: gridStore.columns)
         focusCurrentGridSelection(after: movement)
     }
 
@@ -324,7 +324,7 @@ final class AppCommandCenter {
             return
         }
 
-        guard let tool = gridSession.currentTool(in: layer) else {
+        guard let tool = gridSession.currentTool(in: gridStore.columns) else {
             showGridHint(
                 title: "The Grid has no active column",
                 detail: "Select or add a column in The Grid first.",
@@ -349,7 +349,7 @@ final class AppCommandCenter {
 
         syncGridSession()
         _ = gridSession.selectLayer(id: layerID)
-        _ = gridSession.selectTool(tool, in: gridStore.layer(id: layerID))
+        _ = gridSession.selectTool(tool, in: gridStore.columns)
 
         guard let binding = gridStore.replaceBinding(layerID: layerID, tool: tool, bindingID: bindingID, target: outcome.target) else {
             return
@@ -858,10 +858,11 @@ final class AppCommandCenter {
             return
         }
 
-        let app = gridStore.addStandaloneApp()
-        gridStore.setStandaloneAppShortcut(id: app.id, shortcut: shortcut)
-        guard let updatedApp = gridStore.replaceStandaloneAppBinding(id: app.id, target: target),
-              let binding = updatedApp.binding else {
+        let app = gridStore.createStandaloneApp(
+            target: target,
+            shortcut: shortcut
+        )
+        guard let binding = app.binding else {
             controller.showError("Couldn’t save the standalone app.")
             return
         }
@@ -967,7 +968,7 @@ final class AppCommandCenter {
     }
 
     private func syncGridSession() {
-        gridSession.sync(layers: gridStore.layers)
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
     }
 
     private func currentGridLayer() -> GridLayer? {
@@ -1016,7 +1017,7 @@ final class AppCommandCenter {
             return
         }
 
-        let movement = gridSession.selectColumn(id: destination.id, in: layer)
+        let movement = gridSession.selectColumn(id: destination.id, in: gridStore.columns)
         focusCurrentGridSelection(after: movement)
     }
 
@@ -1031,7 +1032,7 @@ final class AppCommandCenter {
             return
         }
 
-        guard let tool = gridSession.currentTool(in: layer) else {
+        guard let tool = gridSession.currentTool(in: gridStore.columns) else {
             showGridHint(
                 title: "The Grid has no active column",
                 detail: "Select or add a column in The Grid first.",
@@ -1065,13 +1066,13 @@ final class AppCommandCenter {
     }
 
     private func adjacentGridColumn(in layer: GridLayer, step: Int) -> GridToolColumn? {
-        guard !layer.columns.isEmpty else {
+        guard !gridStore.columns.isEmpty else {
             return nil
         }
 
-        let startIndex = layer.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0
-        let destinationIndex = positiveModulo(startIndex + step, layer.columns.count)
-        return layer.columns[destinationIndex]
+        let startIndex = gridStore.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0
+        let destinationIndex = positiveModulo(startIndex + step, gridStore.columns.count)
+        return gridStore.columns[destinationIndex]
     }
 
     private func positiveModulo(_ value: Int, _ modulus: Int) -> Int {
@@ -1124,7 +1125,7 @@ final class AppCommandCenter {
                         id: layer.id,
                         name: layer.name,
                         color: layer.color,
-                        columns: layer.columns.map { column in
+                        columns: gridStore.columns.map { column in
                             let group = layer.group(for: column)
                             return GridMinimapColumn(
                                 id: column.id,

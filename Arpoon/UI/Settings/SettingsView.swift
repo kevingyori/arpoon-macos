@@ -43,10 +43,10 @@ struct SettingsView: View {
             Divider()
                 .padding(.top, 16)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    switch selectedPane {
-                    case .general:
+            switch selectedPane {
+            case .general:
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
                         GeneralSettingsPane(
                             settings: settings,
                             dynamicHotkeys: dynamicHotkeys,
@@ -54,21 +54,22 @@ struct SettingsView: View {
                             commands: commands,
                             activeRecorderID: $activeRecorderID
                         )
-                    case .grid:
-                        GridSettingsPane(
-                            settings: settings,
-                            gridStore: gridStore,
-                            gridSession: gridSession,
-                            availableWindowsProvider: availableWindowsProvider,
-                            activeRecorderID: $activeRecorderID
-                        )
                     }
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+            case .grid:
+                GridSettingsPane(
+                    settings: settings,
+                    gridStore: gridStore,
+                    gridSession: gridSession,
+                    availableWindowsProvider: availableWindowsProvider,
+                    activeRecorderID: $activeRecorderID
+                )
                 .padding(20)
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .frame(minWidth: 860, idealWidth: 920, minHeight: 700, idealHeight: 780)
+        .frame(minWidth: 860, minHeight: 700)
         .background(
             WindowAccessor { window in
                 window.identifier = NSUserInterfaceItemIdentifier("ArpoonSettingsWindow")
@@ -82,7 +83,10 @@ struct SettingsView: View {
             commands.setHotkeyRecordingActive(false)
         }
         .onReceive(gridStore.$layers) { layers in
-            gridSession.sync(layers: layers)
+            gridSession.sync(columns: gridStore.columns, layers: layers)
+        }
+        .onReceive(gridStore.$columns) { columns in
+            gridSession.sync(columns: columns, layers: gridStore.layers)
         }
     }
 }

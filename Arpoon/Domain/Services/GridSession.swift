@@ -12,7 +12,9 @@ final class GridSession: ObservableObject {
     @Published private(set) var currentLayerID: String?
     @Published private(set) var currentColumnID: String = GridToolColumn.terminal.id
 
-    func sync(layers: [GridLayer]) {
+    func sync(columns: [GridToolColumn], layers: [GridLayer]) {
+        let resolvedColumns = columns.isEmpty ? GridToolColumn.defaults : columns
+
         guard let firstLayer = layers.first else {
             currentLayerID = nil
             currentColumnID = GridToolColumn.terminal.id
@@ -23,12 +25,11 @@ final class GridSession: ObservableObject {
             currentLayerID = firstLayer.id
         }
 
-        if let layer = layers.first(where: { $0.id == currentLayerID }),
-           layer.columns.contains(where: { $0.id == currentColumnID }) {
+        if resolvedColumns.contains(where: { $0.id == currentColumnID }) {
             return
         }
 
-        currentColumnID = firstLayer.defaultColumn(kind: .terminal)?.id ?? firstLayer.columns.first?.id ?? GridToolColumn.terminal.id
+        currentColumnID = resolvedColumns.first(where: { $0.kind == .terminal })?.id ?? resolvedColumns.first?.id ?? GridToolColumn.terminal.id
     }
 
     func selectLayer(id: String) -> GridSelectionChange {
@@ -48,9 +49,6 @@ final class GridSession: ObservableObject {
         let destination = layers[position - 1]
         let direction = step(to: destination.id, in: layers)
         currentLayerID = destination.id
-        if !destination.columns.contains(where: { $0.id == currentColumnID }) {
-            currentColumnID = destination.defaultColumn(kind: .terminal)?.id ?? destination.columns.first?.id ?? currentColumnID
-        }
         return .layer(step: direction)
     }
 
@@ -63,20 +61,16 @@ final class GridSession: ObservableObject {
         let destinationIndex = (currentIndex + step + layers.count) % layers.count
         let destination = layers[destinationIndex]
         currentLayerID = destination.id
-        if !destination.columns.contains(where: { $0.id == currentColumnID }) {
-            currentColumnID = destination.defaultColumn(kind: .terminal)?.id ?? destination.columns.first?.id ?? currentColumnID
-        }
         return .layer(step: step)
     }
 
-    func selectTool(_ tool: GridToolColumn, in layer: GridLayer?) -> GridSelectionChange {
-        guard let layer,
-              let destination = layer.column(id: tool.id) ?? layer.defaultColumn(kind: tool.kind) else {
+    func selectTool(_ tool: GridToolColumn, in columns: [GridToolColumn]) -> GridSelectionChange {
+        guard let destination = columns.first(where: { $0.id == tool.id }) else {
             return .neutral
         }
 
-        let fromIndex = layer.columns.firstIndex(where: { $0.id == currentColumnID }) ?? 0
-        let toIndex = layer.columns.firstIndex(where: { $0.id == destination.id }) ?? fromIndex
+        let fromIndex = columns.firstIndex(where: { $0.id == currentColumnID }) ?? 0
+        let toIndex = columns.firstIndex(where: { $0.id == destination.id }) ?? fromIndex
         guard currentColumnID != destination.id else {
             return .neutral
         }
@@ -85,9 +79,9 @@ final class GridSession: ObservableObject {
         return .tool(fromIndex: fromIndex, toIndex: toIndex)
     }
 
-    func selectColumn(id: String, in layer: GridLayer) -> GridSelectionChange {
-        let fromIndex = layer.columns.firstIndex(where: { $0.id == currentColumnID }) ?? 0
-        let toIndex = layer.columns.firstIndex(where: { $0.id == id }) ?? fromIndex
+    func selectColumn(id: String, in columns: [GridToolColumn]) -> GridSelectionChange {
+        let fromIndex = columns.firstIndex(where: { $0.id == currentColumnID }) ?? 0
+        let toIndex = columns.firstIndex(where: { $0.id == id }) ?? fromIndex
         guard currentColumnID != id else {
             return .neutral
         }
@@ -96,17 +90,16 @@ final class GridSession: ObservableObject {
         return .tool(fromIndex: fromIndex, toIndex: toIndex)
     }
 
-    func currentColumn(in layer: GridLayer?) -> GridToolColumn? {
-        if let layer,
-           let column = layer.column(id: currentColumnID) {
+    func currentColumn(in columns: [GridToolColumn]) -> GridToolColumn? {
+        if let column = columns.first(where: { $0.id == currentColumnID }) {
             return column
         }
 
-        return layer?.defaultColumn(kind: .terminal) ?? layer?.columns.first
+        return columns.first(where: { $0.kind == .terminal }) ?? columns.first
     }
 
-    func currentTool(in layer: GridLayer?) -> GridToolColumn? {
-        currentColumn(in: layer)
+    func currentTool(in columns: [GridToolColumn]) -> GridToolColumn? {
+        currentColumn(in: columns)
     }
 
     private func step(to layerID: String, in layers: [GridLayer]) -> Int {

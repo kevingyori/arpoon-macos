@@ -3,6 +3,7 @@ import Foundation
 
 @MainActor
 final class GridStore: ObservableObject {
+    @Published private(set) var columns: [GridToolColumn] = GridToolColumn.defaults
     @Published private(set) var layers: [GridLayer] = []
     @Published private(set) var standaloneApps: [GridStandaloneApp] = []
 
@@ -19,14 +20,18 @@ final class GridStore: ObservableObject {
         do {
             let loaded = try await store.loadState()
             if loaded.layers.isEmpty {
+                columns = GridToolColumn.defaults
                 layers = Self.seedLayers()
                 standaloneApps = Self.normalized(standaloneApps: loaded.standaloneApps)
                 persist()
             } else {
-                layers = Self.normalized(layers: loaded.layers)
+                let normalizedState = Self.normalized(state: loaded)
+                columns = normalizedState.columns
+                layers = normalizedState.layers
                 standaloneApps = Self.normalized(standaloneApps: loaded.standaloneApps)
             }
         } catch {
+            columns = GridToolColumn.defaults
             layers = Self.seedLayers()
             standaloneApps = []
             persist()
@@ -47,6 +52,14 @@ final class GridStore: ObservableObject {
 
     func standaloneApp(id: String) -> GridStandaloneApp? {
         standaloneApps.first(where: { $0.id == id })
+    }
+
+    func column(id: String) -> GridToolColumn? {
+        columns.first(where: { $0.id == id })
+    }
+
+    func defaultColumn(kind: GridColumnKind) -> GridToolColumn? {
+        columns.first(where: { $0.kind == kind })
     }
 
     @discardableResult
@@ -86,81 +99,81 @@ final class GridStore: ObservableObject {
         updateLayer(id: id) { $0.updatingColor(color) }
     }
 
-    func renameColumn(layerID: String, columnID: String, name: String) {
-        updateLayer(id: layerID) { layer in
-            let updatedColumns = layer.columns.map { column in
-                guard column.id == columnID else { return column }
-                return column.renaming(name.isEmpty ? "Untitled" : name)
-            }
-            return layer.updatingColumns(updatedColumns)
+    func renameColumn(columnID: String, name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        columns = columns.map { column in
+            guard column.id == columnID else { return column }
+            return column.renaming(trimmed.isEmpty ? "Untitled" : trimmed)
         }
+        persist()
     }
 
-    func setColumnIcon(layerID: String, columnID: String, iconSymbol: String) {
-        updateLayer(id: layerID) { layer in
-            let updatedColumns = layer.columns.map { column in
-                guard column.id == columnID else { return column }
-                return column.updatingIcon(iconSymbol)
-            }
-            return layer.updatingColumns(updatedColumns)
+    func setColumnIcon(columnID: String, iconSymbol: String) {
+        columns = columns.map { column in
+            guard column.id == columnID else { return column }
+            return column.updatingIcon(iconSymbol)
         }
+        persist()
     }
 
     @discardableResult
-    func addCustomColumn(layerID: String, template: GridToolColumn? = nil) -> GridToolColumn? {
-        var created: GridToolColumn?
-        updateLayer(id: layerID) { layer in
-            if let template {
-                guard !layer.columns.contains(where: { $0.id == template.id }) else {
-                    created = template
-                    return layer
-                }
-
-                let column = GridToolColumn.custom(
-                    id: template.id,
-                    name: template.name,
-                    iconSymbol: template.iconSymbol
-                )
-                created = column
-                return layer.updatingColumns(layer.columns + [column])
-            }
-
-            let index = layer.columns.filter { $0.kind == .custom }.count + 1
-            let column = GridToolColumn.custom(name: "Custom \(index)")
-            created = column
-            return layer.updatingColumns(layer.columns + [column])
-        }
-        return created
+    func addCustomColumn() -> GridToolColumn? {
+        let index = columns.filter { $0.kind == .custom }.count + 1
+        let column = GridToolColumn.custom(name: "Custom \(index)")
+        columns.append(column)
+        persist()
+        return column
     }
 
-    func moveColumns(layerID: String, fromOffsets: IndexSet, toOffset: Int) {
-        updateLayer(id: layerID) { layer in
-            var columns = layer.columns
-            columns.move(fromOffsets: fromOffsets, toOffset: toOffset)
-            return layer.updatingColumns(columns)
-        }
+    func moveColumns(fromOffsets: IndexSet, toOffset: Int) {
+        columns.move(fromOffsets: fromOffsets, toOffset: toOffset)
+        persist()
     }
 
-    func removeCustomColumn(layerID: String, columnID: String) {
-        updateLayer(id: layerID) { layer in
-            let columns = layer.columns.filter { $0.id != columnID }
+    func removeCustomColumn(columnID: String) {
+        guard let column = column(id: columnID), column.kind == .custom else {
+            return
+        }
+
+        columns.removeAll { $0.id == columnID }
+        layers = layers.map { layer in
             var groups = layer.groups
             groups.removeValue(forKey: columnID)
             return GridLayer(
                 id: layer.id,
                 name: layer.name,
                 color: layer.color,
-                columns: columns,
                 groups: groups,
                 createdAt: layer.createdAt,
                 updatedAt: .now
             )
         }
+        persist()
     }
 
     @discardableResult
     func addStandaloneApp() -> GridStandaloneApp {
         let app = GridStandaloneApp(name: "Standalone App \(standaloneApps.count + 1)")
+        standaloneApps.append(app)
+        persist()
+        return app
+    }
+
+    @discardableResult
+    func createStandaloneApp(target: Target, shortcut: HotkeyShortcut? = nil, iconSymbol: String = "app.fill") -> GridStandaloneApp {
+        let app = GridStandaloneApp(
+            name: labelPolicy.label(for: target),
+            iconSymbol: iconSymbol,
+            shortcut: shortcut,
+            binding: GridBinding(
+                id: UUID().uuidString,
+                label: labelPolicy.label(for: target),
+                target: target,
+                archetypeHint: nil,
+                createdAt: .now,
+                updatedAt: .now
+            )
+        )
         standaloneApps.append(app)
         persist()
         return app
@@ -281,6 +294,7 @@ final class GridStore: ObservableObject {
     }
 
     private func persist() {
+        let columns = self.columns
         let layers = self.layers
         let standaloneApps = self.standaloneApps
         persistenceTask?.cancel()
@@ -288,6 +302,7 @@ final class GridStore: ObservableObject {
             do {
                 try await store.saveState(
                     GridWorkspaceState(
+                        columns: columns,
                         layers: layers,
                         standaloneApps: standaloneApps
                     )
@@ -324,24 +339,13 @@ final class GridStore: ObservableObject {
         GridLayerColor.allCases[index % GridLayerColor.allCases.count]
     }
 
-    private static func normalized(layers: [GridLayer]) -> [GridLayer] {
-        let trimmed = Array(layers.prefix(9))
-        let normalized = trimmed.map { layer in
-            let defaults = GridToolColumn.defaults.map { defaultColumn in
-                if let existing = layer.columns.first(where: { $0.id == defaultColumn.id }) {
-                    return existing
-                }
-
-                return defaultColumn
-            }
-            let defaultIDs = Set(GridToolColumn.defaults.map(\.id))
-            let customColumns = layer.columns.filter { column in
-                column.kind == .custom && !defaultIDs.contains(column.id)
-            }
-            let columns = defaults + customColumns
+    private static func normalized(state: GridWorkspaceState) -> GridWorkspaceState {
+        let normalizedColumns = normalized(columns: state.columns)
+        let trimmed = Array(state.layers.prefix(9))
+        let normalizedLayers = trimmed.map { layer in
             var groups: [String: GridToolGroup] = [:]
 
-            for column in columns {
+            for column in normalizedColumns {
                 let existing = layer.groups[column.id] ?? GridToolGroup()
                 groups[column.id] = existing.normalized()
             }
@@ -350,14 +354,38 @@ final class GridStore: ObservableObject {
                 id: layer.id,
                 name: layer.name.isEmpty ? "Untitled Project" : layer.name,
                 color: layer.color,
-                columns: columns,
                 groups: groups,
                 createdAt: layer.createdAt,
                 updatedAt: layer.updatedAt
             )
         }
 
-        return normalized.isEmpty ? seedLayers() : normalized
+        return GridWorkspaceState(
+            columns: normalizedColumns,
+            layers: normalizedLayers.isEmpty ? seedLayers() : normalizedLayers,
+            standaloneApps: state.standaloneApps
+        )
+    }
+
+    private static func normalized(columns: [GridToolColumn]) -> [GridToolColumn] {
+        var ordered: [GridToolColumn] = []
+        var seenIDs = Set<String>()
+
+        for defaultColumn in GridToolColumn.defaults {
+            if let existing = columns.first(where: { $0.id == defaultColumn.id }) {
+                ordered.append(existing)
+            } else {
+                ordered.append(defaultColumn)
+            }
+            seenIDs.insert(defaultColumn.id)
+        }
+
+        for column in columns where !seenIDs.contains(column.id) {
+            ordered.append(column)
+            seenIDs.insert(column.id)
+        }
+
+        return ordered
     }
 
     private static func normalized(standaloneApps: [GridStandaloneApp]) -> [GridStandaloneApp] {

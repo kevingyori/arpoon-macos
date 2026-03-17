@@ -4,8 +4,11 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 private enum GridInspectorSelection: Hashable {
+    case project(layerID: String)
+    case column(columnID: String)
     case layerSlot(layerID: String, columnID: String)
     case standaloneApp(id: String)
+    case newStandaloneApp
 }
 
 struct GridSettingsPane: View {
@@ -15,32 +18,45 @@ struct GridSettingsPane: View {
     let availableWindowsProvider: @MainActor () -> [LiveWindow]
     @Binding var activeRecorderID: String?
 
-    @State private var selectedLayerID: String?
     @State private var inspectorSelection: GridInspectorSelection?
     @State private var draggedLayerID: String?
     @State private var draggedColumnID: String?
     @State private var availableWindows: [LiveWindow] = []
+    @State private var drawerKeyMonitor: Any?
 
-    private let rowLabelWidth: CGFloat = 190
-    private let cellWidth: CGFloat = 176
+    private let rowLabelWidth: CGFloat = 196
+    private let cellWidth: CGFloat = 188
+    private let rowHeight: CGFloat = 120
+    private let headerHeight: CGFloat = 82
+    private let boardSpacing: CGFloat = 12
+    private let drawerWidth: CGFloat = 360
+    private let cardHorizontalInset: CGFloat = 14
 
     var body: some View {
-        HStack(alignment: .top, spacing: 18) {
+        ZStack(alignment: .trailing) {
             boardPanel
 
             if let inspectorSelection {
-                inspectorPanel(for: inspectorSelection)
-                    .frame(width: 340, alignment: .topLeading)
+                GridInspectorDrawer(onClose: { self.inspectorSelection = nil }) {
+                    drawerContent(for: inspectorSelection)
+                }
+                .frame(width: drawerWidth)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+                .zIndex(1)
             }
         }
+        .animation(.easeOut(duration: 0.18), value: inspectorSelection)
         .onAppear {
             refreshAvailableWindows()
-            syncLayerSelection(with: gridStore.layers)
+            syncInspectorSelection()
+            updateDrawerMonitor()
+        }
+        .onReceive(gridStore.$layers) { _ in
+            gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
             syncInspectorSelection()
         }
-        .onReceive(gridStore.$layers) { layers in
-            gridSession.sync(layers: layers)
-            syncLayerSelection(with: layers)
+        .onReceive(gridStore.$columns) { _ in
+            gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
             syncInspectorSelection()
         }
         .onReceive(gridStore.$standaloneApps) { _ in
@@ -48,184 +64,165 @@ struct GridSettingsPane: View {
         }
         .onChange(of: inspectorSelection) { _, _ in
             refreshAvailableWindows()
+            updateDrawerMonitor()
+        }
+        .onDisappear {
+            stopDrawerMonitor()
         }
     }
 
     private var boardPanel: some View {
-        GroupBox {
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("The Grid")
-                            .font(.system(size: 17, weight: .semibold))
+        ScrollView([.horizontal, .vertical]) {
+            VStack(alignment: .leading, spacing: boardSpacing) {
+                gridHeaderRow
 
-                        Text("A digital frontier")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    Button("Add Project") {
-                        if let layer = gridStore.addLayer() {
-                            selectedLayerID = layer.id
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(gridStore.layers.count >= 9)
-
-                    Button("Add Column") {
-                        guard let layerID = selectedLayer?.id else {
-                            return
-                        }
-
-                        if let column = gridStore.addCustomColumn(layerID: layerID) {
-                            selectedLayerID = layerID
-                            inspectorSelection = .layerSlot(layerID: layerID, columnID: column.id)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(selectedLayer == nil)
+                ForEach(gridStore.layers) { layer in
+                    layerRow(layer)
                 }
 
-                Text("Drag project rows or column headers to reorder. Click any slot or plus to open the inspector.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-
-                ScrollView(.horizontal) {
-                    VStack(alignment: .leading, spacing: 14) {
-                        gridHeaderRow
-
-                        ScrollView(.vertical) {
-                            VStack(alignment: .leading, spacing: 14) {
-                                ForEach(gridStore.layers) { layer in
-                                    layerRow(layer)
-                                }
-
-                                standaloneAppsRow
-                            }
-                            .padding(.trailing, 6)
-                        }
-                    }
-                    .padding(.bottom, 6)
-                }
+                addProjectRow
+                standaloneAppsRow
             }
+            .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .background(
+            RoundedRectangle(cornerRadius: 22)
+                .fill(Color.secondary.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 22))
     }
 
     private var gridHeaderRow: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Projects")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+        HStack(alignment: .top, spacing: boardSpacing) {
+            Color.clear
+                .frame(width: rowLabelWidth + (cardHorizontalInset * 2), height: headerHeight)
 
-                Text("\(gridStore.layers.count)/9")
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundStyle(.secondary)
-            }
-            .frame(width: rowLabelWidth, alignment: .leading)
-
-            ForEach(visibleColumns) { column in
+            ForEach(gridStore.columns) { column in
                 columnHeaderCell(column)
             }
+
+            addColumnCard
         }
     }
 
-    @ViewBuilder
     private func columnHeaderCell(_ column: GridToolColumn) -> some View {
-        let selectedLayerHasColumn = selectedLayer?.column(id: column.id) != nil
-        let baseCell = VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: column.iconSymbol)
-                    .font(.system(size: 12, weight: .semibold))
+        Button {
+            inspectorSelection = .column(columnID: column.id)
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: column.iconSymbol)
+                        .font(.system(size: 13, weight: .semibold))
 
-                Text(column.title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .lineLimit(1)
-            }
-
-            Text(column.kind == .custom ? "Custom column" : "Default column")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-        }
-        .frame(width: cellWidth, alignment: .leading)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .cardBackground(
-            fill: headerColumnBackground(for: column),
-            stroke: headerColumnStroke(for: column),
-            cornerRadius: 14
-        )
-        
-        if selectedLayerHasColumn {
-            baseCell
-                .onDrag {
-                    draggedColumnID = column.id
-                    return NSItemProvider(object: NSString(string: column.id))
+                    Text(column.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .lineLimit(1)
                 }
-                .onDrop(
-                    of: [UTType.text],
-                    delegate: GridColumnDropDelegate(
-                        targetColumnID: column.id,
-                        layerID: selectedLayer?.id ?? "",
-                        columns: selectedLayer?.columns ?? visibleColumns,
-                        draggedColumnID: $draggedColumnID,
-                        gridStore: gridStore
-                    )
-                )
-        } else {
-            baseCell
+
+                Text(column.kind == .custom ? "Custom column" : "Default column")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: cellWidth, height: headerHeight, alignment: .leading)
+            .padding(.horizontal, 14)
+            .cardBackground(
+                fill: isSelectedColumn(column.id) ? Color.secondary.opacity(0.12) : Color.secondary.opacity(0.06),
+                stroke: isSelectedColumn(column.id) ? Color.secondary.opacity(0.28) : Color.clear,
+                cornerRadius: 16
+            )
         }
+        .buttonStyle(.plain)
+        .onDrag {
+            draggedColumnID = column.id
+            return NSItemProvider(object: NSString(string: column.id))
+        }
+        .onDrop(
+            of: [UTType.text],
+            delegate: GridColumnDropDelegate(
+                targetColumnID: column.id,
+                columns: gridStore.columns,
+                draggedColumnID: $draggedColumnID,
+                gridStore: gridStore
+            )
+        )
+    }
+
+    private var addColumnCard: some View {
+        Button {
+            if let column = gridStore.addCustomColumn() {
+                inspectorSelection = .column(columnID: column.id)
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.secondary)
+
+                    Text("Add Column")
+                        .font(.system(size: 12, weight: .medium))
+                }
+
+                Text("Shared across every project.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+            .frame(width: cellWidth, height: headerHeight, alignment: .leading)
+            .padding(.horizontal, cardHorizontalInset)
+            .cardBackground(
+                fill: Color.secondary.opacity(0.04),
+                stroke: Color.secondary.opacity(0.22),
+                dash: [6, 6],
+                cornerRadius: 16
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private func layerRow(_ layer: GridLayer) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: boardSpacing) {
             layerLabelCell(layer)
 
-            ForEach(visibleColumns) { template in
-                slotCell(for: layer, template: template)
+            ForEach(gridStore.columns) { column in
+                slotCell(for: layer, column: column)
             }
         }
     }
 
     private func layerLabelCell(_ layer: GridLayer) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(layer.color.swiftUIColor)
-                    .frame(width: 10, height: 10)
+        Button {
+            inspectorSelection = .project(layerID: layer.id)
+        } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(layer.color.swiftUIColor)
+                        .frame(width: 10, height: 10)
 
-                Text(layer.name)
-                    .font(.system(size: 13, weight: selectedLayerID == layer.id ? .semibold : .medium))
-                    .lineLimit(1)
-            }
-
-            HStack(spacing: 8) {
-                Button("Remove") {
-                    gridStore.removeLayer(id: layer.id)
-                    if selectedLayerID == layer.id {
-                        selectedLayerID = gridStore.layers.first?.id
-                    }
+                    Text(layer.name)
+                        .font(.system(size: 13, weight: .semibold))
+                        .lineLimit(1)
                 }
-                .buttonStyle(.borderless)
-                .controlSize(.small)
-                .disabled(gridStore.layers.count == 1)
+
+                Text("\(filledSlotCount(in: layer))/\(gridStore.columns.count) assigned")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
+            .frame(width: rowLabelWidth, height: rowHeight, alignment: .leading)
+            .padding(.horizontal, cardHorizontalInset)
+            .cardBackground(
+                fill: isSelectedProject(layer.id) ? layer.color.swiftUIColor.opacity(0.14) : Color.secondary.opacity(0.06),
+                stroke: isSelectedProject(layer.id) ? layer.color.swiftUIColor.opacity(0.30) : Color.clear,
+                cornerRadius: 18
+            )
         }
-        .frame(width: rowLabelWidth, alignment: .leading)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 12)
-        .cardBackground(
-            fill: selectedLayerID == layer.id ? layer.color.swiftUIColor.opacity(0.14) : Color.secondary.opacity(0.06),
-            stroke: selectedLayerID == layer.id ? layer.color.swiftUIColor.opacity(0.34) : Color.clear,
-            cornerRadius: 16
-        )
-        .contentShape(Rectangle())
-        .onTapGesture {
-            selectedLayerID = layer.id
-        }
+        .buttonStyle(.plain)
         .onDrag {
             draggedLayerID = layer.id
             return NSItemProvider(object: NSString(string: layer.id))
@@ -241,123 +238,135 @@ struct GridSettingsPane: View {
         )
     }
 
-    @ViewBuilder
-    private func slotCell(for layer: GridLayer, template: GridToolColumn) -> some View {
-        if let column = layer.column(id: template.id) ?? matchingDefaultColumn(for: template, in: layer) {
-            let group = layer.group(for: column)
-            let binding = group.activeBinding
+    private func slotCell(for layer: GridLayer, column: GridToolColumn) -> some View {
+        let binding = layer.group(for: column).activeBinding
 
+        return ZStack(alignment: .topTrailing) {
             Button {
-                selectedLayerID = layer.id
                 inspectorSelection = .layerSlot(layerID: layer.id, columnID: column.id)
             } label: {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 8) {
-                        Image(systemName: column.iconSymbol)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(binding == nil ? Color.secondary : layer.color.swiftUIColor)
-
-                        Text(column.title)
-                            .font(.system(size: 12, weight: .semibold))
-                            .lineLimit(1)
-                    }
-
+                VStack(alignment: .leading, spacing: 12) {
                     if let binding {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(spacing: 8) {
-                                AppIconView(bundleId: bundleID(for: binding))
+                        HStack(alignment: .center, spacing: 10) {
+                            AppIconView(bundleId: bundleID(for: binding))
 
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(binding.label)
                                     .font(.system(size: 13, weight: .medium))
                                     .lineLimit(1)
-                            }
 
-                            Text(binding.target.kindDescription)
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
+                                Text(binding.target.kindDescription)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     } else {
-                        VStack(alignment: .leading, spacing: 6) {
+                        VStack(spacing: 8) {
                             Image(systemName: "plus")
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundStyle(.secondary)
 
-                            Text("Add App")
+                            Text("Bind App")
                                 .font(.system(size: 12, weight: .medium))
-
-                            Text("Open the slot inspector")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
                         }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     }
                 }
-                .frame(width: cellWidth, alignment: .leading)
-                .frame(minHeight: 116, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
+                .frame(width: cellWidth, height: rowHeight, alignment: .leading)
+                .padding(.horizontal, cardHorizontalInset)
+                .cardBackground(
+                    fill: slotBackgroundColor(layer: layer, isSelected: isSelected(layerID: layer.id, columnID: column.id)),
+                    stroke: slotBorderColor(layer: layer, isSelected: isSelected(layerID: layer.id, columnID: column.id), isEmpty: binding == nil),
+                    dash: binding == nil ? [6, 6] : [],
+                    cornerRadius: 18
+                )
             }
-            .buttonStyle(CardButtonStyle(
-                fill: slotBackgroundColor(layer: layer, isSelected: isSelected(layerID: layer.id, columnID: column.id)),
-                stroke: slotBorderColor(layer: layer, isSelected: isSelected(layerID: layer.id, columnID: column.id), isEmpty: binding == nil),
-                dash: binding == nil ? [6, 6] : []
-            ))
-        } else {
+            .buttonStyle(.plain)
+
+            if let binding {
+                Button {
+                    gridStore.clearBinding(layerID: layer.id, tool: column, bindingID: binding.id)
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(10)
+                }
+                .buttonStyle(.plain)
+                .help("Remove app")
+            }
+        }
+    }
+
+    private var addProjectRow: some View {
+        HStack(alignment: .top, spacing: boardSpacing) {
             Button {
-                if let created = gridStore.addCustomColumn(layerID: layer.id, template: template) {
-                    selectedLayerID = layer.id
-                    inspectorSelection = .layerSlot(layerID: layer.id, columnID: created.id)
+                if let layer = gridStore.addLayer() {
+                    inspectorSelection = .project(layerID: layer.id)
                 }
             } label: {
-                VStack(alignment: .leading, spacing: 8) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.secondary)
 
-                    Text("Add \(template.title)")
-                        .font(.system(size: 12, weight: .medium))
+                        Text("Add Project")
+                            .font(.system(size: 12, weight: .medium))
+                    }
 
-                    Text("Create this shared column in \(layer.name).")
+                    Text("Create another project row.")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .frame(width: cellWidth, alignment: .leading)
-                .frame(minHeight: 116, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
+                .frame(width: rowLabelWidth, height: rowHeight, alignment: .leading)
+                .padding(.horizontal, cardHorizontalInset)
+                .cardBackground(
+                    fill: Color.secondary.opacity(0.04),
+                    stroke: Color.secondary.opacity(0.22),
+                    dash: [6, 6],
+                    cornerRadius: 18
+                )
             }
-            .buttonStyle(CardButtonStyle(
-                fill: Color.secondary.opacity(0.04),
-                stroke: Color.secondary.opacity(0.22),
-                dash: [6, 6]
-            ))
+            .buttonStyle(.plain)
+            .disabled(gridStore.layers.count >= 9)
+
+            ForEach(gridStore.columns) { _ in
+                Color.clear
+                    .frame(width: cellWidth, height: rowHeight)
+                    .padding(.horizontal, cardHorizontalInset)
+                    .cardBackground(
+                        fill: Color.secondary.opacity(0.025),
+                        stroke: Color.secondary.opacity(0.08),
+                        dash: [6, 6],
+                        cornerRadius: 18
+                    )
+            }
         }
     }
 
     private var standaloneAppsRow: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Standalone Apps Project")
-                    .font(.system(size: 13, weight: .semibold))
+        HStack(alignment: .top, spacing: boardSpacing) {
+            Button {
+                // Row label intentionally opens no editor; actual standalone cards remain editable.
+            } label: {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Standalone Apps")
+                        .font(.system(size: 13, weight: .semibold))
 
-                Text("Shortcuts that stay the same between projects.")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-
-                Button("Add App") {
-                    let app = gridStore.addStandaloneApp()
-                    inspectorSelection = .standaloneApp(id: app.id)
+                    Text("Cross-project shortcuts that stay the same everywhere.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
+                .frame(width: rowLabelWidth, height: rowHeight, alignment: .leading)
+                .padding(.horizontal, cardHorizontalInset)
+                .cardBackground(
+                    fill: Color.secondary.opacity(0.06),
+                    cornerRadius: 18
+                )
             }
-            .frame(width: rowLabelWidth, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.secondary.opacity(0.06))
-            )
+            .buttonStyle(.plain)
 
             ForEach(gridStore.standaloneApps) { app in
                 standaloneAppCard(app)
@@ -368,66 +377,70 @@ struct GridSettingsPane: View {
     }
 
     private func standaloneAppCard(_ app: GridStandaloneApp) -> some View {
-        Button {
-            inspectorSelection = .standaloneApp(id: app.id)
-        } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    Image(systemName: app.iconSymbol)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(app.binding == nil ? Color.secondary : Color.primary)
-
-                    Text(app.name)
-                        .font(.system(size: 12, weight: .semibold))
-                        .lineLimit(1)
-                }
-
-                if let binding = app.binding {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 8) {
+        ZStack(alignment: .topTrailing) {
+            Button {
+                inspectorSelection = .standaloneApp(id: app.id)
+            } label: {
+                VStack(alignment: .leading, spacing: 12) {
+                    if let binding = app.binding {
+                        HStack(alignment: .center, spacing: 10) {
                             AppIconView(bundleId: bundleID(for: binding))
 
-                            Text(binding.label)
-                                .font(.system(size: 13, weight: .medium))
-                                .lineLimit(1)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(binding.label)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .lineLimit(1)
+
+                                Text(app.shortcut?.displayString ?? "No shortcut")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
+                    } else {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(.secondary)
 
-                        Text(app.shortcut?.displayString ?? "No shortcut")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(.secondary)
+                            Text("Bind App")
+                                .font(.system(size: 12, weight: .medium))
 
-                        Text("Add App")
-                            .font(.system(size: 12, weight: .medium))
-
-                        Text(app.shortcut?.displayString ?? "No shortcut")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
+                            Text(app.shortcut?.displayString ?? "No shortcut")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
+                .frame(width: cellWidth, height: rowHeight, alignment: .leading)
+                .padding(.horizontal, cardHorizontalInset)
+                .cardBackground(
+                    fill: isSelectedStandaloneApp(app.id) ? Color.secondary.opacity(0.12) : Color.secondary.opacity(0.05),
+                    stroke: isSelectedStandaloneApp(app.id) ? Color.secondary.opacity(0.32) : Color.clear,
+                    cornerRadius: 18
+                )
             }
-            .frame(width: cellWidth, alignment: .leading)
-            .frame(minHeight: 116, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+            .buttonStyle(.plain)
+
+            if app.binding != nil {
+                Button {
+                    gridStore.clearStandaloneAppBinding(id: app.id)
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(10)
+                }
+                .buttonStyle(.plain)
+                .help("Remove app")
+            }
         }
-        .buttonStyle(CardButtonStyle(
-            fill: isSelectedStandaloneApp(app.id) ? Color.secondary.opacity(0.12) : Color.secondary.opacity(0.05),
-            stroke: isSelectedStandaloneApp(app.id) ? Color.secondary.opacity(0.35) : Color.clear
-        ))
     }
 
     private var addStandaloneAppCard: some View {
         Button {
-            let app = gridStore.addStandaloneApp()
-            inspectorSelection = .standaloneApp(id: app.id)
+            inspectorSelection = .newStandaloneApp
         } label: {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 Image(systemName: "plus")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(.secondary)
@@ -435,87 +448,106 @@ struct GridSettingsPane: View {
                 Text("Add Standalone App")
                     .font(.system(size: 12, weight: .medium))
 
-                Text("Create a cross-project shortcut slot.")
+                Text("Create a cross-project shortcut app.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(width: cellWidth, alignment: .leading)
-            .frame(minHeight: 116, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+            .frame(width: cellWidth, height: rowHeight, alignment: .leading)
+            .padding(.horizontal, 14)
+            .cardBackground(
+                fill: Color.secondary.opacity(0.04),
+                stroke: Color.secondary.opacity(0.22),
+                dash: [6, 6],
+                cornerRadius: 18
+            )
         }
-        .buttonStyle(CardButtonStyle(
-            fill: Color.secondary.opacity(0.04),
-            stroke: Color.secondary.opacity(0.22),
-            dash: [6, 6]
-        ))
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
-    private func inspectorPanel(for selection: GridInspectorSelection) -> some View {
-        GroupBox {
-            switch selection {
-            case .layerSlot(let layerID, let columnID):
-                if let layer = gridStore.layer(id: layerID),
-                   let column = layer.column(id: columnID) ?? selectedLayer?.column(id: columnID) {
-                    slotInspector(layer: layer, column: column)
-                } else {
-                    Text("This slot is no longer available.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                }
-            case .standaloneApp(let id):
-                if let app = gridStore.standaloneApp(id: id) {
-                    GridStandaloneAppInspector(
-                        app: app,
-                        settings: settings,
-                        gridStore: gridStore,
-                        availableWindows: availableWindows,
-                        refreshAvailableWindows: refreshAvailableWindows,
-                        activeRecorderID: $activeRecorderID
-                    )
-                } else {
-                    Text("This standalone app is no longer available.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                }
+    private func drawerContent(for selection: GridInspectorSelection) -> some View {
+        switch selection {
+        case .project(let layerID):
+            if let layer = gridStore.layer(id: layerID) {
+                projectEditor(layer)
+            } else {
+                drawerUnavailableState("This project is no longer available.")
             }
-        } label: {
-            HStack {
-                Text("Inspector")
-                    .font(.system(size: 13, weight: .semibold))
-
-                Spacer()
-
-                Button("Close") {
-                    inspectorSelection = nil
-                }
-                .buttonStyle(.borderless)
+        case .column(let columnID):
+            if let column = gridStore.column(id: columnID) {
+                columnEditor(column)
+            } else {
+                drawerUnavailableState("This column is no longer available.")
             }
+        case .layerSlot(let layerID, let columnID):
+            if let layer = gridStore.layer(id: layerID),
+               let column = gridStore.column(id: columnID) {
+                slotEditor(layer: layer, column: column)
+            } else {
+                drawerUnavailableState("This slot is no longer available.")
+            }
+        case .standaloneApp(let id):
+            if let app = gridStore.standaloneApp(id: id) {
+                standaloneAppEditor(app)
+            } else {
+                drawerUnavailableState("This standalone app is no longer available.")
+            }
+        case .newStandaloneApp:
+            createStandaloneAppEditor
         }
     }
 
-    private func slotInspector(layer: GridLayer, column: GridToolColumn) -> some View {
-        let binding = layer.group(for: column).activeBinding
+    private var createStandaloneAppEditor: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            drawerTitle("Bind Standalone App", subtitle: "Standalone App")
 
-        return VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(column.title)
-                    .font(.system(size: 17, weight: .semibold))
-
-                Text(layer.name)
+            GridSettingsFieldSection(title: "Target") {
+                Text("Pick a live app to create a standalone shortcut entry.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
+
+                GridAvailableWindowPicker(
+                    windows: availableWindows,
+                    selectedWindowID: nil,
+                    currentTargetDescription: nil,
+                    usageTags: { window in
+                        usageTags(for: window)
+                    },
+                    onRefresh: refreshAvailableWindows,
+                    onSelect: { window in
+                        let app = gridStore.createStandaloneApp(
+                            target: .app(
+                                AppTarget(
+                                    bundleId: window.bundleId,
+                                    appName: window.appName
+                                )
+                            )
+                        )
+                        inspectorSelection = .standaloneApp(id: app.id)
+                    }
+                )
             }
 
-            Divider()
+            Spacer()
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Project")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
+    private func drawerUnavailableState(_ message: String) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(message)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
 
+    private func projectEditor(_ layer: GridLayer) -> some View {
+        VStack(alignment: .leading, spacing: 18) {
+            drawerTitle(layer.name, subtitle: "Project")
+
+            GridSettingsFieldSection(title: "Project") {
                 TextField(
                     "Project name",
                     text: Binding(
@@ -545,29 +577,41 @@ struct GridSettingsPane: View {
                 }
             }
 
-            Divider()
+            Button("Remove Project", role: .destructive) {
+                guard gridStore.layers.count > 1 else {
+                    return
+                }
+                gridStore.removeLayer(id: layer.id)
+                inspectorSelection = nil
+            }
+            .buttonStyle(.borderless)
+            .disabled(gridStore.layers.count == 1)
 
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Column")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
+            Spacer()
+        }
+    }
 
+    private func columnEditor(_ column: GridToolColumn) -> some View {
+        VStack(alignment: .leading, spacing: 18) {
+            drawerTitle(column.title, subtitle: column.kind == .custom ? "Shared Custom Column" : "Shared Default Column")
+
+            GridSettingsFieldSection(title: "Column") {
                 TextField(
                     "Column name",
                     text: Binding(
                         get: { column.title },
-                        set: { gridStore.renameColumn(layerID: layer.id, columnID: column.id, name: $0) }
+                        set: { gridStore.renameColumn(columnID: column.id, name: $0) }
                     )
                 )
                 .textFieldStyle(.roundedBorder)
                 .fieldResetButton {
-                    gridStore.renameColumn(layerID: layer.id, columnID: column.id, name: defaultColumnName(for: column, in: layer))
+                    gridStore.renameColumn(columnID: column.id, name: defaultColumnName(for: column))
                 }
 
                 HStack(spacing: 8) {
                     Picker("Icon", selection: Binding(
                         get: { column.iconSymbol },
-                        set: { gridStore.setColumnIcon(layerID: layer.id, columnID: column.id, iconSymbol: $0) }
+                        set: { gridStore.setColumnIcon(columnID: column.id, iconSymbol: $0) }
                     )) {
                         ForEach(GridToolColumn.iconOptions, id: \.self) { icon in
                             Label(icon, systemImage: icon).tag(icon)
@@ -576,26 +620,30 @@ struct GridSettingsPane: View {
                     .pickerStyle(.menu)
 
                     resetFieldButton {
-                        gridStore.setColumnIcon(layerID: layer.id, columnID: column.id, iconSymbol: defaultColumnIcon(for: column))
+                        gridStore.setColumnIcon(columnID: column.id, iconSymbol: defaultColumnIcon(for: column))
                     }
-                }
-
-                if column.kind == .custom {
-                    Button("Remove Column") {
-                        gridStore.removeCustomColumn(layerID: layer.id, columnID: column.id)
-                        inspectorSelection = nil
-                    }
-                    .buttonStyle(.borderless)
                 }
             }
 
-            Divider()
+            if column.kind == .custom {
+                Button("Remove Column", role: .destructive) {
+                    gridStore.removeCustomColumn(columnID: column.id)
+                    inspectorSelection = nil
+                }
+                .buttonStyle(.borderless)
+            }
 
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Slot")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
+            Spacer()
+        }
+    }
 
+    private func slotEditor(layer: GridLayer, column: GridToolColumn) -> some View {
+        let binding = layer.group(for: column).activeBinding
+
+        return VStack(alignment: .leading, spacing: 18) {
+            drawerTitle(column.title, subtitle: layer.name)
+
+            GridSettingsFieldSection(title: "Slot") {
                 if let binding {
                     TextField(
                         "Label",
@@ -635,61 +683,49 @@ struct GridSettingsPane: View {
                         )
                     }
                 )
+            }
 
-                if let binding {
-                    Button("Clear") {
-                        gridStore.clearBinding(layerID: layer.id, tool: column, bindingID: binding.id)
-                    }
-                    .buttonStyle(.bordered)
+            Button("Clear Target", role: .destructive) {
+                guard let binding else {
+                    return
                 }
+                gridStore.clearBinding(layerID: layer.id, tool: column, bindingID: binding.id)
+            }
+            .buttonStyle(.borderless)
+            .disabled(binding == nil)
+
+            Spacer()
+        }
+    }
+
+    private func standaloneAppEditor(_ app: GridStandaloneApp) -> some View {
+        GridStandaloneAppInspector(
+            app: app,
+            settings: settings,
+            gridStore: gridStore,
+            availableWindows: availableWindows,
+            refreshAvailableWindows: refreshAvailableWindows,
+            activeRecorderID: $activeRecorderID
+        )
+    }
+
+    private func drawerTitle(_ title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 18, weight: .semibold))
+
+            Text(subtitle)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func filledSlotCount(in layer: GridLayer) -> Int {
+        gridStore.columns.reduce(into: 0) { count, column in
+            if layer.group(for: column).activeBinding != nil {
+                count += 1
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var selectedLayer: GridLayer? {
-        guard let selectedLayerID else {
-            return gridStore.layers.first
-        }
-
-        return gridStore.layer(id: selectedLayerID) ?? gridStore.layers.first
-    }
-
-    private var visibleColumns: [GridToolColumn] {
-        let allLayers = gridStore.layers
-        guard !allLayers.isEmpty else {
-            return GridToolColumn.defaults
-        }
-
-        let anchorColumns = selectedLayer?.columns ?? allLayers.first?.columns ?? GridToolColumn.defaults
-        var ordered = anchorColumns
-        var seenIDs = Set(anchorColumns.map(\.id))
-
-        for layer in allLayers {
-            for column in layer.columns where !seenIDs.contains(column.id) {
-                ordered.append(column)
-                seenIDs.insert(column.id)
-            }
-        }
-
-        return ordered
-    }
-
-    private func matchingDefaultColumn(for template: GridToolColumn, in layer: GridLayer) -> GridToolColumn? {
-        guard template.kind != .custom else {
-            return nil
-        }
-
-        return layer.defaultColumn(kind: template.kind)
-    }
-
-    private func syncLayerSelection(with layers: [GridLayer]) {
-        if let selectedLayerID,
-           layers.contains(where: { $0.id == selectedLayerID }) {
-            return
-        }
-
-        selectedLayerID = layers.first?.id
     }
 
     private func syncInspectorSelection() {
@@ -698,9 +734,19 @@ struct GridSettingsPane: View {
         }
 
         switch inspectorSelection {
+        case .project(let layerID):
+            guard gridStore.layer(id: layerID) != nil else {
+                self.inspectorSelection = nil
+                return
+            }
+        case .column(let columnID):
+            guard gridStore.column(id: columnID) != nil else {
+                self.inspectorSelection = nil
+                return
+            }
         case .layerSlot(let layerID, let columnID):
-            guard let layer = gridStore.layer(id: layerID),
-                  layer.column(id: columnID) != nil else {
+            guard gridStore.layer(id: layerID) != nil,
+                  gridStore.column(id: columnID) != nil else {
                 self.inspectorSelection = nil
                 return
             }
@@ -709,6 +755,8 @@ struct GridSettingsPane: View {
                 self.inspectorSelection = nil
                 return
             }
+        case .newStandaloneApp:
+            break
         }
     }
 
@@ -716,12 +764,45 @@ struct GridSettingsPane: View {
         availableWindows = availableWindowsProvider()
     }
 
-    private func layerIndex(_ layer: GridLayer) -> Int? {
-        gridStore.layers.firstIndex(where: { $0.id == layer.id })
+    private func updateDrawerMonitor() {
+        if inspectorSelection == nil {
+            stopDrawerMonitor()
+            return
+        }
+
+        guard drawerKeyMonitor == nil else {
+            return
+        }
+
+        drawerKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
+            if event.keyCode == UInt16(kVK_Escape) {
+                inspectorSelection = nil
+                return nil
+            }
+
+            return event
+        }
+    }
+
+    private func stopDrawerMonitor() {
+        guard let drawerKeyMonitor else {
+            return
+        }
+
+        NSEvent.removeMonitor(drawerKeyMonitor)
+        self.drawerKeyMonitor = nil
     }
 
     private func isSelected(layerID: String, columnID: String) -> Bool {
         inspectorSelection == .layerSlot(layerID: layerID, columnID: columnID)
+    }
+
+    private func isSelectedProject(_ layerID: String) -> Bool {
+        inspectorSelection == .project(layerID: layerID)
+    }
+
+    private func isSelectedColumn(_ columnID: String) -> Bool {
+        inspectorSelection == .column(columnID: columnID)
     }
 
     private func isSelectedStandaloneApp(_ id: String) -> Bool {
@@ -744,27 +825,15 @@ struct GridSettingsPane: View {
         return isEmpty ? Color.secondary.opacity(0.24) : Color.clear
     }
 
-    private func headerColumnBackground(for column: GridToolColumn) -> Color {
-        selectedLayer?.column(id: column.id) == nil && column.kind == .custom
-            ? Color.secondary.opacity(0.04)
-            : Color.secondary.opacity(0.06)
-    }
-
-    private func headerColumnStroke(for column: GridToolColumn) -> Color {
-        selectedLayer?.column(id: column.id) == nil && column.kind == .custom
-            ? Color.secondary.opacity(0.22)
-            : Color.clear
-    }
-
     private func defaultLayerName(for layer: GridLayer) -> String {
-        "Project \((layerIndex(layer) ?? 0) + 1)"
+        "Project \((gridStore.layers.firstIndex(where: { $0.id == layer.id }) ?? 0) + 1)"
     }
 
     private func defaultLayerColor(for layer: GridLayer) -> GridLayerColor {
-        GridLayerColor.allCases[(layerIndex(layer) ?? 0) % GridLayerColor.allCases.count]
+        GridLayerColor.allCases[(gridStore.layers.firstIndex(where: { $0.id == layer.id }) ?? 0) % GridLayerColor.allCases.count]
     }
 
-    private func defaultColumnName(for column: GridToolColumn, in layer: GridLayer) -> String {
+    private func defaultColumnName(for column: GridToolColumn) -> String {
         switch column.kind {
         case .terminal:
             return GridToolColumn.terminal.title
@@ -773,7 +842,7 @@ struct GridSettingsPane: View {
         case .browser:
             return GridToolColumn.browser.title
         case .custom:
-            let customColumns = layer.columns.filter { $0.kind == .custom }
+            let customColumns = gridStore.columns.filter { $0.kind == .custom }
             let index = customColumns.firstIndex(where: { $0.id == column.id }) ?? 0
             return "Custom \(index + 1)"
         }
@@ -808,7 +877,7 @@ struct GridSettingsPane: View {
         var tags: [String] = []
 
         for layer in gridStore.layers {
-            for column in layer.columns {
+            for column in gridStore.columns {
                 guard let binding = layer.group(for: column).activeBinding,
                       matchesWindow(window, target: binding.target, matchAppTargets: false) else {
                     continue
@@ -866,6 +935,76 @@ struct GridSettingsPane: View {
     }
 }
 
+private struct GridInspectorDrawer<Content: View>: View {
+    let onClose: () -> Void
+    @ViewBuilder let content: Content
+
+    init(onClose: @escaping () -> Void, @ViewBuilder content: () -> Content) {
+        self.onClose = onClose
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Spacer()
+
+                Button(action: onClose) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 30, height: 30)
+                        .background(Circle().fill(Color.primary.opacity(0.06)))
+                }
+                .buttonStyle(.plain)
+                .help("Close")
+            }
+            .padding(.horizontal, 18)
+            .padding(.top, 18)
+
+            Divider()
+                .padding(.top, 12)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    content
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .frame(maxHeight: .infinity)
+        .background(.regularMaterial)
+        .overlay(
+            Rectangle()
+                .fill(Color.black.opacity(0.08))
+                .frame(width: 1),
+            alignment: .leading
+        )
+        .shadow(color: .black.opacity(0.14), radius: 18, x: -8, y: 0)
+    }
+}
+
+private struct GridSettingsFieldSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            content
+        }
+    }
+}
+
 private struct GridStandaloneAppInspector: View {
     let app: GridStandaloneApp
 
@@ -894,16 +1033,11 @@ private struct GridStandaloneAppInspector: View {
         return app.shortcut?.displayString ?? "Disabled"
     }
 
-    private var defaultAppName: String {
-        let index = gridStore.standaloneApps.firstIndex(where: { $0.id == app.id }) ?? 0
-        return "Standalone App \(index + 1)"
-    }
-
     private func usageTags(for window: LiveWindow, excludingStandaloneAppID: String) -> [String] {
         var tags: [String] = []
 
         for layer in gridStore.layers {
-            for column in layer.columns {
+            for column in gridStore.columns {
                 guard let binding = layer.group(for: column).activeBinding,
                       matchesWindow(window, target: binding.target, matchAppTargets: false) else {
                     continue
@@ -942,53 +1076,35 @@ private struct GridStandaloneAppInspector: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(app.name)
-                    .font(.system(size: 17, weight: .semibold))
+                Text(app.binding?.label ?? "Standalone App")
+                    .font(.system(size: 18, weight: .semibold))
 
-                Text("Standalone Apps Project")
+                Text("Standalone App")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
 
-            Divider()
+            GridSettingsFieldSection(title: "App") {
+                HStack(spacing: 8) {
+                    Picker("Icon", selection: Binding(
+                        get: { app.iconSymbol },
+                        set: { gridStore.setStandaloneAppIcon(id: app.id, iconSymbol: $0) }
+                    )) {
+                        ForEach(GridToolColumn.iconOptions, id: \.self) { icon in
+                            Label(icon, systemImage: icon).tag(icon)
+                        }
+                    }
+                    .pickerStyle(.menu)
 
-            TextField(
-                "Standalone app name",
-                text: Binding(
-                    get: { app.name },
-                    set: { gridStore.renameStandaloneApp(id: app.id, name: $0) }
-                )
-            )
-            .textFieldStyle(.roundedBorder)
-            .fieldResetButton {
-                gridStore.renameStandaloneApp(id: app.id, name: defaultAppName)
-            }
-
-            HStack(spacing: 8) {
-                Picker("Icon", selection: Binding(
-                    get: { app.iconSymbol },
-                    set: { gridStore.setStandaloneAppIcon(id: app.id, iconSymbol: $0) }
-                )) {
-                    ForEach(GridToolColumn.iconOptions, id: \.self) { icon in
-                        Label(icon, systemImage: icon).tag(icon)
+                    resetFieldButton {
+                        gridStore.setStandaloneAppIcon(id: app.id, iconSymbol: "app.fill")
                     }
                 }
-                .pickerStyle(.menu)
-
-                resetFieldButton {
-                    gridStore.setStandaloneAppIcon(id: app.id, iconSymbol: "app.fill")
-                }
             }
 
-            Divider()
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Shortcut")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
-
+            GridSettingsFieldSection(title: "Shortcut") {
                 HStack(spacing: 8) {
                     let shortcutButton = Button {
                         errorMessage = nil
@@ -1021,13 +1137,7 @@ private struct GridStandaloneAppInspector: View {
                 }
             }
 
-            Divider()
-
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Slot")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
-
+            GridSettingsFieldSection(title: "Target") {
                 Text(app.binding?.target.kindDescription ?? "No app target saved.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
@@ -1052,24 +1162,28 @@ private struct GridStandaloneAppInspector: View {
                         )
                     }
                 )
+            }
 
-                Button("Clear Target") {
+            HStack(spacing: 12) {
+                Button("Clear Target", role: .destructive) {
                     gridStore.clearStandaloneAppBinding(id: app.id)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderless)
                 .disabled(app.binding == nil)
-            }
 
-            Button("Remove Standalone App") {
-                gridStore.removeStandaloneApp(id: app.id)
+                Button("Remove Standalone App", role: .destructive) {
+                    gridStore.removeStandaloneApp(id: app.id)
+                }
+                .buttonStyle(.borderless)
             }
-            .buttonStyle(.borderless)
 
             if let errorMessage {
                 Text(errorMessage)
                     .font(.system(size: 11))
                     .foregroundStyle(.orange)
             }
+
+            Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .onChange(of: isRecording) { _, newValue in
@@ -1265,14 +1379,12 @@ private struct GridLayerDropDelegate: DropDelegate {
 
 private struct GridColumnDropDelegate: DropDelegate {
     let targetColumnID: String
-    let layerID: String
     let columns: [GridToolColumn]
     @Binding var draggedColumnID: String?
     let gridStore: GridStore
 
     func dropEntered(info: DropInfo) {
-        guard !layerID.isEmpty,
-              let draggedColumnID,
+        guard let draggedColumnID,
               draggedColumnID != targetColumnID,
               let fromIndex = columns.firstIndex(where: { $0.id == draggedColumnID }),
               let toIndex = columns.firstIndex(where: { $0.id == targetColumnID }) else {
@@ -1281,7 +1393,6 @@ private struct GridColumnDropDelegate: DropDelegate {
 
         withAnimation(.easeOut(duration: 0.14)) {
             gridStore.moveColumns(
-                layerID: layerID,
                 fromOffsets: IndexSet(integer: fromIndex),
                 toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex
             )
@@ -1338,7 +1449,7 @@ private struct CardBackgroundModifier: ViewModifier {
                 ZStack {
                     RoundedRectangle(cornerRadius: cornerRadius)
                         .fill(fill)
-                    
+
                     if isHovered {
                         RoundedRectangle(cornerRadius: cornerRadius)
                             .fill(Color.primary.opacity(0.04))
@@ -1357,49 +1468,5 @@ private struct CardBackgroundModifier: ViewModifier {
 extension View {
     func cardBackground(fill: Color, stroke: Color = .clear, dash: [CGFloat] = [], cornerRadius: CGFloat = 16) -> some View {
         modifier(CardBackgroundModifier(fill: fill, stroke: stroke, dash: dash, cornerRadius: cornerRadius))
-    }
-}
-
-private struct CardButtonStyle: ButtonStyle {
-    let fill: Color
-    let stroke: Color
-    let dash: [CGFloat]
-    let cornerRadius: CGFloat
-    
-    init(fill: Color, stroke: Color = .clear, dash: [CGFloat] = [], cornerRadius: CGFloat = 16) {
-        self.fill = fill
-        self.stroke = stroke
-        self.dash = dash
-        self.cornerRadius = cornerRadius
-    }
-
-    @State private var isHovered = false
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .fill(fill)
-                    
-                    if isHovered {
-                        RoundedRectangle(cornerRadius: cornerRadius)
-                            .fill(Color.primary.opacity(0.04))
-                    }
-                    
-                    if configuration.isPressed {
-                        RoundedRectangle(cornerRadius: cornerRadius)
-                            .fill(Color.primary.opacity(0.06))
-                    }
-                }
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(stroke, style: StrokeStyle(lineWidth: 1, dash: dash))
-            )
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(.easeOut(duration: 0.12), value: isHovered)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
-            .onHover { isHovered = $0 }
     }
 }

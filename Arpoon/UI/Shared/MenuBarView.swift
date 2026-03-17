@@ -33,7 +33,10 @@ struct MenuBarView: View {
         }
         .frame(width: 372)
         .onReceive(gridStore.$layers) { layers in
-            gridSession.sync(layers: layers)
+            gridSession.sync(columns: gridStore.columns, layers: layers)
+        }
+        .onReceive(gridStore.$columns) { columns in
+            gridSession.sync(columns: columns, layers: gridStore.layers)
         }
     }
 
@@ -232,7 +235,7 @@ struct MenuBarView: View {
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
-                                ForEach(layer.columns) { tool in
+                                ForEach(gridStore.columns) { tool in
                                     Button {
                                         dismissPopover()
                                         if let index = gridStore.layers.firstIndex(where: { $0.id == layer.id }) {
@@ -319,7 +322,7 @@ struct MenuBarView: View {
                                         .background(Circle().fill(Color.secondary.opacity(0.14)))
 
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(app.name)
+                                        Text(app.binding?.label ?? "Empty")
                                             .font(.system(size: 12.5, weight: .medium))
 
                                         Text(app.shortcut?.displayString ?? "No shortcut")
@@ -329,7 +332,7 @@ struct MenuBarView: View {
 
                                     Spacer()
 
-                                    Text(app.binding?.label ?? "empty")
+                                    Text(app.binding?.target.kindDescription ?? "No target")
                                         .font(.system(size: 11))
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
@@ -463,7 +466,7 @@ struct MenuBarView: View {
     }
 
     private func gridSummary(for layer: GridLayer) -> String {
-        layer.columns.map { tool in
+        gridStore.columns.map { tool in
             let label = layer.group(for: tool).activeBinding?.label ?? "empty"
             return "\(tool.title): \(label)"
         }
@@ -471,7 +474,7 @@ struct MenuBarView: View {
     }
 
     private func currentGridColumn(in layer: GridLayer) -> GridToolColumn? {
-        gridSession.currentTool(in: layer)
+        gridSession.currentTool(in: gridStore.columns)
     }
 }
 

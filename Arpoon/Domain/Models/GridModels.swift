@@ -178,10 +178,12 @@ struct GridStandaloneApp: Codable, Identifiable, Hashable {
 }
 
 struct GridWorkspaceState: Codable, Hashable {
+    let columns: [GridToolColumn]
     let layers: [GridLayer]
     let standaloneApps: [GridStandaloneApp]
 
-    init(layers: [GridLayer] = [], standaloneApps: [GridStandaloneApp] = []) {
+    init(columns: [GridToolColumn] = GridToolColumn.defaults, layers: [GridLayer] = [], standaloneApps: [GridStandaloneApp] = []) {
+        self.columns = columns
         self.layers = layers
         self.standaloneApps = standaloneApps
     }
@@ -191,7 +193,6 @@ struct GridLayer: Codable, Identifiable, Hashable {
     let id: String
     let name: String
     let color: GridLayerColor
-    let columns: [GridToolColumn]
     let groups: [String: GridToolGroup]
     let createdAt: Date
     let updatedAt: Date
@@ -200,7 +201,6 @@ struct GridLayer: Codable, Identifiable, Hashable {
         id: String = UUID().uuidString,
         name: String,
         color: GridLayerColor,
-        columns: [GridToolColumn] = GridToolColumn.defaults,
         groups: [String: GridToolGroup] = GridToolColumn.defaults.reduce(into: [:]) { $0[$1.id] = GridToolGroup() },
         createdAt: Date = .now,
         updatedAt: Date = .now
@@ -208,7 +208,6 @@ struct GridLayer: Codable, Identifiable, Hashable {
         self.id = id
         self.name = name
         self.color = color
-        self.columns = columns
         self.groups = groups
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -218,14 +217,6 @@ struct GridLayer: Codable, Identifiable, Hashable {
         groups[column.id] ?? GridToolGroup()
     }
 
-    func column(id: String) -> GridToolColumn? {
-        columns.first(where: { $0.id == id })
-    }
-
-    func defaultColumn(kind: GridColumnKind) -> GridToolColumn? {
-        columns.first(where: { $0.kind == kind })
-    }
-
     func updatingGroup(_ group: GridToolGroup, for column: GridToolColumn) -> GridLayer {
         var groups = groups
         groups[column.id] = group
@@ -233,7 +224,6 @@ struct GridLayer: Codable, Identifiable, Hashable {
             id: id,
             name: name,
             color: color,
-            columns: columns,
             groups: groups,
             createdAt: createdAt,
             updatedAt: .now
@@ -245,7 +235,6 @@ struct GridLayer: Codable, Identifiable, Hashable {
             id: id,
             name: name,
             color: color,
-            columns: columns,
             groups: groups,
             createdAt: createdAt,
             updatedAt: .now
@@ -257,19 +246,6 @@ struct GridLayer: Codable, Identifiable, Hashable {
             id: id,
             name: name,
             color: color,
-            columns: columns,
-            groups: groups,
-            createdAt: createdAt,
-            updatedAt: .now
-        )
-    }
-
-    func updatingColumns(_ columns: [GridToolColumn]) -> GridLayer {
-        GridLayer(
-            id: id,
-            name: name,
-            color: color,
-            columns: columns,
             groups: groups,
             createdAt: createdAt,
             updatedAt: .now
