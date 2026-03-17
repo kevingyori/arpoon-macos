@@ -212,6 +212,45 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(gridSession.currentTool(in: gridStore.layer(id: secondLayerID)), browserColumn)
     }
 
+    func testGridLeftRightMovesAcrossBoundAppsAndSkipsEmptyColumns() async throws {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+
+        let layer = try XCTUnwrap(gridStore.layers.first)
+        let layerID = layer.id
+        let browserColumn = try XCTUnwrap(layer.defaultColumn(kind: .browser))
+        let customColumn = try XCTUnwrap(gridStore.addCustomColumn(layerID: layerID))
+
+        let browserTarget = Target.app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
+        let docsTarget = Target.app(AppTarget(bundleId: "com.example.docs", appName: "Docs"))
+        _ = gridStore.replaceBinding(layerID: layerID, tool: browserColumn, bindingID: nil, target: browserTarget)
+        _ = gridStore.replaceBinding(layerID: layerID, tool: customColumn, bindingID: nil, target: docsTarget)
+
+        gridSession.sync(layers: gridStore.layers)
+
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Focused", strategy: nil)
+
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            focusService: focus
+        )
+
+        commandCenter.moveToNextBoundGridApp()
+        XCTAssertEqual(focus.focusedTargets.last, browserTarget)
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.layers.first), browserColumn)
+
+        commandCenter.moveToNextBoundGridApp()
+        XCTAssertEqual(focus.focusedTargets.last, docsTarget)
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.layers.first), customColumn)
+
+        commandCenter.moveToPreviousBoundGridApp()
+        XCTAssertEqual(focus.focusedTargets.last, browserTarget)
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.layers.first), browserColumn)
+    }
+
     func testGridStorePersistsCustomColumnsAlongsideDefaults() async throws {
         let store = makeGridStore()
 
@@ -378,6 +417,8 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onGridNextLayer: (() -> Void)?
     var onGridPreviousLayer: (() -> Void)?
     var onGridJumpLayer: ((Int) -> Void)?
+    var onGridFocusLeft: (() -> Void)?
+    var onGridFocusRight: (() -> Void)?
     var onGridFocusTerminal: (() -> Void)?
     var onGridFocusIDE: (() -> Void)?
     var onGridFocusBrowser: (() -> Void)?

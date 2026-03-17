@@ -17,6 +17,8 @@ final class AppRuntimeCoordinator {
     var onGridNextLayer: (() -> Void)?
     var onGridPreviousLayer: (() -> Void)?
     var onGridJumpLayer: ((Int) -> Void)?
+    var onGridFocusLeft: (() -> Void)?
+    var onGridFocusRight: (() -> Void)?
     var onGridFocusTerminal: (() -> Void)?
     var onGridFocusIDE: (() -> Void)?
     var onGridFocusBrowser: (() -> Void)?
@@ -83,6 +85,12 @@ final class AppRuntimeCoordinator {
         }
         hotkeyController.onGridJumpLayer = { [weak self] slot in
             self?.onGridJumpLayer?(slot)
+        }
+        hotkeyController.onGridFocusLeft = { [weak self] in
+            self?.onGridFocusLeft?()
+        }
+        hotkeyController.onGridFocusRight = { [weak self] in
+            self?.onGridFocusRight?()
         }
         hotkeyController.onGridFocusTerminal = { [weak self] in
             self?.onGridFocusTerminal?()

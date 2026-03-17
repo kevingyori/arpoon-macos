@@ -241,6 +241,14 @@ final class AppCommandCenter {
         jumpBetweenGridLayers(step: -1)
     }
 
+    func moveToPreviousBoundGridApp() {
+        jumpBetweenBoundGridColumns(step: -1)
+    }
+
+    func moveToNextBoundGridApp() {
+        jumpBetweenBoundGridColumns(step: 1)
+    }
+
     func jumpToGridLayer(_ position: Int) {
         syncGridSession()
         guard let movement = gridSession.selectLayer(at: position, in: gridStore.layers) else {
@@ -843,6 +851,43 @@ final class AppCommandCenter {
         focusCurrentGridSelection(after: movement)
     }
 
+    private func jumpBetweenBoundGridColumns(step: Int) {
+        syncGridSession()
+        guard let layer = currentGridLayer() else {
+            showGridHint(
+                title: "The Grid has no projects yet",
+                detail: "Open The Grid settings to add a project layer.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        let filledColumns = layer.columns.filter { !layer.group(for: $0).bindings.isEmpty }
+        guard !filledColumns.isEmpty else {
+            showGridHint(
+                title: "No bound apps in \(layer.name)",
+                detail: "Capture a target into a column first.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard let destination = adjacentBoundGridColumn(in: layer, step: step) else {
+            showGridHint(
+                title: "No bound apps in \(layer.name)",
+                detail: "Capture a target into a column first.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        let movement = gridSession.selectColumn(id: destination.id, in: layer)
+        focusCurrentGridSelection(after: movement)
+    }
+
     private func focusCurrentGridSelection(after movement: GridSelectionChange) {
         guard let layer = currentGridLayer() else {
             showGridHint(
@@ -885,6 +930,29 @@ final class AppCommandCenter {
         case .appFallback:
             return "Window capture wasn’t available, so The Grid saved the app instead."
         }
+    }
+
+    private func adjacentBoundGridColumn(in layer: GridLayer, step: Int) -> GridToolColumn? {
+        guard !layer.columns.isEmpty else {
+            return nil
+        }
+
+        let startIndex = layer.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0
+
+        for offset in 1 ... layer.columns.count {
+            let candidateIndex = positiveModulo(startIndex + (offset * step), layer.columns.count)
+            let candidate = layer.columns[candidateIndex]
+            if layer.group(for: candidate).activeBinding != nil {
+                return candidate
+            }
+        }
+
+        return nil
+    }
+
+    private func positiveModulo(_ value: Int, _ modulus: Int) -> Int {
+        let remainder = value % modulus
+        return remainder >= 0 ? remainder : remainder + modulus
     }
 
     private func standaloneGridTarget(from target: Target) -> Target {

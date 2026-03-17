@@ -15,6 +15,8 @@ protocol HotkeyControlling: AnyObject {
     var onGridNextLayer: (() -> Void)? { get set }
     var onGridPreviousLayer: (() -> Void)? { get set }
     var onGridJumpLayer: ((Int) -> Void)? { get set }
+    var onGridFocusLeft: (() -> Void)? { get set }
+    var onGridFocusRight: (() -> Void)? { get set }
     var onGridFocusTerminal: (() -> Void)? { get set }
     var onGridFocusIDE: (() -> Void)? { get set }
     var onGridFocusBrowser: (() -> Void)? { get set }
@@ -41,6 +43,8 @@ final class HotkeyController: HotkeyControlling {
     var onGridNextLayer: (() -> Void)?
     var onGridPreviousLayer: (() -> Void)?
     var onGridJumpLayer: ((Int) -> Void)?
+    var onGridFocusLeft: (() -> Void)?
+    var onGridFocusRight: (() -> Void)?
     var onGridFocusTerminal: (() -> Void)?
     var onGridFocusIDE: (() -> Void)?
     var onGridFocusBrowser: (() -> Void)?
@@ -166,6 +170,10 @@ final class HotkeyController: HotkeyControlling {
             if let slot = action.slot {
                 onGridJumpLayer?(slot)
             }
+        case .gridFocusLeft:
+            onGridFocusLeft?()
+        case .gridFocusRight:
+            onGridFocusRight?()
         case .gridFocusTerminal:
             onGridFocusTerminal?()
         case .gridFocusIDE:

@@ -108,7 +108,7 @@ struct MenuBarView: View {
                         .foregroundStyle(.secondary)
                 }
             case .grid:
-                Text("The Grid. A digital frontier. Move layers with Option + [ / ], focus tools with Option + T/I/B, and bind the focused target with Option + A.")
+                Text("The Grid. A digital frontier. Move projects with Option + [ / ], switch left and right across bound apps with Option + H/L, focus named columns with Option + T/I/B, and bind the focused target with Option + A.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }

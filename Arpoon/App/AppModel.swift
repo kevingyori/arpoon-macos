@@ -180,6 +180,12 @@ final class AppModel: ObservableObject {
         runtimeCoordinator.onGridJumpLayer = { [weak commandCenter] slot in
             commandCenter?.jumpToGridLayer(slot)
         }
+        runtimeCoordinator.onGridFocusLeft = { [weak commandCenter] in
+            commandCenter?.moveToPreviousBoundGridApp()
+        }
+        runtimeCoordinator.onGridFocusRight = { [weak commandCenter] in
+            commandCenter?.moveToNextBoundGridApp()
+        }
         runtimeCoordinator.onGridFocusTerminal = { [weak commandCenter] in
             commandCenter?.focusGridTool(.terminal)
         }

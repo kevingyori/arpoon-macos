@@ -33,6 +33,8 @@ enum HotkeyActionKind: String, Codable {
     case gridNextLayer
     case gridPreviousLayer
     case gridJumpLayer
+    case gridFocusLeft
+    case gridFocusRight
     case gridFocusTerminal
     case gridFocusIDE
     case gridFocusBrowser
@@ -73,6 +75,10 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "grid-previous-layer"
         case .gridJumpLayer:
             return "grid-jump-\(slot ?? 0)"
+        case .gridFocusLeft:
+            return "grid-focus-left"
+        case .gridFocusRight:
+            return "grid-focus-right"
         case .gridFocusTerminal:
             return "grid-focus-terminal"
         case .gridFocusIDE:
@@ -110,6 +116,10 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "The Grid Previous Project"
         case .gridJumpLayer:
             return "The Grid Jump to Project \(slot ?? 0)"
+        case .gridFocusLeft:
+            return "The Grid Focus Left"
+        case .gridFocusRight:
+            return "The Grid Focus Right"
         case .gridFocusTerminal:
             return "The Grid Focus Terminal"
         case .gridFocusIDE:
@@ -180,6 +190,16 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
                 keyCode: Self.slotKeyCode(for: slot ?? 1),
                 modifiers: UInt32(optionKey)
             )
+        case .gridFocusLeft:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_H),
+                modifiers: UInt32(optionKey)
+            )
+        case .gridFocusRight:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_L),
+                modifiers: UInt32(optionKey)
+            )
         case .gridFocusTerminal:
             return HotkeyShortcut(
                 keyCode: UInt32(kVK_ANSI_T),
@@ -225,6 +245,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
         HotkeyAction(kind: .gridNextLayer, slot: nil)
     ] + (1 ... 9).map { HotkeyAction(kind: .gridJumpLayer, slot: $0) }
     static let gridToolActions = [
+        HotkeyAction(kind: .gridFocusLeft, slot: nil),
+        HotkeyAction(kind: .gridFocusRight, slot: nil),
         HotkeyAction(kind: .gridFocusTerminal, slot: nil),
         HotkeyAction(kind: .gridFocusIDE, slot: nil),
         HotkeyAction(kind: .gridFocusBrowser, slot: nil),
@@ -264,6 +286,10 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             self = HotkeyAction(kind: .gridNextLayer, slot: nil)
         case "grid-previous-layer":
             self = HotkeyAction(kind: .gridPreviousLayer, slot: nil)
+        case "grid-focus-left":
+            self = HotkeyAction(kind: .gridFocusLeft, slot: nil)
+        case "grid-focus-right":
+            self = HotkeyAction(kind: .gridFocusRight, slot: nil)
         case "grid-focus-terminal":
             self = HotkeyAction(kind: .gridFocusTerminal, slot: nil)
         case "grid-focus-ide":
