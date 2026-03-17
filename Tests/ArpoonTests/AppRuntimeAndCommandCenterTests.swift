@@ -362,6 +362,12 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(settings.hotkeyScheme, .grid)
     }
 
+    func testDefaultSettingsEnableExperimentalGridExternalSync() {
+        let settings = makeSettings()
+
+        XCTAssertTrue(settings.enableExperimentalGridExternalSync)
+    }
+
     func testDefaultSettingsSeedGridWithGamerPreset() {
         let settings = makeSettings()
 

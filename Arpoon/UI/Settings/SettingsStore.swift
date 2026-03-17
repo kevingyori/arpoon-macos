@@ -58,6 +58,10 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(animateGridMinimapSelection, forKey: Keys.animateGridMinimapSelection) }
     }
 
+    @Published var enableExperimentalGridExternalSync: Bool {
+        didSet { defaults.set(enableExperimentalGridExternalSync, forKey: Keys.enableExperimentalGridExternalSync) }
+    }
+
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -88,6 +92,7 @@ final class SettingsStore: ObservableObject {
         }
 
         animateGridMinimapSelection = defaults.object(forKey: Keys.animateGridMinimapSelection) as? Bool ?? true
+        enableExperimentalGridExternalSync = defaults.object(forKey: Keys.enableExperimentalGridExternalSync) as? Bool ?? true
     }
 
     func shortcut(for action: HotkeyAction) -> HotkeyShortcut? {
@@ -177,6 +182,7 @@ private enum Keys {
     static let showHUDOnOptionHold = "showHUDOnOptionHold"
     static let optionHoldDuration = "optionHoldDuration"
     static let animateGridMinimapSelection = "animateGridMinimapSelection"
+    static let enableExperimentalGridExternalSync = "enableExperimentalGridExternalSync"
     static let showNotificationPopups = "showNotificationPopups"
 }
 

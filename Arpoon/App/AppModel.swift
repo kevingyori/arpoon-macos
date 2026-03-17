@@ -244,6 +244,10 @@ final class AppModel: ObservableObject {
         gridFocusSyncTask = Task { [weak self] in
             while let self, !Task.isCancelled {
                 await MainActor.run {
+                    guard self.settings.enableExperimentalGridExternalSync else {
+                        return
+                    }
+
                     self.commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
                 }
 

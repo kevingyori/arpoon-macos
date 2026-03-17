@@ -307,6 +307,14 @@ private struct GeneralSettingsPane: View {
 
                         Divider()
 
+                        settingsToggle(
+                            "Experimental external Grid sync",
+                            description: "Update the active Grid cell when you switch windows outside Arpoon. Disabled by default because it still has edge-case weirdness.",
+                            isOn: $settings.enableExperimentalGridExternalSync
+                        )
+
+                        Divider()
+
                         sliderRow(
                             title: "Option hold delay",
                             description: "Wait this long before showing the held-Option HUD.",
@@ -318,6 +326,10 @@ private struct GeneralSettingsPane: View {
                         )
                     }
                 }
+
+                Label("Experimental: external Grid sync can still behave unexpectedly with rapid changes or empty-slot navigation.", systemImage: "flask.fill")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.orange)
             }
 
             section(
