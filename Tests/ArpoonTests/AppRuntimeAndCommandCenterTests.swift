@@ -306,6 +306,23 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(store.column(id: customColumn.id)?.iconSymbol, "book")
     }
 
+    func testGridStorePreservesColumnOrderAcrossReload() async throws {
+        let backingStore = InMemoryGridLayerStore()
+        let store = GridStore(store: backingStore, labelPolicy: TargetLabelPolicy())
+
+        await store.load()
+
+        let customColumn = try XCTUnwrap(store.addCustomColumn())
+        store.moveColumns(fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        store.moveColumns(fromOffsets: IndexSet(integer: 3), toOffset: 1)
+        try? await Task.sleep(nanoseconds: 50_000_000)
+
+        let reloaded = GridStore(store: backingStore, labelPolicy: TargetLabelPolicy())
+        await reloaded.load()
+
+        XCTAssertEqual(reloaded.columns.map(\.id), [GridToolColumn.browser.id, customColumn.id, GridToolColumn.terminal.id, GridToolColumn.ide.id])
+    }
+
     func testGridStandaloneAppShortcutJumpsToSharedAppTarget() async throws {
         let gridStore = makeGridStore()
         await gridStore.load()

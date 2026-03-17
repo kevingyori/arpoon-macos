@@ -368,21 +368,21 @@ final class GridStore: ObservableObject {
     }
 
     private static func normalized(columns: [GridToolColumn]) -> [GridToolColumn] {
+        guard !columns.isEmpty else {
+            return GridToolColumn.defaults
+        }
+
         var ordered: [GridToolColumn] = []
         var seenIDs = Set<String>()
-
-        for defaultColumn in GridToolColumn.defaults {
-            if let existing = columns.first(where: { $0.id == defaultColumn.id }) {
-                ordered.append(existing)
-            } else {
-                ordered.append(defaultColumn)
-            }
-            seenIDs.insert(defaultColumn.id)
-        }
 
         for column in columns where !seenIDs.contains(column.id) {
             ordered.append(column)
             seenIDs.insert(column.id)
+        }
+
+        for defaultColumn in GridToolColumn.defaults where !seenIDs.contains(defaultColumn.id) {
+            ordered.append(defaultColumn)
+            seenIDs.insert(defaultColumn.id)
         }
 
         return ordered
