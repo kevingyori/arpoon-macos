@@ -31,11 +31,14 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         settings.hotkeyScheme = settings.hotkeyScheme
         XCTAssertEqual(hotkeys.configurations.count, 1)
 
+        settings.hotkeyScheme = .dynamicWindows
+        XCTAssertEqual(hotkeys.configurations.count, 2)
+
         dynamicStore.bind(
             shortcut: HotkeyShortcut(keyCode: UInt32(kVK_ANSI_B), modifiers: UInt32(optionKey)),
             target: .app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
         )
-        XCTAssertEqual(hotkeys.configurations.count, 2)
+        XCTAssertEqual(hotkeys.configurations.count, 3)
     }
 
     func testRuntimeRecordingStateSuspendsAndResumesHotkeys() {
@@ -350,6 +353,29 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(
             settings.shortcut(for: HotkeyAction(kind: .gridFocusBrowser, slot: nil)),
             HotkeyShortcut(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(optionKey))
+        )
+    }
+
+    func testDefaultSettingsUseGridScheme() {
+        let settings = makeSettings()
+
+        XCTAssertEqual(settings.hotkeyScheme, .grid)
+    }
+
+    func testDefaultSettingsSeedGridWithGamerPreset() {
+        let settings = makeSettings()
+
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusLeft, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridBindCurrent, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusTerminal, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_Q), modifiers: UInt32(optionKey))
         )
     }
 

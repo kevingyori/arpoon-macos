@@ -130,50 +130,58 @@ private struct GeneralSettingsPane: View {
     let commands: AppCommands
     @Binding var activeRecorderID: String?
 
-    @State private var selectedGridPreset: GridShortcutPreset = .vim
+    @State private var selectedGridPreset: GridShortcutPreset = .gamer
+
+    private let sectionSpacing: CGFloat = 28
+    private let sectionHeaderSpacing: CGFloat = 10
+    private let cardContentSpacing: CGFloat = 16
+    private let contentWidth: CGFloat = 760
+    private let controlColumnWidth: CGFloat = 220
 
     var body: some View {
-        Group {
-            section("Shortcuts") {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Click a shortcut, then press the new key combination. Escape cancels. Delete clears. Global shortcuts require at least one modifier key.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-
-                    Text("Visible-app navigation uses the on-screen window stack, so it requires Accessibility permission and works best when app windows are partially exposed.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-
+        VStack(alignment: .leading, spacing: sectionSpacing) {
+            section(
+                "Shortcuts",
+                description: "Configure global shortcuts and keyboard behavior. Press a shortcut row to record a new combination. Escape cancels, Delete clears, and all global shortcuts require at least one modifier key."
+            ) {
+                controlRow(
+                    title: "Hotkey scheme",
+                    description: "Choose how Arpoon assigns and organizes keyboard shortcuts."
+                ) {
                     Picker("Hotkey Scheme", selection: $settings.hotkeyScheme) {
                         ForEach(HotkeyScheme.allCases) { scheme in
                             Text(scheme.title).tag(scheme)
                         }
                     }
                     .pickerStyle(.menu)
+                    .labelsHidden()
+                    .frame(width: controlColumnWidth)
+                }
 
-                    switch settings.hotkeyScheme {
-                    case .staticSlots:
-                        shortcutGroup(title: "Jump Slots", actions: HotkeyAction.jumpActions)
-                        shortcutGroup(title: "Bind Slots", actions: HotkeyAction.bindActions)
-                        shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
-                    case .dynamicWindows:
-                        Text("Use the add-hotkey shortcut while a window is focused, then press the shortcut you want Arpoon to assign.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
+                switch settings.hotkeyScheme {
+                case .staticSlots:
+                    helperText("Visible-app navigation uses the on-screen window stack, so it needs Accessibility permission and works best when app windows are partially exposed.")
+                    shortcutGroup(title: "Jump Slots", actions: HotkeyAction.jumpActions)
+                    shortcutGroup(title: "Bind Slots", actions: HotkeyAction.bindActions)
+                    shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
+                case .dynamicWindows:
+                    helperText("Use the add-hotkey shortcut while a window is focused, then press the shortcut you want Arpoon to assign.")
+                    shortcutGroup(title: "Dynamic Hotkeys", actions: HotkeyAction.dynamicActions)
+                    shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
+                    dynamicHotkeyGroup
+                case .grid:
+                    helperText("The Grid turns window switching into project navigation: rows are projects, columns are terminal, IDE, and browser, hotkeys move you through the grid, and a minimap HUD keeps the movement spatial and legible.")
+                    shortcutGroup(title: "The Grid Projects", actions: HotkeyAction.gridNavigationActions, gridPreset: selectedGridPreset)
+                    shortcutGroup(title: "The Grid Tools", actions: HotkeyAction.gridToolActions, gridPreset: selectedGridPreset)
+                }
 
-                        shortcutGroup(title: "Dynamic Hotkeys", actions: HotkeyAction.dynamicActions)
-                        shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
-                        dynamicHotkeyGroup
-                    case .grid:
-                        Text("The Grid. A digital frontier. Use Option + H/L to move left and right across the current project’s bound apps, Option + [/] to change projects, Option + Shift + A to add a standalone app hotkey from the focused app, Option + Shift + R to rename the current project, and direct jump keys follow the current layer order rather than permanent IDs.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-
-                        shortcutGroup(title: "The Grid Projects", actions: HotkeyAction.gridNavigationActions, gridPreset: selectedGridPreset)
-                        shortcutGroup(title: "The Grid Tools", actions: HotkeyAction.gridToolActions, gridPreset: selectedGridPreset)
-                    }
-
-                    HStack {
+                controlRow(
+                    title: "Defaults",
+                    description: settings.hotkeyScheme == .grid
+                        ? "Choose the preset used when resetting Grid shortcuts."
+                        : "Reset the current shortcut scheme back to its default values."
+                ) {
+                    HStack(spacing: 10) {
                         if settings.hotkeyScheme == .grid {
                             Picker("Grid defaults", selection: $selectedGridPreset) {
                                 ForEach(GridShortcutPreset.allCases) { preset in
@@ -182,9 +190,8 @@ private struct GeneralSettingsPane: View {
                             }
                             .pickerStyle(.menu)
                             .labelsHidden()
+                            .frame(width: controlColumnWidth)
                         }
-
-                        Spacer()
 
                         Button("Reset Defaults") {
                             activeRecorderID = nil
@@ -199,68 +206,131 @@ private struct GeneralSettingsPane: View {
                 }
             }
 
-            section("Capture") {
-                VStack(alignment: .leading, spacing: 12) {
-                    Toggle("Prefer window targets when possible", isOn: $settings.preferWindowTargets)
-
-                    Text("When accessibility data is available, Arpoon stores the focused window first and falls back to the app only when needed.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+            section(
+                "Capture",
+                description: "Control how Arpoon records targets when you bind shortcuts."
+            ) {
+                sectionCard {
+                    settingsToggle(
+                        "Prefer window targets when possible",
+                        description: "When Accessibility data is available, Arpoon stores the focused window first and falls back to the app only when needed.",
+                        isOn: $settings.preferWindowTargets
+                    )
                 }
             }
 
-            section("Jump Behavior") {
-                VStack(alignment: .leading, spacing: 12) {
-                    Toggle("Launch apps that are not running", isOn: $settings.launchAppsOnJump)
-                    Toggle("Fall back to the app when the window is gone", isOn: $settings.fallbackToAppOnJump)
+            section(
+                "Jump Behavior",
+                description: "Decide how Arpoon should react when a stored target is no longer immediately available."
+            ) {
+                sectionCard {
+                    VStack(spacing: 0) {
+                        settingsToggle(
+                            "Launch apps that are not running",
+                            description: "If the target app is installed but closed, Arpoon will launch it before jumping.",
+                            isOn: $settings.launchAppsOnJump
+                        )
+
+                        Divider()
+
+                        settingsToggle(
+                            "Fall back to the app when the window is gone",
+                            description: "If a saved window no longer exists, Arpoon will focus the parent app instead of failing.",
+                            isOn: $settings.fallbackToAppOnJump
+                        )
+                    }
                 }
             }
 
-            section("HUD") {
-                VStack(alignment: .leading, spacing: 12) {
-                    Toggle("Show jump popups", isOn: $settings.showJumpPopups)
-                    Toggle("Show add popups", isOn: $settings.showAddPopups)
+            section(
+                "HUD",
+                description: "Tune the on-screen feedback Arpoon shows while you add, jump, and navigate."
+            ) {
+                sectionCard {
+                    VStack(spacing: 0) {
+                        settingsToggle(
+                            "Show jump popups",
+                            description: "Display a HUD when a jump action succeeds.",
+                            isOn: $settings.showJumpPopups
+                        )
 
-                    Picker("Add popup style", selection: $settings.addPopupStyle) {
-                        Text("Full").tag(AddPopupStyle.full)
-                        Text("Minimal").tag(AddPopupStyle.minimal)
+                        Divider()
+
+                        settingsToggle(
+                            "Show add popups",
+                            description: "Display confirmation when a new target or shortcut is added.",
+                            isOn: $settings.showAddPopups
+                        )
+
+                        Divider()
+
+                        controlRow(
+                            title: "Add popup style",
+                            description: "Choose whether add confirmations show the full target name or a minimal badge."
+                        ) {
+                            Picker("Add popup style", selection: $settings.addPopupStyle) {
+                                Text("Full").tag(AddPopupStyle.full)
+                                Text("Minimal").tag(AddPopupStyle.minimal)
+                            }
+                            .pickerStyle(.segmented)
+                            .labelsHidden()
+                            .frame(width: controlColumnWidth)
+                            .disabled(!settings.showAddPopups)
+                        }
+
+                        Divider()
+
+                        sliderRow(
+                            title: "Dismiss after",
+                            description: "Set how long HUD overlays stay visible before they fade away.",
+                            value: $settings.hudTimeout,
+                            range: 1.0 ... 5.0,
+                            step: 0.2,
+                            format: "%.1fs"
+                        )
+
+                        Divider()
+
+                        settingsToggle(
+                            "Show HUD when holding Option",
+                            description: "Press and hold Option by itself to reveal the current HUD.",
+                            isOn: $settings.showHUDOnOptionHold
+                        )
+
+                        Divider()
+
+                        settingsToggle(
+                            "Animate The Grid minimap selection",
+                            description: "Move the selected layer or column inside the minimap instead of shifting the HUD window.",
+                            isOn: $settings.animateGridMinimapSelection
+                        )
+
+                        Divider()
+
+                        sliderRow(
+                            title: "Option hold delay",
+                            description: "Wait this long before showing the held-Option HUD.",
+                            value: $settings.optionHoldDuration,
+                            range: 0.25 ... 1.0,
+                            step: 0.05,
+                            format: "%.2fs",
+                            isEnabled: settings.showHUDOnOptionHold
+                        )
                     }
-                    .pickerStyle(.segmented)
-                    .disabled(!settings.showAddPopups)
-
-                    HStack {
-                        Text("Dismiss after")
-                        Slider(value: $settings.hudTimeout, in: 1.0 ... 5.0, step: 0.2)
-                        Text("\(settings.hudTimeout, specifier: "%.1f")s")
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Toggle("Show HUD when holding Option", isOn: $settings.showHUDOnOptionHold)
-                    Toggle("Animate The Grid minimap selection", isOn: $settings.animateGridMinimapSelection)
-
-                    HStack {
-                        Text("Option hold delay")
-                        Slider(value: $settings.optionHoldDuration, in: 0.25 ... 1.0, step: 0.05)
-                        Text("\(settings.optionHoldDuration, specifier: "%.2f")s")
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    }
-                    .disabled(!settings.showHUDOnOptionHold)
-
-                    Text("Press and hold Option by itself to show the current HUD. Minimal add popups show a tiny glass plus badge instead of the target name. The Grid animation moves the selected layer or column inside the minimap instead of shifting the HUD window.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
                 }
             }
 
-            section("Permissions") {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
+            section(
+                "Permissions",
+                description: "Accessibility access is required for reliable window capture and window-focused routing."
+            ) {
+                sectionCard {
+                    HStack(alignment: .center, spacing: 12) {
                         Label(
                             permissions.isTrusted ? "Accessibility is enabled" : "Accessibility is disabled",
                             systemImage: permissions.isTrusted ? "checkmark.circle.fill" : "xmark.circle.fill"
                         )
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(permissions.isTrusted ? .green : .orange)
 
                         Spacer()
@@ -269,25 +339,36 @@ private struct GeneralSettingsPane: View {
                             commands.requestAccessibilityAccess()
                         }
                     }
-
-                    Text("Window capture and reliable window focus routing require Accessibility permission.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                    .padding(16)
                 }
             }
         }
+        .frame(maxWidth: contentWidth, alignment: .leading)
     }
 
     @ViewBuilder
-    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        GroupBox {
-            VStack(alignment: .leading, spacing: 12) {
+    private func section<Content: View>(
+        _ title: String,
+        description: String? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: sectionHeaderSpacing) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+
+                if let description {
+                    Text(description)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: cardContentSpacing) {
                 content()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-        } label: {
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
         }
     }
 
@@ -298,16 +379,27 @@ private struct GeneralSettingsPane: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.secondary)
 
-            ForEach(actions, id: \.id) { action in
-                ShortcutRecorderRow(
-                    action: action,
-                    settings: settings,
-                    resetShortcut: resetShortcut(for: action, gridPreset: gridPreset),
-                    activeRecorderID: $activeRecorderID
-                )
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(actions.enumerated()), id: \.element.id) { index, action in
+                    ShortcutRecorderRow(
+                        action: action,
+                        settings: settings,
+                        resetShortcut: resetShortcut(for: action, gridPreset: gridPreset),
+                        activeRecorderID: $activeRecorderID
+                    )
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+
+                    if index < actions.count - 1 {
+                        Divider()
+                    }
+                }
             }
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
         }
-        .padding(.vertical, 2)
     }
 
     private func resetShortcut(for action: HotkeyAction, gridPreset: GridShortcutPreset?) -> HotkeyShortcut {
@@ -326,42 +418,141 @@ private struct GeneralSettingsPane: View {
                 .foregroundStyle(.secondary)
 
             if dynamicHotkeys.assignments.isEmpty {
-                Text("No dynamic hotkeys assigned yet.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                helperText("No dynamic hotkeys assigned yet.")
             } else {
-                ForEach(dynamicHotkeys.assignments) { assignment in
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(assignment.label)
-                                .font(.system(size: 13, weight: .medium))
-                                .lineLimit(1)
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(dynamicHotkeys.assignments.enumerated()), id: \.element.id) { index, assignment in
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(assignment.label)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .lineLimit(1)
 
-                            Text(assignment.target.kindDescription)
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
+                                Text(assignment.target.kindDescription)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Text(assignment.shortcut.displayString)
+                                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Capsule().fill(Color.secondary.opacity(0.12)))
+
+                            Button("Jump") {
+                                commands.jumpToDynamicHotkey(assignment.shortcut)
+                            }
+
+                            Button("Clear") {
+                                commands.clearDynamicHotkey(assignment.shortcut)
+                            }
                         }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
 
-                        Spacer()
-
-                        Text(assignment.shortcut.displayString)
-                            .font(.system(size: 12, weight: .medium, design: .monospaced))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Capsule().fill(Color.secondary.opacity(0.12)))
-
-                        Button("Jump") {
-                            commands.jumpToDynamicHotkey(assignment.shortcut)
-                        }
-
-                        Button("Clear") {
-                            commands.clearDynamicHotkey(assignment.shortcut)
+                        if index < dynamicHotkeys.assignments.count - 1 {
+                            Divider()
                         }
                     }
                 }
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(nsColor: .controlBackgroundColor))
+                )
             }
         }
-        .padding(.vertical, 2)
+    }
+
+    @ViewBuilder
+    private func controlRow<Content: View>(
+        title: String,
+        description: String? = nil,
+        @ViewBuilder control: () -> Content
+    ) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+
+                if let description {
+                    Text(description)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            control()
+                .controlSize(.small)
+                .frame(minWidth: controlColumnWidth, alignment: .trailing)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+    }
+
+    private func settingsToggle(_ title: String, description: String? = nil, isOn: Binding<Bool>) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+
+                if let description {
+                    Text(description)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .padding(.top, 2)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+    }
+
+    private func sliderRow(
+        title: String,
+        description: String,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        step: Double,
+        format: String,
+        isEnabled: Bool = true
+    ) -> some View {
+        controlRow(title: title, description: description) {
+            HStack(spacing: 10) {
+                Slider(value: value, in: range, step: step)
+                    .frame(width: 170)
+
+                Text(String(format: format, value.wrappedValue))
+                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 52, alignment: .trailing)
+            }
+            .disabled(!isEnabled)
+        }
+    }
+
+    private func sectionCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
+    }
+
+    private func helperText(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
 }

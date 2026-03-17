@@ -3,9 +3,9 @@ import Carbon
 import Foundation
 
 enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
+    case grid
     case staticSlots
     case dynamicWindows
-    case grid
 
     var id: Self { self }
 
@@ -22,8 +22,8 @@ enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
 }
 
 enum GridShortcutPreset: String, CaseIterable, Identifiable {
-    case vim
     case gamer
+    case vim
 
     var id: Self { self }
 

@@ -12,8 +12,14 @@ struct ShortcutRecorderRow: View {
     @State private var eventMonitor: Any?
     @State private var errorMessage: String?
 
+    private let shortcutFieldWidth: CGFloat = 156
+
     private var isRecording: Bool {
         activeRecorderID == action.id
+    }
+
+    private var hasShortcut: Bool {
+        settings.shortcut(for: action) != nil
     }
 
     private var shortcutLabel: String {
@@ -48,13 +54,6 @@ struct ShortcutRecorderRow: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Reset to \(resetShortcut.displayString)")
-
-                Button("Clear") {
-                    errorMessage = nil
-                    settings.clearShortcut(for: action)
-                    activeRecorderID = nil
-                }
-                .disabled(settings.shortcut(for: action) == nil)
             }
 
             if let errorMessage {
@@ -77,19 +76,44 @@ struct ShortcutRecorderRow: View {
 
     @ViewBuilder
     private var shortcutButton: some View {
-        let button = Button {
-            errorMessage = nil
-            activeRecorderID = isRecording ? nil : action.id
-        } label: {
-            Text(shortcutLabel)
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .frame(minWidth: 138)
-        }
+        ZStack(alignment: .trailing) {
+            Button {
+                errorMessage = nil
+                activeRecorderID = isRecording ? nil : action.id
+            } label: {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(isRecording ? Color.accentColor.opacity(0.16) : Color(nsColor: .controlBackgroundColor))
 
-        if isRecording {
-            button.buttonStyle(BorderedProminentButtonStyle())
-        } else {
-            button.buttonStyle(BorderedButtonStyle())
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(
+                            isRecording ? Color.accentColor.opacity(0.65) : Color(nsColor: .separatorColor).opacity(0.22),
+                            lineWidth: 1
+                        )
+
+                    Text(shortcutLabel)
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, hasShortcut && !isRecording ? 28 : 10)
+                        .padding(.vertical, 7)
+                }
+                .frame(width: shortcutFieldWidth)
+                .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
+            if hasShortcut && !isRecording {
+                Button {
+                    clearShortcut()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.trailing, 10)
+                }
+                .buttonStyle(.plain)
+                .help("Clear shortcut")
+            }
         }
     }
 
@@ -144,5 +168,11 @@ struct ShortcutRecorderRow: View {
         case .requiresModifier:
             errorMessage = "Use at least one modifier key."
         }
+    }
+
+    private func clearShortcut() {
+        errorMessage = nil
+        settings.clearShortcut(for: action)
+        activeRecorderID = nil
     }
 }

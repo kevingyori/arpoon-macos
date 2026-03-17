@@ -67,7 +67,7 @@ final class SettingsStore: ObservableObject {
         preferWindowTargets = defaults.object(forKey: Keys.preferWindowTargets) as? Bool ?? true
         launchAppsOnJump = defaults.object(forKey: Keys.launchAppsOnJump) as? Bool ?? true
         fallbackToAppOnJump = defaults.object(forKey: Keys.fallbackToAppOnJump) as? Bool ?? true
-        hotkeyScheme = HotkeyScheme(rawValue: defaults.string(forKey: Keys.hotkeyScheme) ?? "") ?? .dynamicWindows
+        hotkeyScheme = HotkeyScheme(rawValue: defaults.string(forKey: Keys.hotkeyScheme) ?? "") ?? .grid
 
         if defaults.object(forKey: Keys.hudTimeout) == nil {
             hudTimeout = 2.2
@@ -154,7 +154,13 @@ final class SettingsStore: ObservableObject {
     }
 
     private static func defaultHotkeys() -> [HotkeyAction: HotkeyShortcut] {
-        Dictionary(uniqueKeysWithValues: HotkeyAction.allCases.map { ($0, $0.defaultShortcut) })
+        var hotkeys = Dictionary(uniqueKeysWithValues: HotkeyAction.allCases.map { ($0, $0.defaultShortcut) })
+
+        for (action, shortcut) in GridShortcutPreset.gamer.shortcuts {
+            hotkeys[action] = shortcut
+        }
+
+        return hotkeys
     }
 }
 
