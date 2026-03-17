@@ -86,15 +86,6 @@ struct GridSettingsPane: View {
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(
-            RoundedRectangle(cornerRadius: 22)
-                .fill(Color.secondary.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 22))
     }
 
     private var gridHeaderRow: some View {
@@ -421,18 +412,20 @@ struct GridSettingsPane: View {
             }
             .buttonStyle(.plain)
 
-            if app.binding != nil {
-                Button {
+            Button {
+                if app.binding != nil {
                     gridStore.clearStandaloneAppBinding(id: app.id)
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .padding(10)
+                } else {
+                    gridStore.removeStandaloneApp(id: app.id)
                 }
-                .buttonStyle(.plain)
-                .help("Remove app")
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(10)
             }
+            .buttonStyle(.plain)
+            .help(app.binding != nil ? "Clear binding" : "Remove standalone app")
         }
     }
 

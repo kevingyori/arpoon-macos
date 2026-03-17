@@ -66,7 +66,6 @@ struct SettingsView: View {
                     availableWindowsProvider: availableWindowsProvider,
                     activeRecorderID: $activeRecorderID
                 )
-                .padding(20)
             }
         }
         .frame(minWidth: 860, minHeight: 700)
