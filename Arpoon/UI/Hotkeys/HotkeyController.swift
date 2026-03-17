@@ -22,6 +22,7 @@ protocol HotkeyControlling: AnyObject {
     var onTheoCycleBrowser: (() -> Void)? { get set }
     var onTheoBindCurrent: (() -> Void)? { get set }
     var onTheoShowHUD: (() -> Void)? { get set }
+    var onTheoStandaloneApp: ((String) -> Void)? { get set }
 
     func apply(configuration: HotkeyConfiguration)
     func suspend()
@@ -49,6 +50,7 @@ final class HotkeyController: HotkeyControlling {
     var onTheoCycleBrowser: (() -> Void)?
     var onTheoBindCurrent: (() -> Void)?
     var onTheoShowHUD: (() -> Void)?
+    var onTheoStandaloneApp: ((String) -> Void)?
 
     private let hotKeyCenter = GlobalHotKeyCenter.shared
     private var configuration: HotkeyConfiguration?
@@ -89,20 +91,34 @@ final class HotkeyController: HotkeyControlling {
             }
         }
 
-        guard configuration.scheme == .dynamicWindows else {
-            return
-        }
+        switch configuration.scheme {
+        case .dynamicWindows:
+            for shortcut in configuration.dynamicShortcuts {
+                guard registeredShortcuts.insert(shortcut).inserted else {
+                    continue
+                }
 
-        for shortcut in configuration.dynamicShortcuts {
-            guard registeredShortcuts.insert(shortcut).inserted else {
-                continue
-            }
-
-            hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
-                Task { @MainActor in
-                    self?.onDynamicHotkey?(shortcut)
+                hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
+                    Task { @MainActor in
+                        self?.onDynamicHotkey?(shortcut)
+                    }
                 }
             }
+        case .theo:
+            for binding in configuration.theoStandaloneBindings {
+                let shortcut = binding.shortcut
+                guard registeredShortcuts.insert(shortcut).inserted else {
+                    continue
+                }
+
+                hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
+                    Task { @MainActor in
+                        self?.onTheoStandaloneApp?(binding.appID)
+                    }
+                }
+            }
+        case .staticSlots:
+            break
         }
     }
 

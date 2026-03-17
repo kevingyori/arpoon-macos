@@ -16,6 +16,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             settings: settings,
             accessibilityPermissions: permissions,
             dynamicHotkeyStore: dynamicStore,
+            theoStore: makeTheoStore(),
             hotkeyController: hotkeys,
             optionHoldHUDController: optionHold
         )
@@ -44,6 +45,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             settings: makeSettings(),
             accessibilityPermissions: FakePermissionService(),
             dynamicHotkeyStore: makeDynamicHotkeyStore(),
+            theoStore: makeTheoStore(),
             hotkeyController: hotkeys,
             optionHoldHUDController: optionHold
         )
@@ -230,6 +232,37 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(updatedLayer.column(id: customColumn.id)?.iconSymbol, "book")
     }
 
+    func testTheoStandaloneAppShortcutJumpsToSharedAppTarget() async throws {
+        let theoStore = makeTheoStore()
+        await theoStore.load()
+
+        let app = theoStore.addStandaloneApp()
+        theoStore.renameStandaloneApp(id: app.id, name: "Music")
+        theoStore.setStandaloneAppShortcut(
+            id: app.id,
+            shortcut: HotkeyShortcut(keyCode: UInt32(kVK_ANSI_M), modifiers: UInt32(optionKey))
+        )
+        _ = theoStore.replaceStandaloneAppBinding(
+            id: app.id,
+            target: .app(AppTarget(bundleId: "com.example.music", appName: "Music"))
+        )
+
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Music", strategy: nil)
+
+        let commandCenter = makeCommandCenter(
+            theoStore: theoStore,
+            focusService: focus
+        )
+
+        commandCenter.jumpToTheoStandaloneApp(app.id)
+
+        XCTAssertEqual(
+            focus.focusedTargets.last,
+            .app(AppTarget(bundleId: "com.example.music", appName: "Music"))
+        )
+    }
+
     private func makeCommandCenter(
         slotStore: SlotStore? = nil,
         dynamicStore: DynamicHotkeyStore? = nil,
@@ -307,14 +340,14 @@ private final class InMemoryDynamicHotkeyAssignmentStore: DynamicHotkeyAssignmen
 }
 
 private final class InMemoryTheoLayerStore: TheoLayerStore {
-    private var layers: [TheoLayer] = []
+    private var state = TheoWorkspaceState()
 
-    func loadLayers() async throws -> [TheoLayer] {
-        layers
+    func loadState() async throws -> TheoWorkspaceState {
+        state
     }
 
-    func saveLayers(_ layers: [TheoLayer]) async throws {
-        self.layers = layers
+    func saveState(_ state: TheoWorkspaceState) async throws {
+        self.state = state
     }
 }
 
@@ -352,6 +385,7 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onTheoCycleBrowser: (() -> Void)?
     var onTheoBindCurrent: (() -> Void)?
     var onTheoShowHUD: (() -> Void)?
+    var onTheoStandaloneApp: ((String) -> Void)?
 
     private(set) var configurations: [HotkeyConfiguration] = []
     private(set) var suspendCount = 0

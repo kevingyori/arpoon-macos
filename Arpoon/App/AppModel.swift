@@ -66,6 +66,7 @@ final class AppModel: ObservableObject {
             settings: settings,
             accessibilityPermissions: accessibilityPermissions,
             dynamicHotkeyStore: dynamicHotkeyStore,
+            theoStore: theoStore,
             hotkeyController: hotkeyController,
             optionHoldHUDController: optionHoldHUDController
         )
@@ -128,6 +129,12 @@ final class AppModel: ObservableObject {
             },
             appendTheoBinding: { layerID, tool in
                 commandCenter.appendTheoBinding(layerID: layerID, tool: tool)
+            },
+            jumpToTheoStandaloneApp: { appID in
+                commandCenter.jumpToTheoStandaloneApp(appID)
+            },
+            captureTheoStandaloneApp: { appID in
+                commandCenter.captureTheoStandaloneApp(appID)
             },
             setHotkeyRecordingActive: { isActive in
                 runtimeCoordinator.setHotkeyRecordingActive(isActive)
@@ -199,6 +206,9 @@ final class AppModel: ObservableObject {
         }
         runtimeCoordinator.onTheoShowHUD = { [weak commandCenter] in
             commandCenter?.showTheoHUD()
+        }
+        runtimeCoordinator.onTheoStandaloneApp = { [weak commandCenter] appID in
+            commandCenter?.jumpToTheoStandaloneApp(appID)
         }
 
         commandCenter.settingsWindowPresenterProvider = { [weak self] in

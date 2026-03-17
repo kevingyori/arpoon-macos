@@ -110,6 +110,92 @@ struct TheoToolGroup: Codable, Hashable {
     }
 }
 
+struct TheoStandaloneApp: Codable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let iconSymbol: String
+    let shortcut: HotkeyShortcut?
+    let binding: TheoBinding?
+    let createdAt: Date
+    let updatedAt: Date
+
+    init(
+        id: String = UUID().uuidString,
+        name: String,
+        iconSymbol: String = "app.fill",
+        shortcut: HotkeyShortcut? = nil,
+        binding: TheoBinding? = nil,
+        createdAt: Date = .now,
+        updatedAt: Date = .now
+    ) {
+        self.id = id
+        self.name = name
+        self.iconSymbol = iconSymbol
+        self.shortcut = shortcut
+        self.binding = binding
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    func updatingName(_ name: String) -> TheoStandaloneApp {
+        TheoStandaloneApp(
+            id: id,
+            name: name,
+            iconSymbol: iconSymbol,
+            shortcut: shortcut,
+            binding: binding,
+            createdAt: createdAt,
+            updatedAt: .now
+        )
+    }
+
+    func updatingIcon(_ iconSymbol: String) -> TheoStandaloneApp {
+        TheoStandaloneApp(
+            id: id,
+            name: name,
+            iconSymbol: iconSymbol,
+            shortcut: shortcut,
+            binding: binding,
+            createdAt: createdAt,
+            updatedAt: .now
+        )
+    }
+
+    func updatingShortcut(_ shortcut: HotkeyShortcut?) -> TheoStandaloneApp {
+        TheoStandaloneApp(
+            id: id,
+            name: name,
+            iconSymbol: iconSymbol,
+            shortcut: shortcut,
+            binding: binding,
+            createdAt: createdAt,
+            updatedAt: .now
+        )
+    }
+
+    func updatingBinding(_ binding: TheoBinding?) -> TheoStandaloneApp {
+        TheoStandaloneApp(
+            id: id,
+            name: name,
+            iconSymbol: iconSymbol,
+            shortcut: shortcut,
+            binding: binding,
+            createdAt: createdAt,
+            updatedAt: .now
+        )
+    }
+}
+
+struct TheoWorkspaceState: Codable, Hashable {
+    let layers: [TheoLayer]
+    let standaloneApps: [TheoStandaloneApp]
+
+    init(layers: [TheoLayer] = [], standaloneApps: [TheoStandaloneApp] = []) {
+        self.layers = layers
+        self.standaloneApps = standaloneApps
+    }
+}
+
 struct TheoLayer: Codable, Identifiable, Hashable {
     let id: String
     let name: String

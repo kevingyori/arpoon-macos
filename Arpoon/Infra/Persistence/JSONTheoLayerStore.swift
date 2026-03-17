@@ -3,6 +3,11 @@ import Foundation
 final class JSONTheoLayerStore: TheoLayerStore {
     private struct Payload: Codable {
         let layers: [TheoLayer]
+        let standaloneApps: [TheoStandaloneApp]
+    }
+
+    private struct LegacyPayload: Codable {
+        let layers: [TheoLayer]
     }
 
     private let encoder: JSONEncoder
@@ -17,20 +22,28 @@ final class JSONTheoLayerStore: TheoLayerStore {
         decoder.dateDecodingStrategy = .iso8601
     }
 
-    func loadLayers() async throws -> [TheoLayer] {
+    func loadState() async throws -> TheoWorkspaceState {
         let url = try fileURL()
         let decoder = self.decoder
         return try await Task.detached {
             guard FileManager.default.fileExists(atPath: url.path) else {
-                return []
+                return TheoWorkspaceState()
             }
 
             let data = try Data(contentsOf: url)
-            return try decoder.decode(Payload.self, from: data).layers
+            if let payload = try? decoder.decode(Payload.self, from: data) {
+                return TheoWorkspaceState(
+                    layers: payload.layers,
+                    standaloneApps: payload.standaloneApps
+                )
+            }
+
+            let legacy = try decoder.decode(LegacyPayload.self, from: data)
+            return TheoWorkspaceState(layers: legacy.layers)
         }.value
     }
 
-    func saveLayers(_ layers: [TheoLayer]) async throws {
+    func saveState(_ state: TheoWorkspaceState) async throws {
         let url = try fileURL()
         let encoder = self.encoder
         try await Task.detached {
@@ -39,7 +52,12 @@ final class JSONTheoLayerStore: TheoLayerStore {
                 withIntermediateDirectories: true
             )
 
-            let data = try encoder.encode(Payload(layers: layers))
+            let data = try encoder.encode(
+                Payload(
+                    layers: state.layers,
+                    standaloneApps: state.standaloneApps
+                )
+            )
             try data.write(to: url, options: .atomic)
         }.value
     }

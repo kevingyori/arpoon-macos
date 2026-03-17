@@ -50,9 +50,11 @@ struct SettingsView: View {
                         )
                     case .theo:
                         TheoSettingsPane(
+                            settings: settings,
                             theoStore: theoStore,
                             theoSession: theoSession,
-                            commands: commands
+                            commands: commands,
+                            activeRecorderID: $activeRecorderID
                         )
                     }
                 }
@@ -119,7 +121,7 @@ private struct GeneralSettingsPane: View {
                         shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
                         dynamicHotkeyGroup
                     case .theo:
-                        Text("Theo uses semantic project-layer navigation. Direct jump keys follow the current layer order, not permanent layer IDs.")
+                        Text("Theo uses semantic project-layer navigation. Direct jump keys follow the current layer order, not permanent layer IDs, and standalone app shortcuts stay the same across projects.")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
 

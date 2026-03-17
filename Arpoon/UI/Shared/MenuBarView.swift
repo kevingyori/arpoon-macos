@@ -309,6 +309,47 @@ struct MenuBarView: View {
                         }
                     }
                 }
+
+                if !theoStore.standaloneApps.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Standalone Apps")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.secondary)
+
+                        ForEach(theoStore.standaloneApps) { app in
+                            Button {
+                                dismissPopover()
+                                commands.jumpToTheoStandaloneApp(app.id)
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: app.iconSymbol)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .frame(width: 22, height: 22)
+                                        .background(Circle().fill(Color.secondary.opacity(0.14)))
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(app.name)
+                                            .font(.system(size: 12.5, weight: .medium))
+
+                                        Text(app.shortcut?.displayString ?? "No shortcut")
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    Text(app.binding?.label ?? "empty")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                                .contentShape(Rectangle())
+                                .padding(.vertical, 6)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
             }
         }
     }

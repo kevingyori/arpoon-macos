@@ -2,6 +2,6 @@ import Foundation
 
 @MainActor
 protocol TheoLayerStore {
-    func loadLayers() async throws -> [TheoLayer]
-    func saveLayers(_ layers: [TheoLayer]) async throws
+    func loadState() async throws -> TheoWorkspaceState
+    func saveState(_ state: TheoWorkspaceState) async throws
 }

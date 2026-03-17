@@ -24,10 +24,12 @@ final class AppRuntimeCoordinator {
     var onTheoCycleBrowser: (() -> Void)?
     var onTheoBindCurrent: (() -> Void)?
     var onTheoShowHUD: (() -> Void)?
+    var onTheoStandaloneApp: ((String) -> Void)?
 
     private let settings: SettingsStore
     private let accessibilityPermissions: any AccessibilityPermissionMonitoring
     private let dynamicHotkeyStore: DynamicHotkeyStore
+    private let theoStore: TheoStore
     private let hotkeyController: any HotkeyControlling
     private let optionHoldHUDController: any OptionHoldHUDControlling
     private var cancellables = Set<AnyCancellable>()
@@ -37,12 +39,14 @@ final class AppRuntimeCoordinator {
         settings: SettingsStore,
         accessibilityPermissions: any AccessibilityPermissionMonitoring,
         dynamicHotkeyStore: DynamicHotkeyStore,
+        theoStore: TheoStore,
         hotkeyController: any HotkeyControlling,
         optionHoldHUDController: any OptionHoldHUDControlling
     ) {
         self.settings = settings
         self.accessibilityPermissions = accessibilityPermissions
         self.dynamicHotkeyStore = dynamicHotkeyStore
+        self.theoStore = theoStore
         self.hotkeyController = hotkeyController
         self.optionHoldHUDController = optionHoldHUDController
 
@@ -103,6 +107,9 @@ final class AppRuntimeCoordinator {
         hotkeyController.onTheoShowHUD = { [weak self] in
             self?.onTheoShowHUD?()
         }
+        hotkeyController.onTheoStandaloneApp = { [weak self] id in
+            self?.onTheoStandaloneApp?(id)
+        }
 
         optionHoldHUDController.onShow = { [weak self] in
             self?.onShowHeldHUD?()
@@ -126,13 +133,19 @@ final class AppRuntimeCoordinator {
                 settings.$hotkeys,
                 dynamicHotkeyStore.$assignments.map { assignments in
                     assignments.map(\.shortcut)
+                },
+                theoStore.$standaloneApps.map { apps in
+                    apps.compactMap { app in
+                        app.shortcut.map { HotkeyConfiguration.TheoStandaloneBinding(appID: app.id, shortcut: $0) }
+                    }
                 }
             )
-            .map { scheme, hotkeys, dynamicShortcuts in
+            .map { scheme, hotkeys, dynamicShortcuts, theoStandaloneBindings in
                 HotkeyConfiguration(
                     scheme: scheme,
                     hotkeys: hotkeys,
-                    dynamicShortcuts: dynamicShortcuts
+                    dynamicShortcuts: dynamicShortcuts,
+                    theoStandaloneBindings: theoStandaloneBindings
                 )
             }
             .removeDuplicates()

@@ -386,6 +386,65 @@ final class AppCommandCenter {
         )
     }
 
+    func jumpToTheoStandaloneApp(_ appID: String) {
+        guard let app = theoStore.standaloneApp(id: appID) else {
+            showTheoHint(
+                title: "Standalone app is missing",
+                detail: "Re-open Theo settings and add it again.",
+                tone: .warning,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard let binding = app.binding else {
+            showTheoHint(
+                title: "\(app.name) is empty",
+                detail: "Capture an app target first.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        let outcome = focusService.focus(target: binding.target)
+        showTheoHintForOutcome(outcome, fallbackLabel: app.name, movement: .neutral)
+    }
+
+    func captureTheoStandaloneApp(_ appID: String) {
+        guard let outcome = captureService.captureFocusedTarget() else {
+            showTheoHint(
+                title: "Couldn’t capture the current app",
+                detail: "Focus an app and try again.",
+                tone: .warning,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard let app = theoStore.replaceStandaloneAppBinding(
+            id: appID,
+            target: standaloneTheoTarget(from: outcome.target)
+        ) else {
+            return
+        }
+
+        let detail: String
+        switch outcome.target {
+        case .app:
+            detail = "Theo saved the app target for \(app.name)."
+        case .window:
+            detail = "Theo saved the app target for \(app.name), not the current window."
+        }
+
+        showTheoHint(
+            title: "\(app.name) saved",
+            detail: detail,
+            tone: .success,
+            movement: .neutral
+        )
+    }
+
     func jumpToVisibleApp(toward direction: SpatialNavigationDirection) {
         guard accessibilityPermissions.isTrusted else {
             showMessage(
@@ -897,6 +956,20 @@ final class AppCommandCenter {
             return "Theo saved the focused window to \(tool.title.lowercased())."
         case .appFallback:
             return "Window capture wasn’t available, so Theo saved the app instead."
+        }
+    }
+
+    private func standaloneTheoTarget(from target: Target) -> Target {
+        switch target {
+        case .app:
+            return target
+        case .window(let window):
+            return .app(
+                AppTarget(
+                    bundleId: window.bundleId,
+                    appName: window.appName
+                )
+            )
         }
     }
 

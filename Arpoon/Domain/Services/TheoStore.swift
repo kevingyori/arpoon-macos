@@ -4,6 +4,7 @@ import Foundation
 @MainActor
 final class TheoStore: ObservableObject {
     @Published private(set) var layers: [TheoLayer] = []
+    @Published private(set) var standaloneApps: [TheoStandaloneApp] = []
 
     private let store: TheoLayerStore
     private let labelPolicy: TargetLabelPolicy
@@ -16,15 +17,18 @@ final class TheoStore: ObservableObject {
 
     func load() async {
         do {
-            let loaded = try await store.loadLayers()
-            if loaded.isEmpty {
+            let loaded = try await store.loadState()
+            if loaded.layers.isEmpty {
                 layers = Self.seedLayers()
+                standaloneApps = Self.normalized(standaloneApps: loaded.standaloneApps)
                 persist()
             } else {
-                layers = Self.normalized(layers: loaded)
+                layers = Self.normalized(layers: loaded.layers)
+                standaloneApps = Self.normalized(standaloneApps: loaded.standaloneApps)
             }
         } catch {
             layers = Self.seedLayers()
+            standaloneApps = []
             persist()
         }
     }
@@ -39,6 +43,10 @@ final class TheoStore: ObservableObject {
         }
 
         return layers[position - 1]
+    }
+
+    func standaloneApp(id: String) -> TheoStandaloneApp? {
+        standaloneApps.first(where: { $0.id == id })
     }
 
     @discardableResult
@@ -125,6 +133,63 @@ final class TheoStore: ObservableObject {
                 updatedAt: .now
             )
         }
+    }
+
+    @discardableResult
+    func addStandaloneApp() -> TheoStandaloneApp {
+        let app = TheoStandaloneApp(name: "Standalone App \(standaloneApps.count + 1)")
+        standaloneApps.append(app)
+        persist()
+        return app
+    }
+
+    func removeStandaloneApp(id: String) {
+        standaloneApps.removeAll { $0.id == id }
+        persist()
+    }
+
+    func renameStandaloneApp(id: String, name: String) {
+        updateStandaloneApp(id: id) {
+            $0.updatingName(name.isEmpty ? "Untitled App" : name)
+        }
+    }
+
+    func setStandaloneAppIcon(id: String, iconSymbol: String) {
+        updateStandaloneApp(id: id) {
+            $0.updatingIcon(iconSymbol)
+        }
+    }
+
+    func setStandaloneAppShortcut(id: String, shortcut: HotkeyShortcut?) {
+        updateStandaloneApp(id: id) {
+            $0.updatingShortcut(shortcut)
+        }
+    }
+
+    func clearStandaloneAppBinding(id: String) {
+        updateStandaloneApp(id: id) {
+            $0.updatingBinding(nil)
+        }
+    }
+
+    @discardableResult
+    func replaceStandaloneAppBinding(id: String, target: Target) -> TheoStandaloneApp? {
+        var updatedApp: TheoStandaloneApp?
+        updateStandaloneApp(id: id) { app in
+            let existing = app.binding
+            let binding = TheoBinding(
+                id: existing?.id ?? UUID().uuidString,
+                label: labelPolicy.label(for: target),
+                target: target,
+                archetypeHint: app.name,
+                createdAt: existing?.createdAt ?? .now,
+                updatedAt: .now
+            )
+            let updated = app.updatingBinding(binding)
+            updatedApp = updated
+            return updated
+        }
+        return updatedApp
     }
 
     func setActiveBinding(layerID: String, tool: TheoToolColumn, bindingID: String?) {
@@ -279,14 +344,29 @@ final class TheoStore: ObservableObject {
 
     private func persist() {
         let layers = self.layers
+        let standaloneApps = self.standaloneApps
         persistenceTask?.cancel()
         persistenceTask = Task {
             do {
-                try await store.saveLayers(layers)
+                try await store.saveState(
+                    TheoWorkspaceState(
+                        layers: layers,
+                        standaloneApps: standaloneApps
+                    )
+                )
             } catch {
                 // Keep the in-memory model authoritative for the current session.
             }
         }
+    }
+
+    private func updateStandaloneApp(id: String, transform: (TheoStandaloneApp) -> TheoStandaloneApp) {
+        guard let index = standaloneApps.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+
+        standaloneApps[index] = transform(standaloneApps[index])
+        persist()
     }
 
     private func defaultLabel(for tool: TheoToolColumn, group: TheoToolGroup) -> String {
@@ -354,5 +434,19 @@ final class TheoStore: ObservableObject {
         }
 
         return normalized.isEmpty ? seedLayers() : normalized
+    }
+
+    private static func normalized(standaloneApps: [TheoStandaloneApp]) -> [TheoStandaloneApp] {
+        standaloneApps.map { app in
+            TheoStandaloneApp(
+                id: app.id,
+                name: app.name.isEmpty ? "Untitled App" : app.name,
+                iconSymbol: app.iconSymbol.isEmpty ? "app.fill" : app.iconSymbol,
+                shortcut: app.shortcut,
+                binding: app.binding,
+                createdAt: app.createdAt,
+                updatedAt: app.updatedAt
+            )
+        }
     }
 }

@@ -15,6 +15,8 @@ struct AppCommands {
     let bindFocusedTargetToTheoCurrentContext: () -> Void
     let captureTheoBinding: (String, TheoToolColumn, String?) -> Void
     let appendTheoBinding: (String, TheoToolColumn) -> Void
+    let jumpToTheoStandaloneApp: (String) -> Void
+    let captureTheoStandaloneApp: (String) -> Void
     let setHotkeyRecordingActive: (Bool) -> Void
     let registerSettingsWindow: (NSWindow) -> Void
 }

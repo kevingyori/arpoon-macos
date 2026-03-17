@@ -2,6 +2,7 @@ import SwiftUI
 
 extension TheoToolColumn {
     static let iconOptions = [
+        "app.fill",
         "terminal",
         "curlybraces",
         "globe",
