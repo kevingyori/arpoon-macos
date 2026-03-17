@@ -116,6 +116,16 @@ final class SettingsStore: ObservableObject {
         hotkeys = Self.defaultHotkeys()
     }
 
+    func applyGridShortcutPreset(_ preset: GridShortcutPreset) {
+        for action in HotkeyAction.gridActions {
+            hotkeys[action] = action.defaultShortcut
+        }
+
+        for (action, shortcut) in preset.shortcuts {
+            hotkeys[action] = shortcut
+        }
+    }
+
     private func persistHotkeys() {
         let payload = hotkeys
             .sorted { $0.key.id < $1.key.id }

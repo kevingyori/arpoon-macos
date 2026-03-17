@@ -93,6 +93,8 @@ private struct GeneralSettingsPane: View {
     let commands: AppCommands
     @Binding var activeRecorderID: String?
 
+    @State private var selectedGridPreset: GridShortcutPreset = .vim
+
     var body: some View {
         Group {
             section("Shortcuts") {
@@ -126,20 +128,35 @@ private struct GeneralSettingsPane: View {
                         shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
                         dynamicHotkeyGroup
                     case .grid:
-                        Text("The Grid. A digital frontier. Use Option + H/L to move left and right across the current project’s bound apps, Option + [/] to change projects, Option + Shift + A to add a standalone app hotkey from the focused app, and direct jump keys follow the current layer order rather than permanent IDs.")
+                        Text("The Grid. A digital frontier. Use Option + H/L to move left and right across the current project’s bound apps, Option + [/] to change projects, Option + Shift + A to add a standalone app hotkey from the focused app, Option + Shift + R to rename the current project, and direct jump keys follow the current layer order rather than permanent IDs.")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
 
-                        shortcutGroup(title: "The Grid Projects", actions: HotkeyAction.gridNavigationActions)
-                        shortcutGroup(title: "The Grid Tools", actions: HotkeyAction.gridToolActions)
+                        shortcutGroup(title: "The Grid Projects", actions: HotkeyAction.gridNavigationActions, gridPreset: selectedGridPreset)
+                        shortcutGroup(title: "The Grid Tools", actions: HotkeyAction.gridToolActions, gridPreset: selectedGridPreset)
                     }
 
                     HStack {
+                        if settings.hotkeyScheme == .grid {
+                            Picker("Grid defaults", selection: $selectedGridPreset) {
+                                ForEach(GridShortcutPreset.allCases) { preset in
+                                    Text(preset.title.replacingOccurrences(of: "Reset to ", with: "")).tag(preset)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                        }
+
                         Spacer()
 
                         Button("Reset Defaults") {
                             activeRecorderID = nil
-                            settings.resetHotkeysToDefaults()
+                            switch settings.hotkeyScheme {
+                            case .grid:
+                                settings.applyGridShortcutPreset(selectedGridPreset)
+                            case .staticSlots, .dynamicWindows:
+                                settings.resetHotkeysToDefaults()
+                            }
                         }
                     }
                 }
@@ -238,7 +255,7 @@ private struct GeneralSettingsPane: View {
     }
 
     @ViewBuilder
-    private func shortcutGroup(title: String, actions: [HotkeyAction]) -> some View {
+    private func shortcutGroup(title: String, actions: [HotkeyAction], gridPreset: GridShortcutPreset? = nil) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.system(size: 12, weight: .semibold))
@@ -248,11 +265,20 @@ private struct GeneralSettingsPane: View {
                 ShortcutRecorderRow(
                     action: action,
                     settings: settings,
+                    resetShortcut: resetShortcut(for: action, gridPreset: gridPreset),
                     activeRecorderID: $activeRecorderID
                 )
             }
         }
         .padding(.vertical, 2)
+    }
+
+    private func resetShortcut(for action: HotkeyAction, gridPreset: GridShortcutPreset?) -> HotkeyShortcut {
+        if let gridPreset, HotkeyAction.gridActions.contains(action) {
+            return gridPreset.shortcuts[action] ?? action.defaultShortcut
+        }
+
+        return action.defaultShortcut
     }
 
     @ViewBuilder
@@ -300,4 +326,5 @@ private struct GeneralSettingsPane: View {
         }
         .padding(.vertical, 2)
     }
+
 }

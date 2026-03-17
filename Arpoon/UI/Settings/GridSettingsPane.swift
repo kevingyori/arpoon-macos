@@ -87,17 +87,22 @@ struct GridSettingsPane: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
 
-                ScrollView([.horizontal, .vertical]) {
+                ScrollView(.horizontal) {
                     VStack(alignment: .leading, spacing: 14) {
                         gridHeaderRow
 
-                        ForEach(gridStore.layers) { layer in
-                            layerRow(layer)
-                        }
+                        ScrollView(.vertical) {
+                            VStack(alignment: .leading, spacing: 14) {
+                                ForEach(gridStore.layers) { layer in
+                                    layerRow(layer)
+                                }
 
-                        standaloneAppsRow
+                                standaloneAppsRow
+                            }
+                            .padding(.trailing, 6)
+                        }
                     }
-                    .padding(.trailing, 6)
+                    .padding(.bottom, 6)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -141,13 +146,10 @@ struct GridSettingsPane: View {
         .frame(width: cellWidth, alignment: .leading)
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(headerColumnBackground(for: column))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(headerColumnStroke(for: column), lineWidth: 1)
+        .cardBackground(
+            fill: headerColumnBackground(for: column),
+            stroke: headerColumnStroke(for: column),
+            cornerRadius: 14
         )
         .onDrag {
             draggedColumnID = column.id
@@ -188,14 +190,6 @@ struct GridSettingsPane: View {
             }
 
             HStack(spacing: 8) {
-                Button("Jump") {
-                    if let index = layerIndex(layer) {
-                        commands.jumpToGridLayer(index + 1)
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-
                 Button("Remove") {
                     gridStore.removeLayer(id: layer.id)
                     if selectedLayerID == layer.id {
@@ -210,13 +204,10 @@ struct GridSettingsPane: View {
         .frame(width: rowLabelWidth, alignment: .leading)
         .padding(.horizontal, 12)
         .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(selectedLayerID == layer.id ? layer.color.swiftUIColor.opacity(0.14) : Color.secondary.opacity(0.06))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(selectedLayerID == layer.id ? layer.color.swiftUIColor.opacity(0.34) : Color.clear, lineWidth: 1)
+        .cardBackground(
+            fill: selectedLayerID == layer.id ? layer.color.swiftUIColor.opacity(0.14) : Color.secondary.opacity(0.06),
+            stroke: selectedLayerID == layer.id ? layer.color.swiftUIColor.opacity(0.34) : Color.clear,
+            cornerRadius: 16
         )
         .contentShape(Rectangle())
         .onTapGesture {
@@ -291,13 +282,12 @@ struct GridSettingsPane: View {
                 .frame(minHeight: 116, alignment: .leading)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 12)
-                .background(slotBackgroundColor(layer: layer, isSelected: isSelected(layerID: layer.id, columnID: column.id)))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(slotBorderColor(layer: layer, isSelected: isSelected(layerID: layer.id, columnID: column.id), isEmpty: binding == nil), style: StrokeStyle(lineWidth: 1, dash: binding == nil ? [6, 6] : []))
-                )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(CardButtonStyle(
+                fill: slotBackgroundColor(layer: layer, isSelected: isSelected(layerID: layer.id, columnID: column.id)),
+                stroke: slotBorderColor(layer: layer, isSelected: isSelected(layerID: layer.id, columnID: column.id), isEmpty: binding == nil),
+                dash: binding == nil ? [6, 6] : []
+            ))
         } else {
             Button {
                 if let created = gridStore.addCustomColumn(layerID: layer.id, template: template) {
@@ -322,16 +312,12 @@ struct GridSettingsPane: View {
                 .frame(minHeight: 116, alignment: .leading)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.secondary.opacity(0.04))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.secondary.opacity(0.22), style: StrokeStyle(lineWidth: 1, dash: [6, 6]))
-                )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(CardButtonStyle(
+                fill: Color.secondary.opacity(0.04),
+                stroke: Color.secondary.opacity(0.22),
+                dash: [6, 6]
+            ))
         }
     }
 
@@ -416,16 +402,11 @@ struct GridSettingsPane: View {
             .frame(minHeight: 116, alignment: .leading)
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isSelectedStandaloneApp(app.id) ? Color.secondary.opacity(0.12) : Color.secondary.opacity(0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelectedStandaloneApp(app.id) ? Color.secondary.opacity(0.35) : Color.clear, lineWidth: 1)
-            )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CardButtonStyle(
+            fill: isSelectedStandaloneApp(app.id) ? Color.secondary.opacity(0.12) : Color.secondary.opacity(0.05),
+            stroke: isSelectedStandaloneApp(app.id) ? Color.secondary.opacity(0.35) : Color.clear
+        ))
     }
 
     private var addStandaloneAppCard: some View {
@@ -450,16 +431,12 @@ struct GridSettingsPane: View {
             .frame(minHeight: 116, alignment: .leading)
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.secondary.opacity(0.04))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.secondary.opacity(0.22), style: StrokeStyle(lineWidth: 1, dash: [6, 6]))
-            )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CardButtonStyle(
+            fill: Color.secondary.opacity(0.04),
+            stroke: Color.secondary.opacity(0.22),
+            dash: [6, 6]
+        ))
     }
 
     @ViewBuilder
@@ -533,16 +510,25 @@ struct GridSettingsPane: View {
                     )
                 )
                 .textFieldStyle(.roundedBorder)
+                .fieldResetButton {
+                    gridStore.renameLayer(id: layer.id, name: defaultLayerName(for: layer))
+                }
 
-                Picker("Color", selection: Binding(
-                    get: { layer.color },
-                    set: { gridStore.setColor($0, forLayerID: layer.id) }
-                )) {
-                    ForEach(GridLayerColor.allCases) { color in
-                        Text(color.title).tag(color)
+                HStack(spacing: 8) {
+                    Picker("Color", selection: Binding(
+                        get: { layer.color },
+                        set: { gridStore.setColor($0, forLayerID: layer.id) }
+                    )) {
+                        ForEach(GridLayerColor.allCases) { color in
+                            Text(color.title).tag(color)
+                        }
+                    }
+                    .pickerStyle(.menu)
+
+                    resetFieldButton {
+                        gridStore.setColor(defaultLayerColor(for: layer), forLayerID: layer.id)
                     }
                 }
-                .pickerStyle(.menu)
             }
 
             Divider()
@@ -560,16 +546,25 @@ struct GridSettingsPane: View {
                     )
                 )
                 .textFieldStyle(.roundedBorder)
+                .fieldResetButton {
+                    gridStore.renameColumn(layerID: layer.id, columnID: column.id, name: defaultColumnName(for: column, in: layer))
+                }
 
-                Picker("Icon", selection: Binding(
-                    get: { column.iconSymbol },
-                    set: { gridStore.setColumnIcon(layerID: layer.id, columnID: column.id, iconSymbol: $0) }
-                )) {
-                    ForEach(GridToolColumn.iconOptions, id: \.self) { icon in
-                        Label(icon, systemImage: icon).tag(icon)
+                HStack(spacing: 8) {
+                    Picker("Icon", selection: Binding(
+                        get: { column.iconSymbol },
+                        set: { gridStore.setColumnIcon(layerID: layer.id, columnID: column.id, iconSymbol: $0) }
+                    )) {
+                        ForEach(GridToolColumn.iconOptions, id: \.self) { icon in
+                            Label(icon, systemImage: icon).tag(icon)
+                        }
+                    }
+                    .pickerStyle(.menu)
+
+                    resetFieldButton {
+                        gridStore.setColumnIcon(layerID: layer.id, columnID: column.id, iconSymbol: defaultColumnIcon(for: column))
                     }
                 }
-                .pickerStyle(.menu)
 
                 if column.kind == .custom {
                     Button("Remove Column") {
@@ -596,6 +591,9 @@ struct GridSettingsPane: View {
                         )
                     )
                     .textFieldStyle(.roundedBorder)
+                    .fieldResetButton {
+                        gridStore.renameBinding(layerID: layer.id, tool: column, bindingID: binding.id, label: defaultBindingLabel(for: binding))
+                    }
 
                     Text(binding.target.kindDescription)
                         .font(.system(size: 11))
@@ -611,14 +609,6 @@ struct GridSettingsPane: View {
                         commands.captureGridBinding(layer.id, column, binding?.id)
                     }
                     .buttonStyle(.borderedProminent)
-
-                    Button("Jump") {
-                        if let index = layerIndex(layer) {
-                            commands.jumpToGridLayer(index + 1)
-                        }
-                        commands.focusGridTool(column)
-                    }
-                    .buttonStyle(.bordered)
 
                     if let binding {
                         Button("Clear") {
@@ -720,6 +710,46 @@ struct GridSettingsPane: View {
             ? Color.secondary.opacity(0.22)
             : Color.clear
     }
+
+    private func defaultLayerName(for layer: GridLayer) -> String {
+        "Project \((layerIndex(layer) ?? 0) + 1)"
+    }
+
+    private func defaultLayerColor(for layer: GridLayer) -> GridLayerColor {
+        GridLayerColor.allCases[(layerIndex(layer) ?? 0) % GridLayerColor.allCases.count]
+    }
+
+    private func defaultColumnName(for column: GridToolColumn, in layer: GridLayer) -> String {
+        switch column.kind {
+        case .terminal:
+            return GridToolColumn.terminal.title
+        case .ide:
+            return GridToolColumn.ide.title
+        case .browser:
+            return GridToolColumn.browser.title
+        case .custom:
+            let customColumns = layer.columns.filter { $0.kind == .custom }
+            let index = customColumns.firstIndex(where: { $0.id == column.id }) ?? 0
+            return "Custom \(index + 1)"
+        }
+    }
+
+    private func defaultColumnIcon(for column: GridToolColumn) -> String {
+        switch column.kind {
+        case .terminal:
+            return GridToolColumn.terminal.iconSymbol
+        case .ide:
+            return GridToolColumn.ide.iconSymbol
+        case .browser:
+            return GridToolColumn.browser.iconSymbol
+        case .custom:
+            return "square.stack.3d.up"
+        }
+    }
+
+    private func defaultBindingLabel(for binding: GridBinding) -> String {
+        TargetLabelPolicy().label(for: binding.target)
+    }
 }
 
 private struct GridStandaloneAppInspector: View {
@@ -749,6 +779,11 @@ private struct GridStandaloneAppInspector: View {
         return app.shortcut?.displayString ?? "Disabled"
     }
 
+    private var defaultAppName: String {
+        let index = gridStore.standaloneApps.firstIndex(where: { $0.id == app.id }) ?? 0
+        return "Standalone App \(index + 1)"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
@@ -770,16 +805,25 @@ private struct GridStandaloneAppInspector: View {
                 )
             )
             .textFieldStyle(.roundedBorder)
+            .fieldResetButton {
+                gridStore.renameStandaloneApp(id: app.id, name: defaultAppName)
+            }
 
-            Picker("Icon", selection: Binding(
-                get: { app.iconSymbol },
-                set: { gridStore.setStandaloneAppIcon(id: app.id, iconSymbol: $0) }
-            )) {
-                ForEach(GridToolColumn.iconOptions, id: \.self) { icon in
-                    Label(icon, systemImage: icon).tag(icon)
+            HStack(spacing: 8) {
+                Picker("Icon", selection: Binding(
+                    get: { app.iconSymbol },
+                    set: { gridStore.setStandaloneAppIcon(id: app.id, iconSymbol: $0) }
+                )) {
+                    ForEach(GridToolColumn.iconOptions, id: \.self) { icon in
+                        Label(icon, systemImage: icon).tag(icon)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                resetFieldButton {
+                    gridStore.setStandaloneAppIcon(id: app.id, iconSymbol: "app.fill")
                 }
             }
-            .pickerStyle(.menu)
 
             Divider()
 
@@ -811,6 +855,12 @@ private struct GridStandaloneAppInspector: View {
                     }
                     .buttonStyle(.bordered)
                     .disabled(app.shortcut == nil)
+
+                    resetFieldButton {
+                        errorMessage = nil
+                        gridStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
+                        activeRecorderID = nil
+                    }
                 }
             }
 
@@ -830,11 +880,6 @@ private struct GridStandaloneAppInspector: View {
                         commands.captureGridStandaloneApp(app.id)
                     }
                     .buttonStyle(.borderedProminent)
-
-                    Button("Jump") {
-                        commands.jumpToGridStandaloneApp(app.id)
-                    }
-                    .buttonStyle(.bordered)
 
                     Button("Clear Target") {
                         gridStore.clearStandaloneAppBinding(id: app.id)
@@ -991,5 +1036,106 @@ private func bundleID(for binding: GridBinding) -> String {
         return target.bundleId
     case .window(let target):
         return target.bundleId
+    }
+}
+
+@MainActor
+private func resetFieldButton(action: @escaping () -> Void) -> some View {
+    Button(action: action) {
+        Image(systemName: "arrow.counterclockwise")
+            .font(.system(size: 12, weight: .semibold))
+            .frame(width: 28, height: 28)
+    }
+    .buttonStyle(.borderless)
+    .help("Reset field")
+}
+
+@MainActor
+private extension View {
+    func fieldResetButton(action: @escaping () -> Void) -> some View {
+        HStack(spacing: 8) {
+            self
+            resetFieldButton(action: action)
+        }
+    }
+}
+
+private struct CardBackgroundModifier: ViewModifier {
+    let fill: Color
+    let stroke: Color
+    let dash: [CGFloat]
+    let cornerRadius: CGFloat
+
+    @State private var isHovered = false
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .fill(fill)
+                    
+                    if isHovered {
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .fill(Color.primary.opacity(0.04))
+                    }
+                }
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(stroke, style: StrokeStyle(lineWidth: 1, dash: dash))
+            )
+            .animation(.easeOut(duration: 0.12), value: isHovered)
+            .onHover { isHovered = $0 }
+    }
+}
+
+extension View {
+    func cardBackground(fill: Color, stroke: Color = .clear, dash: [CGFloat] = [], cornerRadius: CGFloat = 16) -> some View {
+        modifier(CardBackgroundModifier(fill: fill, stroke: stroke, dash: dash, cornerRadius: cornerRadius))
+    }
+}
+
+private struct CardButtonStyle: ButtonStyle {
+    let fill: Color
+    let stroke: Color
+    let dash: [CGFloat]
+    let cornerRadius: CGFloat
+    
+    init(fill: Color, stroke: Color = .clear, dash: [CGFloat] = [], cornerRadius: CGFloat = 16) {
+        self.fill = fill
+        self.stroke = stroke
+        self.dash = dash
+        self.cornerRadius = cornerRadius
+    }
+
+    @State private var isHovered = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .fill(fill)
+                    
+                    if isHovered {
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .fill(Color.primary.opacity(0.04))
+                    }
+                    
+                    if configuration.isPressed {
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .fill(Color.primary.opacity(0.06))
+                    }
+                }
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(stroke, style: StrokeStyle(lineWidth: 1, dash: dash))
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeOut(duration: 0.12), value: isHovered)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+            .onHover { isHovered = $0 }
     }
 }

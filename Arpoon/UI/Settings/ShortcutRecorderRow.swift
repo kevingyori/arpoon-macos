@@ -6,6 +6,7 @@ struct ShortcutRecorderRow: View {
     let action: HotkeyAction
 
     @ObservedObject var settings: SettingsStore
+    let resetShortcut: HotkeyShortcut
     @Binding var activeRecorderID: String?
 
     @State private var eventMonitor: Any?
@@ -38,6 +39,15 @@ struct ShortcutRecorderRow: View {
                 Spacer()
 
                 shortcutButton
+
+                Button {
+                    errorMessage = nil
+                    applyShortcut(resetShortcut)
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                }
+                .buttonStyle(.borderless)
+                .help("Reset to \(resetShortcut.displayString)")
 
                 Button("Clear") {
                     errorMessage = nil
@@ -121,6 +131,10 @@ struct ShortcutRecorderRow: View {
             return
         }
 
+        applyShortcut(shortcut)
+    }
+
+    private func applyShortcut(_ shortcut: HotkeyShortcut) {
         switch settings.setShortcut(shortcut, for: action) {
         case .updated:
             errorMessage = nil

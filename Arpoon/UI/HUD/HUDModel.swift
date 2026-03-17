@@ -35,6 +35,10 @@ struct GridMinimapModel: Hashable {
     let movement: GridSelectionChange
     let hint: GridHUDHint?
     let animateSelectionMotion: Bool
+
+    var maxColumnCount: Int {
+        layers.map(\.columns.count).max() ?? 0
+    }
 }
 
 struct HUDOverviewEntry: Identifiable {
@@ -71,8 +75,9 @@ enum HUDModel {
             return 46
         case .overview:
             return 420
-        case .gridMinimap:
-            return 420
+        case .gridMinimap(let minimap):
+            let columns = max(1, minimap.maxColumnCount)
+            return 56.0 + (Double(columns) * 110.0) + (Double(max(0, columns - 1)) * 10.0)
         }
     }
 
@@ -87,8 +92,9 @@ enum HUDModel {
             let baseHeight = accessibilityTrusted ? 84.0 : 116.0
             return min(420, baseHeight + (Double(entries.count) * 36.0))
         case .gridMinimap(let minimap):
-            let hintHeight = minimap.hint == nil ? 0.0 : 48.0
-            return min(480, 86.0 + (Double(minimap.layers.count) * 38.0) + hintHeight)
+            let rows = max(1, minimap.layers.count)
+            let hintHeight = minimap.hint == nil ? 0.0 : 64.0
+            return 28.0 + (Double(rows) * 84.0) + (Double(max(0, rows - 1)) * 14.0) + hintHeight
         }
     }
 

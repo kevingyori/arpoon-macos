@@ -21,6 +21,68 @@ enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+enum GridShortcutPreset: String, CaseIterable, Identifiable {
+    case vim
+    case gamer
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .vim:
+            return "Reset to Vim"
+        case .gamer:
+            return "Reset to Gamer"
+        }
+    }
+
+    var summary: String {
+        switch self {
+        case .vim:
+            return "H/L move across apps, J/K switch projects, I focuses IDE, O focuses Browser."
+        case .gamer:
+            return "A/D move across apps, W/S switch projects, Q focuses Terminal, E focuses Browser."
+        }
+    }
+
+    var shortcuts: [HotkeyAction: HotkeyShortcut] {
+        var shortcuts = Dictionary(uniqueKeysWithValues: HotkeyAction.gridActions.map { ($0, $0.defaultShortcut) })
+
+        switch self {
+        case .vim:
+            shortcuts[HotkeyAction(kind: .gridPreviousLayer, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_K))
+            shortcuts[HotkeyAction(kind: .gridNextLayer, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_J))
+            shortcuts[HotkeyAction(kind: .gridFocusLeft, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_H))
+            shortcuts[HotkeyAction(kind: .gridFocusRight, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_L))
+            shortcuts[HotkeyAction(kind: .gridFocusTerminal, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_T))
+            shortcuts[HotkeyAction(kind: .gridFocusIDE, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_I))
+            shortcuts[HotkeyAction(kind: .gridFocusBrowser, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_O))
+            shortcuts[HotkeyAction(kind: .gridBindCurrent, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_A))
+            shortcuts[HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_A))
+        case .gamer:
+            shortcuts[HotkeyAction(kind: .gridPreviousLayer, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_W))
+            shortcuts[HotkeyAction(kind: .gridNextLayer, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_S))
+            shortcuts[HotkeyAction(kind: .gridFocusLeft, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_A))
+            shortcuts[HotkeyAction(kind: .gridFocusRight, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_D))
+            shortcuts[HotkeyAction(kind: .gridFocusTerminal, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_Q))
+            shortcuts[HotkeyAction(kind: .gridFocusIDE, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_I))
+            shortcuts[HotkeyAction(kind: .gridFocusBrowser, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_E))
+            shortcuts[HotkeyAction(kind: .gridBindCurrent, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_F))
+            shortcuts[HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_A))
+        }
+
+        return shortcuts
+    }
+
+    private func optionShortcut(_ keyCode: UInt32) -> HotkeyShortcut {
+        HotkeyShortcut(keyCode: keyCode, modifiers: UInt32(optionKey))
+    }
+
+    private func optionShiftShortcut(_ keyCode: UInt32) -> HotkeyShortcut {
+        HotkeyShortcut(keyCode: keyCode, modifiers: UInt32(optionKey | shiftKey))
+    }
+}
+
 enum HotkeyActionKind: String, Codable {
     case jumpSlot
     case bindSlot
@@ -39,6 +101,7 @@ enum HotkeyActionKind: String, Codable {
     case gridFocusIDE
     case gridFocusBrowser
     case gridAddStandaloneHotkey
+    case gridRenameProject
     case gridBindCurrent
     case gridShowHUD
 }
@@ -88,6 +151,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "grid-focus-browser"
         case .gridAddStandaloneHotkey:
             return "grid-add-standalone-hotkey"
+        case .gridRenameProject:
+            return "grid-rename-project"
         case .gridBindCurrent:
             return "grid-bind-current"
         case .gridShowHUD:
@@ -131,6 +196,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "The Grid Focus Browser"
         case .gridAddStandaloneHotkey:
             return "The Grid Add Standalone App Hotkey"
+        case .gridRenameProject:
+            return "The Grid Rename Current Project"
         case .gridBindCurrent:
             return "The Grid Bind Focused Target"
         case .gridShowHUD:
@@ -225,6 +292,11 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
                 keyCode: UInt32(kVK_ANSI_A),
                 modifiers: UInt32(optionKey | shiftKey)
             )
+        case .gridRenameProject:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_R),
+                modifiers: UInt32(optionKey | shiftKey)
+            )
         case .gridBindCurrent:
             return HotkeyShortcut(
                 keyCode: UInt32(kVK_ANSI_A),
@@ -261,6 +333,7 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
         HotkeyAction(kind: .gridFocusIDE, slot: nil),
         HotkeyAction(kind: .gridFocusBrowser, slot: nil),
         HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil),
+        HotkeyAction(kind: .gridRenameProject, slot: nil),
         HotkeyAction(kind: .gridBindCurrent, slot: nil),
         HotkeyAction(kind: .gridShowHUD, slot: nil)
     ]
@@ -309,6 +382,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             self = HotkeyAction(kind: .gridFocusBrowser, slot: nil)
         case "grid-add-standalone-hotkey":
             self = HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)
+        case "grid-rename-project":
+            self = HotkeyAction(kind: .gridRenameProject, slot: nil)
         case "grid-bind-current":
             self = HotkeyAction(kind: .gridBindCurrent, slot: nil)
         case "grid-show-hud":

@@ -198,6 +198,9 @@ final class AppModel: ObservableObject {
         runtimeCoordinator.onGridAddStandaloneHotkey = { [weak commandCenter] in
             commandCenter?.beginGridStandaloneHotkeyCapture()
         }
+        runtimeCoordinator.onGridRenameProject = { [weak commandCenter] in
+            commandCenter?.renameCurrentGridProject()
+        }
         runtimeCoordinator.onGridBindCurrent = { [weak commandCenter] in
             commandCenter?.bindFocusedTargetToGridCurrentContext()
         }

@@ -67,11 +67,24 @@ final class HUDWindowController {
     }
 
     private func present(model: HUDModel) {
-        let width = model.preferredWidth
-        let height = model.preferredHeight
-        let targetFrame = panelFrame(width: width, height: height)
-        panel.setContentSize(NSSize(width: width, height: height))
-        panel.contentViewController = NSHostingController(rootView: HUDView(model: model))
+        let hostingController = NSHostingController(rootView: HUDView(model: model))
+        panel.contentViewController = hostingController
+
+        let contentSize: NSSize
+        switch model {
+        case .gridMinimap:
+            hostingController.view.layoutSubtreeIfNeeded()
+            let fittingSize = hostingController.view.fittingSize
+            contentSize = NSSize(
+                width: max(model.preferredWidth, fittingSize.width),
+                height: max(model.preferredHeight, fittingSize.height)
+            )
+        default:
+            contentSize = NSSize(width: model.preferredWidth, height: model.preferredHeight)
+        }
+
+        let targetFrame = panelFrame(width: contentSize.width, height: contentSize.height)
+        panel.setContentSize(contentSize)
 
         if !visible {
             panel.setFrame(targetFrame, display: true)

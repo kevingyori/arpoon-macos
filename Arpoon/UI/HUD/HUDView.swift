@@ -26,7 +26,8 @@ struct HUDView: View {
                 }
             }
             .padding(containerPadding)
-            .frame(width: model.preferredWidth)
+            .frame(width: fixedWidth, alignment: .leading)
+            .fixedSize(horizontal: isGridMinimap, vertical: isGridMinimap)
         }
     }
 
@@ -139,6 +140,18 @@ struct HUDView: View {
         GridMinimapAnimatedView(minimap: minimap)
     }
 
+    private var isGridMinimap: Bool {
+        if case .gridMinimap = model {
+            return true
+        }
+
+        return false
+    }
+
+    private var fixedWidth: CGFloat? {
+        isGridMinimap ? nil : model.preferredWidth
+    }
+
     private var containerPadding: CGFloat {
         switch model {
         case .message:
@@ -199,15 +212,6 @@ private struct GridMinimapAnimatedView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("The Grid")
-                    .font(.system(size: 17, weight: .semibold))
-
-                Text("A digital frontier")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-            }
-
             ForEach(minimap.layers) { layer in
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
@@ -220,12 +224,10 @@ private struct GridMinimapAnimatedView: View {
                             .lineLimit(1)
                     }
 
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            ForEach(layer.columns) { column in
-                                gridColumnView(column, layerColor: layer.color, isCurrentLayer: layer.isCurrent)
-                                    .offset(x: toolOffset(for: column))
-                            }
+                    HStack(spacing: 10) {
+                        ForEach(layer.columns) { column in
+                            gridColumnView(column, layerColor: layer.color, isCurrentLayer: layer.isCurrent)
+                                .offset(x: toolOffset(for: column))
                         }
                     }
                 }

@@ -56,6 +56,7 @@ extension SettingsWindowController: SettingsWindowPresenting {}
 @MainActor
 final class AppCommandCenter {
     var settingsWindowPresenterProvider: (() -> (any SettingsWindowPresenting)?)?
+    var requestGridProjectRename: ((String) -> String?)?
 
     private let settings: SettingsStore
     private let accessibilityPermissions: any AccessibilityPermissionMonitoring
@@ -230,6 +231,47 @@ final class AppCommandCenter {
         hudController.show(
             model: gridMinimapModel(movement: .neutral, hint: nil),
             timeout: settings.hudTimeout
+        )
+    }
+
+    func renameCurrentGridProject() {
+        syncGridSession()
+        guard let layer = currentGridLayer() else {
+            showGridHint(
+                title: "The Grid has no projects yet",
+                detail: "Open The Grid settings to add a project layer.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        let proposedName = (requestGridProjectRename ?? defaultGridProjectRenamePrompt)(layer.name)
+        guard let proposedName else {
+            return
+        }
+
+        let trimmed = proposedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            showGridHint(
+                title: "Project name can’t be empty",
+                detail: "Type a name for the current project.",
+                tone: .warning,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard trimmed != layer.name else {
+            return
+        }
+
+        gridStore.renameLayer(id: layer.id, name: trimmed)
+        showGridHint(
+            title: "Renamed project",
+            detail: trimmed,
+            tone: .success,
+            movement: .neutral
         )
     }
 
@@ -960,21 +1002,10 @@ final class AppCommandCenter {
             return
         }
 
-        let filledColumns = layer.columns.filter { !layer.group(for: $0).bindings.isEmpty }
-        guard !filledColumns.isEmpty else {
+        guard let destination = adjacentGridColumn(in: layer, step: step) else {
             showGridHint(
-                title: "No bound apps in \(layer.name)",
-                detail: "Capture a target into a column first.",
-                tone: .neutral,
-                movement: .neutral
-            )
-            return
-        }
-
-        guard let destination = adjacentBoundGridColumn(in: layer, step: step) else {
-            showGridHint(
-                title: "No bound apps in \(layer.name)",
-                detail: "Capture a target into a column first.",
+                title: "\(layer.name) has no columns yet",
+                detail: "Add a column in The Grid settings first.",
                 tone: .neutral,
                 movement: .neutral
             )
@@ -1029,22 +1060,14 @@ final class AppCommandCenter {
         }
     }
 
-    private func adjacentBoundGridColumn(in layer: GridLayer, step: Int) -> GridToolColumn? {
+    private func adjacentGridColumn(in layer: GridLayer, step: Int) -> GridToolColumn? {
         guard !layer.columns.isEmpty else {
             return nil
         }
 
         let startIndex = layer.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0
-
-        for offset in 1 ... layer.columns.count {
-            let candidateIndex = positiveModulo(startIndex + (offset * step), layer.columns.count)
-            let candidate = layer.columns[candidateIndex]
-            if layer.group(for: candidate).activeBinding != nil {
-                return candidate
-            }
-        }
-
-        return nil
+        let destinationIndex = positiveModulo(startIndex + step, layer.columns.count)
+        return layer.columns[destinationIndex]
     }
 
     private func positiveModulo(_ value: Int, _ modulus: Int) -> Int {
@@ -1064,6 +1087,29 @@ final class AppCommandCenter {
                 )
             )
         }
+    }
+
+    private func defaultGridProjectRenamePrompt(currentName: String) -> String? {
+        NSApp.activate(ignoringOtherApps: true)
+
+        let alert = NSAlert()
+        alert.messageText = "Rename Current Project"
+        alert.informativeText = "Enter a new name for the active Grid project."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Rename")
+        alert.addButton(withTitle: "Cancel")
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        textField.stringValue = currentName
+        textField.placeholderString = "Project name"
+        alert.accessoryView = textField
+
+        let response = alert.runModal()
+        guard response == .alertFirstButtonReturn else {
+            return nil
+        }
+
+        return textField.stringValue
     }
 
     private func gridMinimapModel(movement: GridSelectionChange, hint: GridHUDHint?) -> HUDModel {

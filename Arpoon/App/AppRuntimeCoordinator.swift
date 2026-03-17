@@ -23,6 +23,7 @@ final class AppRuntimeCoordinator {
     var onGridFocusIDE: (() -> Void)?
     var onGridFocusBrowser: (() -> Void)?
     var onGridAddStandaloneHotkey: (() -> Void)?
+    var onGridRenameProject: (() -> Void)?
     var onGridBindCurrent: (() -> Void)?
     var onGridShowHUD: (() -> Void)?
     var onGridStandaloneApp: ((String) -> Void)?
@@ -104,6 +105,9 @@ final class AppRuntimeCoordinator {
         }
         hotkeyController.onGridAddStandaloneHotkey = { [weak self] in
             self?.onGridAddStandaloneHotkey?()
+        }
+        hotkeyController.onGridRenameProject = { [weak self] in
+            self?.onGridRenameProject?()
         }
         hotkeyController.onGridBindCurrent = { [weak self] in
             self?.onGridBindCurrent?()

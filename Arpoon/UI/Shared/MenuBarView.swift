@@ -108,7 +108,7 @@ struct MenuBarView: View {
                         .foregroundStyle(.secondary)
                 }
             case .grid:
-                Text("The Grid. A digital frontier. Move projects with Option + [ / ], switch left and right across bound apps with Option + H/L, add a standalone app hotkey with Option + Shift + A, focus named columns with Option + T/I/B, and bind the focused target with Option + A.")
+                Text("The Grid. A digital frontier. Move projects with Option + [ / ], switch left and right across bound apps with Option + H/L, add a standalone app hotkey with Option + Shift + A, rename the current project with Option + Shift + R, focus named columns with Option + T/I/B, and bind the focused target with Option + A.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }

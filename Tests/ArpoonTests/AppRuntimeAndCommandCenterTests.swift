@@ -154,6 +154,26 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
     }
 
+    func testGridRenameProjectUsesPromptResult() async throws {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        gridSession.sync(layers: gridStore.layers)
+
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession
+        )
+        commandCenter.requestGridProjectRename = { currentName in
+            XCTAssertEqual(currentName, "Project 1")
+            return "Alpha"
+        }
+
+        commandCenter.renameCurrentGridProject()
+
+        XCTAssertEqual(gridStore.layers.first?.name, "Alpha")
+    }
+
     func testGridStoreSeedsThreeLayersOnFirstLoad() async {
         let store = makeGridStore()
 
@@ -222,13 +242,14 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(gridSession.currentTool(in: gridStore.layer(id: secondLayerID)), browserColumn)
     }
 
-    func testGridLeftRightMovesAcrossBoundAppsAndSkipsEmptyColumns() async throws {
+    func testGridLeftRightMovesAcrossColumnsAndAllowsEmptySelection() async throws {
         let gridStore = makeGridStore()
         let gridSession = GridSession()
         await gridStore.load()
 
         let layer = try XCTUnwrap(gridStore.layers.first)
         let layerID = layer.id
+        let ideColumn = try XCTUnwrap(layer.defaultColumn(kind: .ide))
         let browserColumn = try XCTUnwrap(layer.defaultColumn(kind: .browser))
         let customColumn = try XCTUnwrap(gridStore.addCustomColumn(layerID: layerID))
 
@@ -247,6 +268,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             gridSession: gridSession,
             focusService: focus
         )
+
+        commandCenter.moveToNextBoundGridApp()
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.layers.first), ideColumn)
+        XCTAssertNil(focus.focusedTargets.last)
 
         commandCenter.moveToNextBoundGridApp()
         XCTAssertEqual(focus.focusedTargets.last, browserTarget)
@@ -310,6 +335,107 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             focus.focusedTargets.last,
             .app(AppTarget(bundleId: "com.example.music", appName: "Music"))
         )
+    }
+
+    func testApplyingGridVimPresetOverridesGridNavigationKeys() {
+        let settings = makeSettings()
+
+        settings.applyGridShortcutPreset(.vim)
+
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridPreviousLayer, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_K), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridNextLayer, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_J), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusBrowser, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(optionKey))
+        )
+    }
+
+    func testApplyingGridGamerPresetMovesBindOffOptionA() {
+        let settings = makeSettings()
+
+        settings.applyGridShortcutPreset(.gamer)
+
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusLeft, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridBindCurrent, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusTerminal, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_Q), modifiers: UInt32(optionKey))
+        )
+    }
+
+    func testGridRenameProjectHasDefaultShortcut() {
+        XCTAssertEqual(
+            HotkeyAction(kind: .gridRenameProject, slot: nil).defaultShortcut,
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_R), modifiers: UInt32(optionKey | shiftKey))
+        )
+    }
+
+    func testGridMinimapPreferredSizeExpandsWithRowsAndColumns() {
+        let compact = HUDModel.gridMinimap(
+            GridMinimapModel(
+                layers: [
+                    GridMinimapLayer(
+                        id: "one",
+                        name: "Project 1",
+                        color: .cobalt,
+                        columns: [
+                            GridMinimapColumn(id: "terminal", name: "Terminal", iconSymbol: "terminal", isSelected: true, isFilled: true, activeLabel: "Shell")
+                        ],
+                        isCurrent: true
+                    )
+                ],
+                movement: .neutral,
+                hint: nil,
+                animateSelectionMotion: true
+            )
+        )
+
+        let expanded = HUDModel.gridMinimap(
+            GridMinimapModel(
+                layers: [
+                    GridMinimapLayer(
+                        id: "one",
+                        name: "Project 1",
+                        color: .cobalt,
+                        columns: [
+                            GridMinimapColumn(id: "terminal", name: "Terminal", iconSymbol: "terminal", isSelected: false, isFilled: true, activeLabel: "Shell"),
+                            GridMinimapColumn(id: "ide", name: "IDE", iconSymbol: "curlybraces", isSelected: true, isFilled: false, activeLabel: nil),
+                            GridMinimapColumn(id: "browser", name: "Browser", iconSymbol: "globe", isSelected: false, isFilled: true, activeLabel: "Site")
+                        ],
+                        isCurrent: true
+                    ),
+                    GridMinimapLayer(
+                        id: "two",
+                        name: "Project 2",
+                        color: .rose,
+                        columns: [
+                            GridMinimapColumn(id: "terminal", name: "Terminal", iconSymbol: "terminal", isSelected: false, isFilled: true, activeLabel: "Shell"),
+                            GridMinimapColumn(id: "ide", name: "IDE", iconSymbol: "curlybraces", isSelected: false, isFilled: true, activeLabel: "Editor"),
+                            GridMinimapColumn(id: "browser", name: "Browser", iconSymbol: "globe", isSelected: false, isFilled: false, activeLabel: nil)
+                        ],
+                        isCurrent: false
+                    )
+                ],
+                movement: .neutral,
+                hint: GridHUDHint(title: "Hint", detail: "Detail", tone: .neutral),
+                animateSelectionMotion: true
+            )
+        )
+
+        XCTAssertGreaterThan(expanded.preferredWidth, compact.preferredWidth)
+        XCTAssertGreaterThan(expanded.preferredHeight, compact.preferredHeight)
     }
 
     private func makeCommandCenter(
@@ -433,6 +559,7 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onGridFocusIDE: (() -> Void)?
     var onGridFocusBrowser: (() -> Void)?
     var onGridAddStandaloneHotkey: (() -> Void)?
+    var onGridRenameProject: (() -> Void)?
     var onGridBindCurrent: (() -> Void)?
     var onGridShowHUD: (() -> Void)?
     var onGridStandaloneApp: ((String) -> Void)?

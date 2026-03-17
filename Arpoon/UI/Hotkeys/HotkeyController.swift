@@ -21,6 +21,7 @@ protocol HotkeyControlling: AnyObject {
     var onGridFocusIDE: (() -> Void)? { get set }
     var onGridFocusBrowser: (() -> Void)? { get set }
     var onGridAddStandaloneHotkey: (() -> Void)? { get set }
+    var onGridRenameProject: (() -> Void)? { get set }
     var onGridBindCurrent: (() -> Void)? { get set }
     var onGridShowHUD: (() -> Void)? { get set }
     var onGridStandaloneApp: ((String) -> Void)? { get set }
@@ -50,6 +51,7 @@ final class HotkeyController: HotkeyControlling {
     var onGridFocusIDE: (() -> Void)?
     var onGridFocusBrowser: (() -> Void)?
     var onGridAddStandaloneHotkey: (() -> Void)?
+    var onGridRenameProject: (() -> Void)?
     var onGridBindCurrent: (() -> Void)?
     var onGridShowHUD: (() -> Void)?
     var onGridStandaloneApp: ((String) -> Void)?
@@ -184,6 +186,8 @@ final class HotkeyController: HotkeyControlling {
             onGridFocusBrowser?()
         case .gridAddStandaloneHotkey:
             onGridAddStandaloneHotkey?()
+        case .gridRenameProject:
+            onGridRenameProject?()
         case .gridBindCurrent:
             onGridBindCurrent?()
         case .gridShowHUD:
