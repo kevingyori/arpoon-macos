@@ -20,7 +20,9 @@ struct MenuBarView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     actionsSection
-                    guidanceSection
+                    if showsGuidanceSection {
+                        guidanceSection
+                    }
                     assignmentsSection
                 }
                 .padding(16)
@@ -55,12 +57,14 @@ struct MenuBarView: View {
                 Spacer()
             }
 
-            Label(
-                permissions.isTrusted ? "Accessibility enabled" : "Accessibility needed for window targeting",
-                systemImage: permissions.isTrusted ? "checkmark.shield.fill" : "exclamationmark.triangle.fill"
-            )
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(permissions.isTrusted ? Color.secondary : Color.orange)
+            if !permissions.isTrusted {
+                Label(
+                    "Accessibility needed for window targeting",
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.orange)
+            }
         }
         .padding(16)
     }
@@ -111,9 +115,7 @@ struct MenuBarView: View {
                         .foregroundStyle(.secondary)
                 }
             case .grid:
-                Text("The Grid. A digital frontier. Move projects with Option + [ / ], switch left and right across bound apps with Option + H/L, add a standalone app hotkey with Option + Shift + A, rename the current project with Option + Shift + R, focus named columns with Option + T/I/B, and bind the focused target with Option + A.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                EmptyView()
             }
         }
     }
@@ -385,6 +387,10 @@ struct MenuBarView: View {
         case .grid:
             return "The Grid"
         }
+    }
+
+    private var showsGuidanceSection: Bool {
+        settings.hotkeyScheme != .grid
     }
 
     private var assignmentsTitle: String {
