@@ -47,7 +47,8 @@ The newer navigation model.
 - switch between tools inside a project
 - see a small HUD while navigating
 
-![Grid mode](images/hud-screenshot.png)
+![Grid hud](images/hud-screenshot.png)
+![Grid mode](images/grid-screenshot.png)
 
 ### Dynamic mode
 
