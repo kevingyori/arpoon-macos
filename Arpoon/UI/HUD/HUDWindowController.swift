@@ -55,7 +55,7 @@ final class HUDWindowController {
         }
 
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.16
+            context.duration = 0.08
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             panel.animator().alphaValue = 0
         }, completionHandler: { [weak self] in
@@ -70,19 +70,7 @@ final class HUDWindowController {
         let hostingController = NSHostingController(rootView: HUDView(model: model))
         panel.contentViewController = hostingController
 
-        let contentSize: NSSize
-        switch model {
-        case .gridMinimap:
-            hostingController.view.layoutSubtreeIfNeeded()
-            let fittingSize = hostingController.view.fittingSize
-            contentSize = NSSize(
-                width: max(model.preferredWidth, fittingSize.width),
-                height: max(model.preferredHeight, fittingSize.height)
-            )
-        default:
-            contentSize = NSSize(width: model.preferredWidth, height: model.preferredHeight)
-        }
-
+        let contentSize = NSSize(width: model.preferredWidth, height: model.preferredHeight)
         let targetFrame = panelFrame(width: contentSize.width, height: contentSize.height)
         panel.setContentSize(contentSize)
 

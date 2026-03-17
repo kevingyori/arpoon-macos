@@ -26,8 +26,7 @@ struct HUDView: View {
                 }
             }
             .padding(containerPadding)
-            .frame(width: fixedWidth, alignment: .leading)
-            .fixedSize(horizontal: isGridMinimap, vertical: isGridMinimap)
+            .frame(width: model.preferredWidth, alignment: .leading)
         }
     }
 
@@ -140,18 +139,6 @@ struct HUDView: View {
         GridMinimapAnimatedView(minimap: minimap)
     }
 
-    private var isGridMinimap: Bool {
-        if case .gridMinimap = model {
-            return true
-        }
-
-        return false
-    }
-
-    private var fixedWidth: CGFloat? {
-        isGridMinimap ? nil : model.preferredWidth
-    }
-
     private var containerPadding: CGFloat {
         switch model {
         case .message:
@@ -213,31 +200,38 @@ private struct GridMinimapAnimatedView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             ForEach(minimap.layers) { layer in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(layer.color.swiftUIColor)
-                            .frame(width: 4, height: 26)
+                ZStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(layer.color.swiftUIColor)
+                                .frame(width: 4, height: 26)
 
-                        Text(layer.name)
-                            .font(.system(size: 12.5, weight: layer.isCurrent ? .semibold : .medium))
-                            .lineLimit(1)
-                    }
+                            Text(layer.name)
+                                .font(.system(size: 12.5, weight: layer.isCurrent ? .semibold : .medium))
+                                .lineLimit(1)
+                        }
 
-                    HStack(spacing: 10) {
-                        ForEach(layer.columns) { column in
-                            gridColumnView(column, layerColor: layer.color, isCurrentLayer: layer.isCurrent)
-                                .offset(x: toolOffset(for: column))
+                        HStack(spacing: 10) {
+                            ForEach(layer.columns) { column in
+                                gridColumnSlot(
+                                    column,
+                                    layerColor: layer.color,
+                                    isCurrentLayer: layer.isCurrent
+                                )
+                            }
                         }
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .offset(y: layerOffset(for: layer))
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
+                .frame(width: rowWidth(for: layer), alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 14)
                         .fill(layer.isCurrent ? layer.color.swiftUIColor.opacity(0.12) : Color.secondary.opacity(0.06))
                 )
-                .offset(y: layerOffset(for: layer))
+                .clipped()
             }
 
             if let hint = minimap.hint {
@@ -268,6 +262,16 @@ private struct GridMinimapAnimatedView: View {
         .onChange(of: minimap.movement) { _, _ in
             resetMotion()
         }
+    }
+
+    @ViewBuilder
+    private func gridColumnSlot(_ column: GridMinimapColumn, layerColor: GridLayerColor, isCurrentLayer: Bool) -> some View {
+        ZStack(alignment: .leading) {
+            gridColumnView(column, layerColor: layerColor, isCurrentLayer: isCurrentLayer)
+                .offset(x: toolOffset(for: column))
+        }
+        .frame(width: 110, alignment: .leading)
+        .clipped()
     }
 
     @ViewBuilder
@@ -305,6 +309,11 @@ private struct GridMinimapAnimatedView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(column.isSelected ? layerColor.swiftUIColor.opacity(0.4) : Color.clear, lineWidth: 1)
         )
+    }
+
+    private func rowWidth(for layer: GridMinimapLayer) -> CGFloat {
+        let columnCount = max(layer.columns.count, 1)
+        return (CGFloat(columnCount) * 110) + (CGFloat(max(0, columnCount - 1)) * 10) + 20
     }
 
     private func layerOffset(for layer: GridMinimapLayer) -> CGFloat {
@@ -345,7 +354,7 @@ private struct GridMinimapAnimatedView: View {
         case .layer, .tool:
             isAtRest = false
             DispatchQueue.main.async {
-                withAnimation(.easeOut(duration: 0.16)) {
+                withAnimation(.easeOut(duration: 0.12)) {
                     isAtRest = true
                 }
             }
