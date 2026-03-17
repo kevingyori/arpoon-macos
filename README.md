@@ -22,8 +22,11 @@ The important difference is that Arpoon does not move windows around. It only ch
 
 So instead of a flat list of bindings, it becomes more like a project map.
 
-[![Arpoon demo](images/hud-screenshot.png)](images/arpoon-demo.mp4)
-_click image to view short demo of grid navigation_
+<a href="images/arpoon-demo.mp4">
+  <img src="images/arpoon-demo.gif" alt="Arpoon demo" width="900">
+</a>
+
+_click to see video_
 
 ## What it is
 
@@ -43,6 +46,8 @@ The newer navigation model.
 - switch between projects
 - switch between tools inside a project
 - see a small HUD while navigating
+
+![Grid mode](images/hud-screenshot.png)
 
 ### Dynamic mode
 
