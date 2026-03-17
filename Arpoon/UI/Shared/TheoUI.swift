@@ -1,16 +1,20 @@
 import SwiftUI
 
 extension TheoToolColumn {
-    var systemImage: String {
-        switch self {
-        case .terminal:
-            return "terminal"
-        case .ide:
-            return "curlybraces"
-        case .browser:
-            return "globe"
-        }
-    }
+    static let iconOptions = [
+        "terminal",
+        "curlybraces",
+        "globe",
+        "hammer",
+        "doc.text",
+        "shippingbox",
+        "tray.full",
+        "bubble.left.and.bubble.right",
+        "square.stack.3d.up",
+        "bolt",
+        "book",
+        "link"
+    ]
 }
 
 extension TheoLayerColor {

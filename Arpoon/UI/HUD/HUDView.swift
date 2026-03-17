@@ -146,22 +146,8 @@ struct HUDView: View {
                     .foregroundStyle(.secondary)
             }
 
-            HStack(spacing: 12) {
-                Text("Project")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 120, alignment: .leading)
-
-                ForEach(TheoToolColumn.allCases) { tool in
-                    Label(tool.title, systemImage: tool.systemImage)
-                        .font(.system(size: 10.5, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-
             ForEach(minimap.layers) { layer in
-                HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
                         RoundedRectangle(cornerRadius: 2)
                             .fill(layer.color.swiftUIColor)
@@ -171,10 +157,13 @@ struct HUDView: View {
                             .font(.system(size: 12.5, weight: layer.isCurrent ? .semibold : .medium))
                             .lineLimit(1)
                     }
-                    .frame(width: 120, alignment: .leading)
 
-                    ForEach(layer.columns) { column in
-                        theoColumnView(column, layerColor: layer.color, isCurrentLayer: layer.isCurrent)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(layer.columns) { column in
+                                theoColumnView(column, layerColor: layer.color, isCurrentLayer: layer.isCurrent)
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal, 10)
@@ -211,17 +200,29 @@ struct HUDView: View {
 
     @ViewBuilder
     private func theoColumnView(_ column: TheoMinimapColumn, layerColor: TheoLayerColor, isCurrentLayer: Bool) -> some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(column.isFilled ? layerColor.swiftUIColor : Color.secondary.opacity(0.22))
-                .frame(width: 7, height: 7)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: column.iconSymbol)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(column.isFilled ? layerColor.swiftUIColor : Color.secondary)
 
-            Text(column.activeLabel ?? "empty")
-                .font(.system(size: 10.5, weight: column.isSelected ? .semibold : .medium))
-                .lineLimit(1)
-                .foregroundStyle(column.isFilled ? Color.primary : Color.secondary)
+                Text(column.name)
+                    .font(.system(size: 10.5, weight: column.isSelected ? .semibold : .medium))
+                    .lineLimit(1)
+            }
+
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(column.isFilled ? layerColor.swiftUIColor : Color.secondary.opacity(0.22))
+                    .frame(width: 7, height: 7)
+
+                Text(column.activeLabel ?? "empty")
+                    .font(.system(size: 10.5))
+                    .lineLimit(1)
+                    .foregroundStyle(column.isFilled ? Color.primary : Color.secondary)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(width: 110, alignment: .leading)
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
         .background(

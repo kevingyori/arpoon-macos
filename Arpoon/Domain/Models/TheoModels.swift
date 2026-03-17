@@ -1,41 +1,76 @@
 import Foundation
 
-enum TheoToolColumn: String, CaseIterable, Codable, Identifiable, Hashable {
+enum TheoColumnKind: String, Codable, Hashable {
     case terminal
     case ide
     case browser
+    case custom
+}
 
-    var id: Self { self }
+struct TheoToolColumn: Codable, Identifiable, Hashable {
+    let id: String
+    let kind: TheoColumnKind
+    let name: String
+    let iconSymbol: String
 
-    var title: String {
-        switch self {
-        case .terminal:
-            return "Terminal"
-        case .ide:
-            return "IDE"
-        case .browser:
-            return "Browser"
-        }
-    }
+    static let terminal = TheoToolColumn(
+        id: "terminal",
+        kind: .terminal,
+        name: "Terminal",
+        iconSymbol: "terminal"
+    )
+    static let ide = TheoToolColumn(
+        id: "ide",
+        kind: .ide,
+        name: "IDE",
+        iconSymbol: "curlybraces"
+    )
+    static let browser = TheoToolColumn(
+        id: "browser",
+        kind: .browser,
+        name: "Browser",
+        iconSymbol: "globe"
+    )
+    static let defaults = [terminal, ide, browser]
+
+    var title: String { name }
 
     var supportsMultipleBindings: Bool {
-        switch self {
+        switch kind {
         case .terminal, .browser:
             return true
-        case .ide:
+        case .ide, .custom:
             return false
         }
     }
 
     var suggestedLabels: [String] {
-        switch self {
+        switch kind {
         case .terminal:
             return ["dev", "git", "agent"]
         case .ide:
             return ["workspace"]
         case .browser:
             return ["local", "repo", "docs"]
+        case .custom:
+            return [name.lowercased()]
         }
+    }
+
+    func renaming(_ name: String) -> TheoToolColumn {
+        TheoToolColumn(id: id, kind: kind, name: name, iconSymbol: iconSymbol)
+    }
+
+    func updatingIcon(_ iconSymbol: String) -> TheoToolColumn {
+        TheoToolColumn(id: id, kind: kind, name: name, iconSymbol: iconSymbol)
+    }
+
+    static func custom(
+        id: String = UUID().uuidString,
+        name: String,
+        iconSymbol: String = "square.stack.3d.up"
+    ) -> TheoToolColumn {
+        TheoToolColumn(id: id, kind: .custom, name: name, iconSymbol: iconSymbol)
     }
 }
 
@@ -79,9 +114,8 @@ struct TheoLayer: Codable, Identifiable, Hashable {
     let id: String
     let name: String
     let color: TheoLayerColor
-    let terminalGroup: TheoToolGroup
-    let ideGroup: TheoToolGroup
-    let browserGroup: TheoToolGroup
+    let columns: [TheoToolColumn]
+    let groups: [String: TheoToolGroup]
     let createdAt: Date
     let updatedAt: Date
 
@@ -89,41 +123,41 @@ struct TheoLayer: Codable, Identifiable, Hashable {
         id: String = UUID().uuidString,
         name: String,
         color: TheoLayerColor,
-        terminalGroup: TheoToolGroup = TheoToolGroup(),
-        ideGroup: TheoToolGroup = TheoToolGroup(),
-        browserGroup: TheoToolGroup = TheoToolGroup(),
+        columns: [TheoToolColumn] = TheoToolColumn.defaults,
+        groups: [String: TheoToolGroup] = TheoToolColumn.defaults.reduce(into: [:]) { $0[$1.id] = TheoToolGroup() },
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {
         self.id = id
         self.name = name
         self.color = color
-        self.terminalGroup = terminalGroup
-        self.ideGroup = ideGroup
-        self.browserGroup = browserGroup
+        self.columns = columns
+        self.groups = groups
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
 
     func group(for column: TheoToolColumn) -> TheoToolGroup {
-        switch column {
-        case .terminal:
-            return terminalGroup
-        case .ide:
-            return ideGroup
-        case .browser:
-            return browserGroup
-        }
+        groups[column.id] ?? TheoToolGroup()
+    }
+
+    func column(id: String) -> TheoToolColumn? {
+        columns.first(where: { $0.id == id })
+    }
+
+    func defaultColumn(kind: TheoColumnKind) -> TheoToolColumn? {
+        columns.first(where: { $0.kind == kind })
     }
 
     func updatingGroup(_ group: TheoToolGroup, for column: TheoToolColumn) -> TheoLayer {
-        TheoLayer(
+        var groups = groups
+        groups[column.id] = group
+        return TheoLayer(
             id: id,
             name: name,
             color: color,
-            terminalGroup: column == .terminal ? group : terminalGroup,
-            ideGroup: column == .ide ? group : ideGroup,
-            browserGroup: column == .browser ? group : browserGroup,
+            columns: columns,
+            groups: groups,
             createdAt: createdAt,
             updatedAt: .now
         )
@@ -134,9 +168,8 @@ struct TheoLayer: Codable, Identifiable, Hashable {
             id: id,
             name: name,
             color: color,
-            terminalGroup: terminalGroup,
-            ideGroup: ideGroup,
-            browserGroup: browserGroup,
+            columns: columns,
+            groups: groups,
             createdAt: createdAt,
             updatedAt: .now
         )
@@ -147,9 +180,20 @@ struct TheoLayer: Codable, Identifiable, Hashable {
             id: id,
             name: name,
             color: color,
-            terminalGroup: terminalGroup,
-            ideGroup: ideGroup,
-            browserGroup: browserGroup,
+            columns: columns,
+            groups: groups,
+            createdAt: createdAt,
+            updatedAt: .now
+        )
+    }
+
+    func updatingColumns(_ columns: [TheoToolColumn]) -> TheoLayer {
+        TheoLayer(
+            id: id,
+            name: name,
+            color: color,
+            columns: columns,
+            groups: groups,
             createdAt: createdAt,
             updatedAt: .now
         )

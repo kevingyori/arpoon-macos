@@ -225,36 +225,38 @@ struct MenuBarView: View {
 
                             Spacer()
 
-                            Text(theoSession.currentTool.title)
+                            Text(currentTheoColumn(in: layer)?.title ?? "No column")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.secondary)
                         }
 
-                        HStack(spacing: 8) {
-                            ForEach(TheoToolColumn.allCases) { tool in
-                                Button(tool.title) {
-                                    dismissPopover()
-                                    commands.focusTheoTool(tool)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(layer.columns) { tool in
+                                    Button {
+                                        dismissPopover()
+                                        if let index = theoStore.layers.firstIndex(where: { $0.id == layer.id }) {
+                                            commands.jumpToTheoLayer(index + 1)
+                                        }
+                                        commands.focusTheoTool(tool)
+                                    } label: {
+                                        Label(tool.title, systemImage: tool.iconSymbol)
+                                    }
+                                    .controlSize(.small)
+                                    .theoToolButtonStyle(tool.id == theoSession.currentColumnID)
                                 }
-                                .controlSize(.small)
-                                .theoToolButtonStyle(tool == theoSession.currentTool)
                             }
                         }
 
                         HStack(spacing: 8) {
-                            Button("Cycle Terminal") {
-                                dismissPopover()
-                                commands.cycleTheoTool(.terminal)
+                            if let currentTool = currentTheoColumn(in: layer), currentTool.supportsMultipleBindings {
+                                Button("Cycle \(currentTool.title)") {
+                                    dismissPopover()
+                                    commands.cycleTheoTool(currentTool)
+                                }
+                                .controlSize(.small)
+                                .buttonStyle(.bordered)
                             }
-                            .controlSize(.small)
-                            .buttonStyle(.bordered)
-
-                            Button("Cycle Browser") {
-                                dismissPopover()
-                                commands.cycleTheoTool(.browser)
-                            }
-                            .controlSize(.small)
-                            .buttonStyle(.bordered)
 
                             Button("Bind Current") {
                                 dismissPopover()
@@ -429,11 +431,15 @@ struct MenuBarView: View {
     }
 
     private func theoSummary(for layer: TheoLayer) -> String {
-        TheoToolColumn.allCases.map { tool in
+        layer.columns.map { tool in
             let label = layer.group(for: tool).activeBinding?.label ?? "empty"
             return "\(tool.title): \(label)"
         }
         .joined(separator: " • ")
+    }
+
+    private func currentTheoColumn(in layer: TheoLayer) -> TheoToolColumn? {
+        theoSession.currentTool(in: layer)
     }
 }
 

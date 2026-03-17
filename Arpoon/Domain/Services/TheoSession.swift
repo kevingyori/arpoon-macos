@@ -3,22 +3,32 @@ import Foundation
 
 enum TheoSelectionChange: Hashable {
     case layer(step: Int)
-    case tool(from: TheoToolColumn, to: TheoToolColumn)
+    case tool(fromIndex: Int, toIndex: Int)
     case neutral
 }
 
 @MainActor
 final class TheoSession: ObservableObject {
     @Published private(set) var currentLayerID: String?
-    @Published private(set) var currentTool: TheoToolColumn = .terminal
+    @Published private(set) var currentColumnID: String = TheoToolColumn.terminal.id
 
     func sync(layers: [TheoLayer]) {
-        if let currentLayerID,
-           layers.contains(where: { $0.id == currentLayerID }) {
+        guard let firstLayer = layers.first else {
+            currentLayerID = nil
+            currentColumnID = TheoToolColumn.terminal.id
             return
         }
 
-        currentLayerID = layers.first?.id
+        if currentLayerID == nil || !layers.contains(where: { $0.id == currentLayerID }) {
+            currentLayerID = firstLayer.id
+        }
+
+        if let layer = layers.first(where: { $0.id == currentLayerID }),
+           layer.columns.contains(where: { $0.id == currentColumnID }) {
+            return
+        }
+
+        currentColumnID = firstLayer.defaultColumn(kind: .terminal)?.id ?? firstLayer.columns.first?.id ?? TheoToolColumn.terminal.id
     }
 
     func selectLayer(id: String) -> TheoSelectionChange {
@@ -38,6 +48,9 @@ final class TheoSession: ObservableObject {
         let destination = layers[position - 1]
         let direction = step(to: destination.id, in: layers)
         currentLayerID = destination.id
+        if !destination.columns.contains(where: { $0.id == currentColumnID }) {
+            currentColumnID = destination.defaultColumn(kind: .terminal)?.id ?? destination.columns.first?.id ?? currentColumnID
+        }
         return .layer(step: direction)
     }
 
@@ -48,18 +61,52 @@ final class TheoSession: ObservableObject {
 
         let currentIndex = layers.firstIndex(where: { $0.id == currentLayerID }) ?? 0
         let destinationIndex = (currentIndex + step + layers.count) % layers.count
-        currentLayerID = layers[destinationIndex].id
+        let destination = layers[destinationIndex]
+        currentLayerID = destination.id
+        if !destination.columns.contains(where: { $0.id == currentColumnID }) {
+            currentColumnID = destination.defaultColumn(kind: .terminal)?.id ?? destination.columns.first?.id ?? currentColumnID
+        }
         return .layer(step: step)
     }
 
-    func selectTool(_ tool: TheoToolColumn) -> TheoSelectionChange {
-        guard currentTool != tool else {
+    func selectTool(_ tool: TheoToolColumn, in layer: TheoLayer?) -> TheoSelectionChange {
+        guard let layer,
+              let destination = layer.column(id: tool.id) ?? layer.defaultColumn(kind: tool.kind) else {
             return .neutral
         }
 
-        let previous = currentTool
-        currentTool = tool
-        return .tool(from: previous, to: tool)
+        let fromIndex = layer.columns.firstIndex(where: { $0.id == currentColumnID }) ?? 0
+        let toIndex = layer.columns.firstIndex(where: { $0.id == destination.id }) ?? fromIndex
+        guard currentColumnID != destination.id else {
+            return .neutral
+        }
+
+        currentColumnID = destination.id
+        return .tool(fromIndex: fromIndex, toIndex: toIndex)
+    }
+
+    func selectColumn(id: String, in layer: TheoLayer) -> TheoSelectionChange {
+        let fromIndex = layer.columns.firstIndex(where: { $0.id == currentColumnID }) ?? 0
+        let toIndex = layer.columns.firstIndex(where: { $0.id == id }) ?? fromIndex
+        guard currentColumnID != id else {
+            return .neutral
+        }
+
+        currentColumnID = id
+        return .tool(fromIndex: fromIndex, toIndex: toIndex)
+    }
+
+    func currentColumn(in layer: TheoLayer?) -> TheoToolColumn? {
+        if let layer,
+           let column = layer.column(id: currentColumnID) {
+            return column
+        }
+
+        return layer?.defaultColumn(kind: .terminal) ?? layer?.columns.first
+    }
+
+    func currentTool(in layer: TheoLayer?) -> TheoToolColumn? {
+        currentColumn(in: layer)
     }
 
     private func step(to layerID: String, in layers: [TheoLayer]) -> Int {

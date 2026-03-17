@@ -78,6 +78,55 @@ final class TheoStore: ObservableObject {
         updateLayer(id: id) { $0.updatingColor(color) }
     }
 
+    func renameColumn(layerID: String, columnID: String, name: String) {
+        updateLayer(id: layerID) { layer in
+            let updatedColumns = layer.columns.map { column in
+                guard column.id == columnID else { return column }
+                return column.renaming(name.isEmpty ? "Untitled" : name)
+            }
+            return layer.updatingColumns(updatedColumns)
+        }
+    }
+
+    func setColumnIcon(layerID: String, columnID: String, iconSymbol: String) {
+        updateLayer(id: layerID) { layer in
+            let updatedColumns = layer.columns.map { column in
+                guard column.id == columnID else { return column }
+                return column.updatingIcon(iconSymbol)
+            }
+            return layer.updatingColumns(updatedColumns)
+        }
+    }
+
+    @discardableResult
+    func addCustomColumn(layerID: String) -> TheoToolColumn? {
+        var created: TheoToolColumn?
+        updateLayer(id: layerID) { layer in
+            let index = layer.columns.filter { $0.kind == .custom }.count + 1
+            let column = TheoToolColumn.custom(name: "Custom \(index)")
+            created = column
+            return layer.updatingColumns(layer.columns + [column])
+        }
+        return created
+    }
+
+    func removeCustomColumn(layerID: String, columnID: String) {
+        updateLayer(id: layerID) { layer in
+            let columns = layer.columns.filter { $0.id != columnID }
+            var groups = layer.groups
+            groups.removeValue(forKey: columnID)
+            return TheoLayer(
+                id: layer.id,
+                name: layer.name,
+                color: layer.color,
+                columns: columns,
+                groups: groups,
+                createdAt: layer.createdAt,
+                updatedAt: .now
+            )
+        }
+    }
+
     func setActiveBinding(layerID: String, tool: TheoToolColumn, bindingID: String?) {
         updateToolGroup(layerID: layerID, tool: tool) { group in
             TheoToolGroup(bindings: group.bindings, activeBindingID: bindingID).normalized()
@@ -152,7 +201,7 @@ final class TheoStore: ObservableObject {
     func replaceBinding(layerID: String, tool: TheoToolColumn, bindingID: String?, target: Target) -> TheoBinding? {
         var updatedBinding: TheoBinding?
         updateToolGroup(layerID: layerID, tool: tool) { group in
-            if tool == .ide {
+            if !tool.supportsMultipleBindings {
                 let existing = group.bindings.first
                 let label = existing?.archetypeHint ?? tool.suggestedLabels.first ?? labelPolicy.label(for: target)
                 let binding = TheoBinding(
@@ -265,16 +314,40 @@ final class TheoStore: ObservableObject {
     private static func normalized(layers: [TheoLayer]) -> [TheoLayer] {
         let trimmed = Array(layers.prefix(9))
         let normalized = trimmed.map { layer in
-            TheoLayer(
+            let defaults = TheoToolColumn.defaults.map { defaultColumn in
+                if let existing = layer.columns.first(where: { $0.id == defaultColumn.id }) {
+                    return existing
+                }
+
+                return defaultColumn
+            }
+            let defaultIDs = Set(TheoToolColumn.defaults.map(\.id))
+            let customColumns = layer.columns.filter { column in
+                column.kind == .custom && !defaultIDs.contains(column.id)
+            }
+            let columns = defaults + customColumns
+            var groups: [String: TheoToolGroup] = [:]
+
+            for column in columns {
+                let existing = layer.groups[column.id] ?? TheoToolGroup()
+                let normalizedGroup: TheoToolGroup
+                if column.supportsMultipleBindings {
+                    normalizedGroup = existing.normalized()
+                } else {
+                    normalizedGroup = TheoToolGroup(
+                        bindings: Array(existing.bindings.prefix(1)),
+                        activeBindingID: existing.activeBindingID
+                    ).normalized()
+                }
+                groups[column.id] = normalizedGroup
+            }
+
+            return TheoLayer(
                 id: layer.id,
                 name: layer.name.isEmpty ? "Untitled Project" : layer.name,
                 color: layer.color,
-                terminalGroup: layer.terminalGroup.normalized(),
-                ideGroup: TheoToolGroup(
-                    bindings: Array(layer.ideGroup.bindings.prefix(1)),
-                    activeBindingID: layer.ideGroup.activeBindingID
-                ).normalized(),
-                browserGroup: layer.browserGroup.normalized(),
+                columns: columns,
+                groups: groups,
                 createdAt: layer.createdAt,
                 updatedAt: layer.updatedAt
             )

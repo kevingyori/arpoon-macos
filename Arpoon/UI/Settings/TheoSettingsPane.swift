@@ -129,6 +129,11 @@ struct TheoSettingsPane: View {
                         }
                         .buttonStyle(.bordered)
                     }
+
+                    Button("Add Custom Column") {
+                        _ = theoStore.addCustomColumn(layerID: layer.id)
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
 
                 HStack(alignment: .center, spacing: 12) {
@@ -165,7 +170,7 @@ struct TheoSettingsPane: View {
                     }
                 }
 
-                ForEach(TheoToolColumn.allCases) { tool in
+                ForEach(layer.columns) { tool in
                     toolGroup(for: tool, in: layer)
                 }
             }
@@ -190,7 +195,7 @@ struct TheoSettingsPane: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Label(tool.title, systemImage: tool.systemImage)
+                        Label(tool.title, systemImage: tool.iconSymbol)
                             .font(.system(size: 13, weight: .semibold))
 
                         Text(tool.supportsMultipleBindings ? "Ordered subtargets with one active binding." : "Single target for this layer.")
@@ -218,6 +223,47 @@ struct TheoSettingsPane: View {
                             commands.appendTheoBinding(layer.id, tool)
                         }
                         .buttonStyle(.bordered)
+                    }
+
+                    if tool.kind == .custom {
+                        Button("Remove") {
+                            theoStore.removeCustomColumn(layerID: layer.id, columnID: tool.id)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+
+                HStack(alignment: .center, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Column name")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.secondary)
+
+                        TextField(
+                            "Column name",
+                            text: Binding(
+                                get: { tool.title },
+                                set: { theoStore.renameColumn(layerID: layer.id, columnID: tool.id, name: $0) }
+                            )
+                        )
+                        .textFieldStyle(.roundedBorder)
+                    }
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Icon")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.secondary)
+
+                        Picker("Icon", selection: Binding(
+                            get: { tool.iconSymbol },
+                            set: { theoStore.setColumnIcon(layerID: layer.id, columnID: tool.id, iconSymbol: $0) }
+                        )) {
+                            ForEach(TheoToolColumn.iconOptions, id: \.self) { icon in
+                                Label(icon, systemImage: icon).tag(icon)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .frame(width: 180)
                     }
                 }
 

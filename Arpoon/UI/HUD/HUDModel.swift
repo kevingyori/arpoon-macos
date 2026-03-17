@@ -14,12 +14,12 @@ struct TheoHUDHint: Hashable {
 }
 
 struct TheoMinimapColumn: Identifiable, Hashable {
-    let tool: TheoToolColumn
+    let id: String
+    let name: String
+    let iconSymbol: String
     let isSelected: Bool
     let isFilled: Bool
     let activeLabel: String?
-
-    var id: TheoToolColumn { tool }
 }
 
 struct TheoMinimapLayer: Identifiable, Hashable {
@@ -87,7 +87,7 @@ enum HUDModel {
             return min(420, baseHeight + (Double(entries.count) * 36.0))
         case .theoMinimap(let minimap):
             let hintHeight = minimap.hint == nil ? 0.0 : 48.0
-            return min(440, 86.0 + (Double(minimap.layers.count) * 38.0) + hintHeight)
+            return min(480, 86.0 + (Double(minimap.layers.count) * 38.0) + hintHeight)
         }
     }
 
@@ -97,9 +97,7 @@ enum HUDModel {
             switch minimap.movement {
             case .layer(let step):
                 return (0, step >= 0 ? -18 : 18)
-            case .tool(let from, let to):
-                let fromIndex = TheoToolColumn.allCases.firstIndex(of: from) ?? 0
-                let toIndex = TheoToolColumn.allCases.firstIndex(of: to) ?? 0
+            case .tool(let fromIndex, let toIndex):
                 return (toIndex >= fromIndex ? -18 : 18, 0)
             case .neutral:
                 return (0, 0)

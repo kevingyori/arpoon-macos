@@ -151,12 +151,15 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(store.layers.map(\.name), ["Project 1", "Project 2", "Project 3"])
     }
 
-    func testTheoBindUsesCurrentLayerAndTool() async {
+    func testTheoBindUsesCurrentLayerAndTool() async throws {
         let theoStore = makeTheoStore()
         let theoSession = TheoSession()
         await theoStore.load()
         theoSession.sync(layers: theoStore.layers)
-        _ = theoSession.selectTool(.browser)
+        let firstLayer = try XCTUnwrap(theoStore.layers.first)
+        let browserColumn = try XCTUnwrap(firstLayer.defaultColumn(kind: .browser))
+        let terminalColumn = try XCTUnwrap(firstLayer.defaultColumn(kind: .terminal))
+        _ = theoSession.selectTool(browserColumn, in: firstLayer)
 
         let target = Target.app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
         let capture = FakeCaptureService()
@@ -170,8 +173,9 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
 
         commandCenter.bindFocusedTargetToTheoCurrentContext()
 
-        XCTAssertEqual(theoStore.layers.first?.browserGroup.activeBinding?.target, target)
-        XCTAssertTrue(theoStore.layers.first?.terminalGroup.bindings.isEmpty ?? false)
+        let updatedLayer = try XCTUnwrap(theoStore.layers.first)
+        XCTAssertEqual(updatedLayer.group(for: browserColumn).activeBinding?.target, target)
+        XCTAssertTrue(updatedLayer.group(for: terminalColumn).bindings.isEmpty)
     }
 
     func testTheoJumpUsesCurrentToolAcrossLayers() async throws {
@@ -183,11 +187,12 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         let browserTwo = Target.app(AppTarget(bundleId: "com.example.browser.two", appName: "Browser Two"))
         let firstLayerID = try XCTUnwrap(theoStore.layers.first?.id)
         let secondLayerID = try XCTUnwrap(theoStore.layers.dropFirst().first?.id)
-        _ = theoStore.replaceBinding(layerID: firstLayerID, tool: .browser, bindingID: nil, target: browserOne)
-        _ = theoStore.replaceBinding(layerID: secondLayerID, tool: .browser, bindingID: nil, target: browserTwo)
+        let browserColumn = try XCTUnwrap(theoStore.layers.first?.defaultColumn(kind: .browser))
+        _ = theoStore.replaceBinding(layerID: firstLayerID, tool: browserColumn, bindingID: nil, target: browserOne)
+        _ = theoStore.replaceBinding(layerID: secondLayerID, tool: browserColumn, bindingID: nil, target: browserTwo)
 
         theoSession.sync(layers: theoStore.layers)
-        _ = theoSession.selectTool(.browser)
+        _ = theoSession.selectTool(browserColumn, in: theoStore.layers.first)
 
         let focus = FakeFocusService()
         focus.targetOutcome = .focused(label: "Browser Two", strategy: nil)
@@ -202,7 +207,27 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
 
         XCTAssertEqual(focus.focusedTargets.last, browserTwo)
         XCTAssertEqual(theoSession.currentLayerID, secondLayerID)
-        XCTAssertEqual(theoSession.currentTool, .browser)
+        XCTAssertEqual(theoSession.currentTool(in: theoStore.layer(id: secondLayerID)), browserColumn)
+    }
+
+    func testTheoStorePersistsCustomColumnsAlongsideDefaults() async throws {
+        let store = makeTheoStore()
+
+        await store.load()
+
+        let layer = try XCTUnwrap(store.layers.first)
+        let customColumn = try XCTUnwrap(store.addCustomColumn(layerID: layer.id))
+        store.renameColumn(layerID: layer.id, columnID: TheoToolColumn.terminal.id, name: "Shells")
+        store.setColumnIcon(layerID: layer.id, columnID: TheoToolColumn.browser.id, iconSymbol: "safari")
+        store.renameColumn(layerID: layer.id, columnID: customColumn.id, name: "Docs")
+        store.setColumnIcon(layerID: layer.id, columnID: customColumn.id, iconSymbol: "book")
+
+        let updatedLayer = try XCTUnwrap(store.layers.first)
+        XCTAssertEqual(updatedLayer.defaultColumn(kind: .terminal)?.title, "Shells")
+        XCTAssertEqual(updatedLayer.defaultColumn(kind: .browser)?.iconSymbol, "safari")
+        XCTAssertEqual(updatedLayer.columns.count, 4)
+        XCTAssertEqual(updatedLayer.column(id: customColumn.id)?.title, "Docs")
+        XCTAssertEqual(updatedLayer.column(id: customColumn.id)?.iconSymbol, "book")
     }
 
     private func makeCommandCenter(

@@ -258,13 +258,13 @@ final class AppCommandCenter {
 
     func focusTheoTool(_ tool: TheoToolColumn) {
         syncTheoSession()
-        let movement = theoSession.selectTool(tool)
+        let movement = theoSession.selectTool(tool, in: currentTheoLayer())
         focusCurrentTheoSelection(after: movement)
     }
 
     func cycleTheoTool(_ tool: TheoToolColumn) {
         syncTheoSession()
-        _ = theoSession.selectTool(tool)
+        _ = theoSession.selectTool(tool, in: currentTheoLayer())
 
         guard let layer = currentTheoLayer() else {
             showTheoHint(
@@ -313,7 +313,15 @@ final class AppCommandCenter {
             return
         }
 
-        let tool = theoSession.currentTool
+        guard let tool = theoSession.currentTool(in: layer) else {
+            showTheoHint(
+                title: "Theo has no active column",
+                detail: "Select or add a Theo column first.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
         captureTheoBinding(layerID: layer.id, tool: tool, bindingID: layer.group(for: tool).activeBinding?.id)
     }
 
@@ -330,7 +338,7 @@ final class AppCommandCenter {
 
         syncTheoSession()
         _ = theoSession.selectLayer(id: layerID)
-        _ = theoSession.selectTool(tool)
+        _ = theoSession.selectTool(tool, in: theoStore.layer(id: layerID))
 
         guard let binding = theoStore.replaceBinding(layerID: layerID, tool: tool, bindingID: bindingID, target: outcome.target) else {
             return
@@ -363,7 +371,7 @@ final class AppCommandCenter {
 
         syncTheoSession()
         _ = theoSession.selectLayer(id: layerID)
-        _ = theoSession.selectTool(tool)
+        _ = theoSession.selectTool(tool, in: theoStore.layer(id: layerID))
 
         guard let binding = theoStore.appendBinding(layerID: layerID, tool: tool, target: outcome.target) else {
             return
@@ -859,7 +867,15 @@ final class AppCommandCenter {
             return
         }
 
-        let tool = theoSession.currentTool
+        guard let tool = theoSession.currentTool(in: layer) else {
+            showTheoHint(
+                title: "Theo has no active column",
+                detail: "Select or add a Theo column first.",
+                tone: .neutral,
+                movement: movement
+            )
+            return
+        }
         let group = layer.group(for: tool)
 
         guard let binding = group.activeBinding else {
@@ -892,11 +908,13 @@ final class AppCommandCenter {
                         id: layer.id,
                         name: layer.name,
                         color: layer.color,
-                        columns: TheoToolColumn.allCases.map { column in
+                        columns: layer.columns.map { column in
                             let group = layer.group(for: column)
                             return TheoMinimapColumn(
-                                tool: column,
-                                isSelected: theoSession.currentLayerID == layer.id && theoSession.currentTool == column,
+                                id: column.id,
+                                name: column.name,
+                                iconSymbol: column.iconSymbol,
+                                isSelected: theoSession.currentLayerID == layer.id && theoSession.currentColumnID == column.id,
                                 isFilled: !group.bindings.isEmpty,
                                 activeLabel: group.activeBinding?.label
                             )
