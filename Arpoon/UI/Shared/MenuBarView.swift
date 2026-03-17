@@ -268,6 +268,7 @@ struct MenuBarView: View {
             }
             .buttonStyle(.plain)
             .help("Clear")
+            .accessibilityLabel("Clear \(title)")
         }
     }
 }
