@@ -144,6 +144,16 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
     }
 
+    func testGridStandaloneShortcutValidationRejectsConfiguredActionShortcut() {
+        let commandCenter = makeCommandCenter()
+        let duplicateShortcut = HotkeyShortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(optionKey | shiftKey))
+
+        XCTAssertEqual(
+            commandCenter.validationErrorForGridStandaloneShortcut(duplicateShortcut),
+            "Already assigned to The Grid Add Standalone App Hotkey."
+        )
+    }
+
     func testGridStoreSeedsThreeLayersOnFirstLoad() async {
         let store = makeGridStore()
 
@@ -422,6 +432,7 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onGridFocusTerminal: (() -> Void)?
     var onGridFocusIDE: (() -> Void)?
     var onGridFocusBrowser: (() -> Void)?
+    var onGridAddStandaloneHotkey: (() -> Void)?
     var onGridBindCurrent: (() -> Void)?
     var onGridShowHUD: (() -> Void)?
     var onGridStandaloneApp: ((String) -> Void)?

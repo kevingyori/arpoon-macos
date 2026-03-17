@@ -126,7 +126,7 @@ private struct GeneralSettingsPane: View {
                         shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
                         dynamicHotkeyGroup
                     case .grid:
-                        Text("The Grid. A digital frontier. Use Option + H/L to move left and right across the current project’s bound apps, Option + [/] to change projects, and direct jump keys follow the current layer order rather than permanent IDs.")
+                        Text("The Grid. A digital frontier. Use Option + H/L to move left and right across the current project’s bound apps, Option + [/] to change projects, Option + Shift + A to add a standalone app hotkey from the focused app, and direct jump keys follow the current layer order rather than permanent IDs.")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
 

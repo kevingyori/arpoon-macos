@@ -195,6 +195,9 @@ final class AppModel: ObservableObject {
         runtimeCoordinator.onGridFocusBrowser = { [weak commandCenter] in
             commandCenter?.focusGridTool(.browser)
         }
+        runtimeCoordinator.onGridAddStandaloneHotkey = { [weak commandCenter] in
+            commandCenter?.beginGridStandaloneHotkeyCapture()
+        }
         runtimeCoordinator.onGridBindCurrent = { [weak commandCenter] in
             commandCenter?.bindFocusedTargetToGridCurrentContext()
         }

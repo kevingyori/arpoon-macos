@@ -38,6 +38,7 @@ enum HotkeyActionKind: String, Codable {
     case gridFocusTerminal
     case gridFocusIDE
     case gridFocusBrowser
+    case gridAddStandaloneHotkey
     case gridBindCurrent
     case gridShowHUD
 }
@@ -85,6 +86,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "grid-focus-ide"
         case .gridFocusBrowser:
             return "grid-focus-browser"
+        case .gridAddStandaloneHotkey:
+            return "grid-add-standalone-hotkey"
         case .gridBindCurrent:
             return "grid-bind-current"
         case .gridShowHUD:
@@ -126,6 +129,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "The Grid Focus IDE"
         case .gridFocusBrowser:
             return "The Grid Focus Browser"
+        case .gridAddStandaloneHotkey:
+            return "The Grid Add Standalone App Hotkey"
         case .gridBindCurrent:
             return "The Grid Bind Focused Target"
         case .gridShowHUD:
@@ -215,6 +220,11 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
                 keyCode: UInt32(kVK_ANSI_B),
                 modifiers: UInt32(optionKey)
             )
+        case .gridAddStandaloneHotkey:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_A),
+                modifiers: UInt32(optionKey | shiftKey)
+            )
         case .gridBindCurrent:
             return HotkeyShortcut(
                 keyCode: UInt32(kVK_ANSI_A),
@@ -250,6 +260,7 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
         HotkeyAction(kind: .gridFocusTerminal, slot: nil),
         HotkeyAction(kind: .gridFocusIDE, slot: nil),
         HotkeyAction(kind: .gridFocusBrowser, slot: nil),
+        HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil),
         HotkeyAction(kind: .gridBindCurrent, slot: nil),
         HotkeyAction(kind: .gridShowHUD, slot: nil)
     ]
@@ -296,6 +307,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             self = HotkeyAction(kind: .gridFocusIDE, slot: nil)
         case "grid-focus-browser":
             self = HotkeyAction(kind: .gridFocusBrowser, slot: nil)
+        case "grid-add-standalone-hotkey":
+            self = HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)
         case "grid-bind-current":
             self = HotkeyAction(kind: .gridBindCurrent, slot: nil)
         case "grid-show-hud":

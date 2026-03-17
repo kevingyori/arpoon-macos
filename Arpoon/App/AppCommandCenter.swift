@@ -514,6 +514,57 @@ final class AppCommandCenter {
         controller.begin()
     }
 
+    func beginGridStandaloneHotkeyCapture() {
+        guard settings.hotkeyScheme == .grid else {
+            showGridHint(
+                title: "The Grid is inactive",
+                detail: "Switch to The Grid hotkey scheme first.",
+                tone: .warning,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard let outcome = captureService.captureFocusedTarget() else {
+            showGridHint(
+                title: "Couldn’t capture the current app",
+                detail: "Focus an app and try again.",
+                tone: .warning,
+                movement: .neutral
+            )
+            return
+        }
+
+        let target = standaloneGridTarget(from: outcome.target)
+
+        setHotkeyRecordingActive(true)
+        dynamicHotkeyCaptureController?.finish()
+        dynamicHotkeyCaptureController = nil
+
+        let controller = DynamicHotkeyCaptureController(
+            targetLabel: labelPolicy.label(for: target),
+            targetFrame: frame(for: outcome)
+        )
+        controller.onShortcut = { [weak self, weak controller] shortcut in
+            guard let self, let controller else {
+                return
+            }
+
+            self.completeGridStandaloneHotkeyCapture(
+                shortcut: shortcut,
+                target: target,
+                controller: controller
+            )
+        }
+        controller.onCancel = { [weak self] in
+            self?.dynamicHotkeyCaptureController = nil
+            self?.setHotkeyRecordingActive(false)
+        }
+
+        dynamicHotkeyCaptureController = controller
+        controller.begin()
+    }
+
     func validationErrorForDynamicShortcut(_ shortcut: HotkeyShortcut) -> String? {
         for action in HotkeyAction.activeActions(for: .dynamicWindows) {
             guard let configuredShortcut = settings.shortcut(for: action) else {
@@ -523,6 +574,24 @@ final class AppCommandCenter {
             if configuredShortcut == shortcut {
                 return "Already assigned to \(action.title)."
             }
+        }
+
+        return nil
+    }
+
+    func validationErrorForGridStandaloneShortcut(_ shortcut: HotkeyShortcut) -> String? {
+        for action in HotkeyAction.activeActions(for: .grid) {
+            guard let configuredShortcut = settings.shortcut(for: action) else {
+                continue
+            }
+
+            if configuredShortcut == shortcut {
+                return "Already assigned to \(action.title)."
+            }
+        }
+
+        if let app = gridStore.standaloneApps.first(where: { $0.shortcut == shortcut }) {
+            return "Already assigned to \(app.name)."
         }
 
         return nil
@@ -730,6 +799,34 @@ final class AppCommandCenter {
         showAddPopup(
             title: "\(shortcut.displayString) -> \(assignment.label)",
             detail: detail
+        )
+    }
+
+    private func completeGridStandaloneHotkeyCapture(
+        shortcut: HotkeyShortcut,
+        target: Target,
+        controller: DynamicHotkeyCaptureController
+    ) {
+        if let error = validationErrorForGridStandaloneShortcut(shortcut) {
+            controller.showError(error)
+            return
+        }
+
+        let app = gridStore.addStandaloneApp()
+        gridStore.setStandaloneAppShortcut(id: app.id, shortcut: shortcut)
+        guard let updatedApp = gridStore.replaceStandaloneAppBinding(id: app.id, target: target),
+              let binding = updatedApp.binding else {
+            controller.showError("Couldn’t save the standalone app.")
+            return
+        }
+
+        controller.finish()
+        dynamicHotkeyCaptureController = nil
+        setHotkeyRecordingActive(false)
+
+        showAddPopup(
+            title: "\(shortcut.displayString) -> \(binding.label)",
+            detail: "The Grid saved a standalone app shortcut that works across every project."
         )
     }
 

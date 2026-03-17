@@ -107,15 +107,38 @@ final class GridStore: ObservableObject {
     }
 
     @discardableResult
-    func addCustomColumn(layerID: String) -> GridToolColumn? {
+    func addCustomColumn(layerID: String, template: GridToolColumn? = nil) -> GridToolColumn? {
         var created: GridToolColumn?
         updateLayer(id: layerID) { layer in
+            if let template {
+                guard !layer.columns.contains(where: { $0.id == template.id }) else {
+                    created = template
+                    return layer
+                }
+
+                let column = GridToolColumn.custom(
+                    id: template.id,
+                    name: template.name,
+                    iconSymbol: template.iconSymbol
+                )
+                created = column
+                return layer.updatingColumns(layer.columns + [column])
+            }
+
             let index = layer.columns.filter { $0.kind == .custom }.count + 1
             let column = GridToolColumn.custom(name: "Custom \(index)")
             created = column
             return layer.updatingColumns(layer.columns + [column])
         }
         return created
+    }
+
+    func moveColumns(layerID: String, fromOffsets: IndexSet, toOffset: Int) {
+        updateLayer(id: layerID) { layer in
+            var columns = layer.columns
+            columns.move(fromOffsets: fromOffsets, toOffset: toOffset)
+            return layer.updatingColumns(columns)
+        }
     }
 
     func removeCustomColumn(layerID: String, columnID: String) {
