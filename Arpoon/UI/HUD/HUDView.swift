@@ -1,7 +1,21 @@
 import SwiftUI
 
+@MainActor
+final class HUDViewModel: ObservableObject {
+    @Published var model: HUDModel
+    @Published var presentationID: Int = 0
+
+    init(model: HUDModel) {
+        self.model = model
+    }
+}
+
 struct HUDView: View {
-    let model: HUDModel
+    @ObservedObject var viewModel: HUDViewModel
+
+    private var model: HUDModel {
+        viewModel.model
+    }
 
     var body: some View {
         GlassPanelSurface(cornerRadius: cornerRadius, material: .hudWindow, blendingMode: .behindWindow) {
@@ -23,6 +37,7 @@ struct HUDView: View {
                     )
                 case .gridMinimap(let minimap):
                     gridMinimapView(minimap)
+                        .id("grid-\(viewModel.presentationID)")
                 }
             }
             .padding(containerPadding)
@@ -195,44 +210,30 @@ struct HUDView: View {
 private struct GridMinimapAnimatedView: View {
     let minimap: GridMinimapModel
 
-    @State private var isAtRest = false
+    @State private var displayedLayerIndex: Int = 0
+    @State private var displayedColumnIndex: Int = 0
+    @State private var hasAppeared = false
+
+    init(minimap: GridMinimapModel) {
+        self.minimap = minimap
+
+        let initialPosition = Self.initialSelectorPosition(for: minimap)
+        _displayedLayerIndex = State(initialValue: initialPosition.layerIndex)
+        _displayedColumnIndex = State(initialValue: initialPosition.columnIndex)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            ForEach(minimap.layers) { layer in
-                ZStack(alignment: .leading) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) {
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(layer.color.swiftUIColor)
-                                .frame(width: 4, height: 26)
-
-                            Text(layer.name)
-                                .font(.system(size: 12.5, weight: layer.isCurrent ? .semibold : .medium))
-                                .lineLimit(1)
-                        }
-
-                        HStack(spacing: 10) {
-                            ForEach(layer.columns) { column in
-                                gridColumnSlot(
-                                    column,
-                                    layerColor: layer.color,
-                                    isCurrentLayer: layer.isCurrent
-                                )
-                            }
-                        }
+            ZStack(alignment: .topLeading) {
+                VStack(alignment: .leading, spacing: rowSpacing) {
+                    ForEach(Array(minimap.layers.enumerated()), id: \.element.id) { index, layer in
+                        rowView(layer, rowIndex: index)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
-                    .offset(y: layerOffset(for: layer))
                 }
-                .frame(width: rowWidth(for: layer), alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(layer.isCurrent ? layer.color.swiftUIColor.opacity(0.12) : Color.secondary.opacity(0.06))
-                )
-                .clipped()
+
+                selectorView
             }
+            .frame(width: gridBodyWidth, height: gridBodyHeight, alignment: .topLeading)
 
             if let hint = minimap.hint {
                 VStack(alignment: .leading, spacing: 3) {
@@ -255,109 +256,210 @@ private struct GridMinimapAnimatedView: View {
                 )
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: true, vertical: false)
         .onAppear {
-            resetMotion()
+            hasAppeared = true
+            animateSelectorToTarget()
         }
-        .onChange(of: minimap.movement) { _, _ in
-            resetMotion()
+        .onChange(of: minimap.selectedLayerIndex) { _, _ in
+            animateSelectorToTarget()
+        }
+        .onChange(of: minimap.selectedColumnIndex) { _, _ in
+            animateSelectorToTarget()
         }
     }
 
-    @ViewBuilder
-    private func gridColumnSlot(_ column: GridMinimapColumn, layerColor: GridLayerColor, isCurrentLayer: Bool) -> some View {
-        ZStack(alignment: .leading) {
-            gridColumnView(column, layerColor: layerColor, isCurrentLayer: isCurrentLayer)
-                .offset(x: toolOffset(for: column))
-        }
-        .frame(width: 110, alignment: .leading)
-        .clipped()
+    private var rowLabelWidth: CGFloat {
+        minimap.detailMode == .compact ? 120 : 140
+    }
+
+    private var rowLabelTotalWidth: CGFloat {
+        rowLabelWidth + 20
+    }
+
+    private var cellWidth: CGFloat {
+        minimap.detailMode == .compact ? 64 : 88
+    }
+
+    private var cellTotalWidth: CGFloat {
+        cellWidth + 16
+    }
+
+    private var rowHeight: CGFloat {
+        minimap.detailMode == .compact ? 40 : 54
+    }
+
+    private var columnSpacing: CGFloat {
+        minimap.detailMode == .compact ? 8 : 10
+    }
+
+    private var rowSpacing: CGFloat {
+        minimap.detailMode == .compact ? 8 : 10
+    }
+
+    private var gridBodyWidth: CGFloat {
+        rowLabelTotalWidth + columnSpacing + CGFloat(max(0, minimap.maxColumnCount)) * cellTotalWidth + CGFloat(max(0, minimap.maxColumnCount - 1)) * columnSpacing
+    }
+
+    private var gridBodyHeight: CGFloat {
+        CGFloat(max(1, minimap.layers.count)) * rowHeight + CGFloat(max(0, minimap.layers.count - 1)) * rowSpacing
+    }
+
+    private var selectorWidth: CGFloat {
+        cellTotalWidth
+    }
+
+    private var selectorHeight: CGFloat {
+        rowHeight
     }
 
     @ViewBuilder
-    private func gridColumnView(_ column: GridMinimapColumn, layerColor: GridLayerColor, isCurrentLayer: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Image(systemName: column.iconSymbol)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(column.isFilled ? layerColor.swiftUIColor : Color.secondary)
+    private func rowView(_ layer: GridMinimapLayer, rowIndex: Int) -> some View {
+        HStack(spacing: columnSpacing) {
+            HStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(layer.color.swiftUIColor)
+                    .frame(width: 4, height: minimap.detailMode == .compact ? 18 : 24)
 
-                Text(column.name)
-                    .font(.system(size: 10.5, weight: column.isSelected ? .semibold : .medium))
+                Text(layer.name)
+                    .font(.system(size: minimap.detailMode == .compact ? 11.5 : 12.5, weight: .medium))
                     .lineLimit(1)
             }
+            .frame(width: rowLabelWidth, height: rowHeight, alignment: .leading)
+            .padding(.horizontal, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.secondary.opacity(0.05))
+            )
 
+            ForEach(Array(layer.columns.enumerated()), id: \.element.id) { columnIndex, column in
+                gridColumnView(
+                    column,
+                    layerColor: layer.color,
+                    rowIndex: rowIndex,
+                    columnIndex: columnIndex
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func gridColumnView(
+        _ column: GridMinimapColumn,
+        layerColor: GridLayerColor,
+        rowIndex: Int,
+        columnIndex: Int
+    ) -> some View {
+        let isTargetSelected = minimap.selectedLayerIndex == rowIndex && minimap.selectedColumnIndex == columnIndex
+        let showLabel = minimap.detailMode == .expanded && isTargetSelected && (column.activeLabel?.isEmpty == false)
+        let hasAppIcon = column.bundleId?.isEmpty == false
+
+        VStack(spacing: 4) {
             HStack(spacing: 6) {
-                Circle()
-                    .fill(column.isFilled ? layerColor.swiftUIColor : Color.secondary.opacity(0.22))
-                    .frame(width: 7, height: 7)
+                if let bundleId = column.bundleId, hasAppIcon {
+                    AppIconView(bundleId: bundleId)
+                        .frame(width: 16, height: 16)
+                } else {
+                    Image(systemName: column.iconSymbol)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.secondary)
+                }
 
-                Text(column.activeLabel ?? "empty")
+                if !hasAppIcon {
+                    Circle()
+                        .fill(column.isFilled ? layerColor.swiftUIColor : Color.secondary.opacity(0.22))
+                        .frame(width: 6, height: 6)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+
+            if showLabel {
+                Text(column.activeLabel ?? "")
                     .font(.system(size: 10.5))
                     .lineLimit(1)
-                    .foregroundStyle(column.isFilled ? Color.primary : Color.secondary)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
-        .frame(width: 110, alignment: .leading)
+        .frame(width: cellWidth, height: rowHeight, alignment: .center)
         .padding(.horizontal, 8)
-        .padding(.vertical, 7)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(column.isSelected ? layerColor.swiftUIColor.opacity(isCurrentLayer ? 0.22 : 0.16) : Color.secondary.opacity(0.08))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(column.isSelected ? layerColor.swiftUIColor.opacity(0.4) : Color.clear, lineWidth: 1)
+                .fill(isTargetSelected ? layerColor.swiftUIColor.opacity(0.18) : Color.secondary.opacity(0.06))
         )
     }
 
-    private func rowWidth(for layer: GridMinimapLayer) -> CGFloat {
-        let columnCount = max(layer.columns.count, 1)
-        return (CGFloat(columnCount) * 110) + (CGFloat(max(0, columnCount - 1)) * 10) + 20
+    @ViewBuilder
+    private var selectorView: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .stroke(selectorColor, lineWidth: 1.5)
+            .frame(width: selectorWidth, height: selectorHeight)
+            .offset(x: selectorX, y: selectorY)
+            .animation(selectorAnimation, value: displayedLayerIndex)
+            .animation(selectorAnimation, value: displayedColumnIndex)
     }
 
-    private func layerOffset(for layer: GridMinimapLayer) -> CGFloat {
-        guard minimap.animateSelectionMotion, !isAtRest, layer.isCurrent else {
-            return 0
+    private var selectorColor: Color {
+        guard displayedLayerIndex < minimap.layers.count else {
+            return Color.primary.opacity(0.24)
+        }
+
+        return minimap.layers[displayedLayerIndex].color.swiftUIColor.opacity(0.45)
+    }
+
+    private var selectorX: CGFloat {
+        rowLabelTotalWidth + columnSpacing + CGFloat(displayedColumnIndex) * (cellTotalWidth + columnSpacing)
+    }
+
+    private var selectorY: CGFloat {
+        CGFloat(displayedLayerIndex) * (rowHeight + rowSpacing)
+    }
+
+    private var selectorAnimation: Animation? {
+        minimap.animateSelectionMotion ? .easeOut(duration: 0.14) : nil
+    }
+
+    private func animateSelectorToTarget() {
+        let targetLayerIndex = minimap.selectedLayerIndex
+        let targetColumnIndex = minimap.selectedColumnIndex
+
+        guard minimap.animateSelectionMotion else {
+            displayedLayerIndex = targetLayerIndex
+            displayedColumnIndex = targetColumnIndex
+            return
+        }
+
+        guard hasAppeared else {
+            displayedLayerIndex = targetLayerIndex
+            displayedColumnIndex = targetColumnIndex
+            return
+        }
+
+        guard displayedLayerIndex != targetLayerIndex || displayedColumnIndex != targetColumnIndex else {
+            return
+        }
+
+        DispatchQueue.main.async {
+            displayedLayerIndex = targetLayerIndex
+            displayedColumnIndex = targetColumnIndex
+        }
+    }
+
+    private static func initialSelectorPosition(for minimap: GridMinimapModel) -> (layerIndex: Int, columnIndex: Int) {
+        let targetLayerIndex = minimap.selectedLayerIndex
+        let targetColumnIndex = minimap.selectedColumnIndex
+
+        guard minimap.animateSelectionMotion else {
+            return (targetLayerIndex, targetColumnIndex)
         }
 
         switch minimap.movement {
         case .layer(let step):
-            return step >= 0 ? -14 : 14
-        case .neutral, .tool:
-            return 0
-        }
-    }
-
-    private func toolOffset(for column: GridMinimapColumn) -> CGFloat {
-        guard minimap.animateSelectionMotion, !isAtRest, column.isSelected else {
-            return 0
-        }
-
-        switch minimap.movement {
-        case .tool(let fromIndex, let toIndex):
-            return toIndex >= fromIndex ? -14 : 14
-        case .neutral, .layer:
-            return 0
-        }
-    }
-
-    private func resetMotion() {
-        guard minimap.animateSelectionMotion else {
-            isAtRest = true
-            return
-        }
-
-        switch minimap.movement {
+            return (max(0, targetLayerIndex - step), targetColumnIndex)
+        case .tool(let fromIndex, _):
+            return (targetLayerIndex, max(0, fromIndex))
         case .neutral:
-            isAtRest = true
-        case .layer, .tool:
-            isAtRest = false
-            DispatchQueue.main.async {
-                withAnimation(.easeOut(duration: 0.12)) {
-                    isAtRest = true
-                }
-            }
+            return (targetLayerIndex, targetColumnIndex)
         }
     }
 

@@ -5,10 +5,15 @@ import SwiftUI
 @MainActor
 final class HUDWindowController {
     private let panel: NSPanel
+    private let viewModel: HUDViewModel
+    private let hostingController: NSHostingController<HUDView>
     private var dismissTask: DispatchWorkItem?
     private var visible = false
 
     init() {
+        viewModel = HUDViewModel(model: .symbol(systemName: "circle.fill", tone: .neutral))
+        hostingController = NSHostingController(rootView: HUDView(viewModel: viewModel))
+
         panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 420, height: 140),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -25,6 +30,7 @@ final class HUDWindowController {
         panel.hidesOnDeactivate = false
         panel.ignoresMouseEvents = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
+        panel.contentViewController = hostingController
     }
 
     func show(model: HUDModel, timeout: Double) {
@@ -67,8 +73,10 @@ final class HUDWindowController {
     }
 
     private func present(model: HUDModel) {
-        let hostingController = NSHostingController(rootView: HUDView(model: model))
-        panel.contentViewController = hostingController
+        if !visible {
+            viewModel.presentationID += 1
+        }
+        viewModel.model = model
 
         let contentSize = NSSize(width: model.preferredWidth, height: model.preferredHeight)
         let targetFrame = panelFrame(width: contentSize.width, height: contentSize.height)
@@ -76,13 +84,8 @@ final class HUDWindowController {
 
         if !visible {
             panel.setFrame(targetFrame, display: true)
-            panel.alphaValue = 0
+            panel.alphaValue = 1
             panel.orderFrontRegardless()
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.16
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                panel.animator().alphaValue = 1
-            }
             visible = true
         } else {
             panel.alphaValue = 1

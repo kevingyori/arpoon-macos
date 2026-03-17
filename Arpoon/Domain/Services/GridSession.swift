@@ -102,6 +102,16 @@ final class GridSession: ObservableObject {
         currentColumn(in: columns)
     }
 
+    func select(layerID: String, columnID: String, in columns: [GridToolColumn], layers: [GridLayer]) {
+        guard layers.contains(where: { $0.id == layerID }),
+              columns.contains(where: { $0.id == columnID }) else {
+            return
+        }
+
+        currentLayerID = layerID
+        currentColumnID = columnID
+    }
+
     private func step(to layerID: String, in layers: [GridLayer]) -> Int {
         guard let currentLayerID,
               let fromIndex = layers.firstIndex(where: { $0.id == currentLayerID }),

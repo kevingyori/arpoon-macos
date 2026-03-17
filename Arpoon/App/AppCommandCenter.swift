@@ -25,6 +25,11 @@ protocol TargetFocusing {
 }
 
 @MainActor
+protocol AppProviding {
+    func focusedApp() -> LiveApp?
+}
+
+@MainActor
 protocol WindowProviding {
     func focusedWindow() -> LiveWindow?
     func visibleWindow(from reference: LiveWindow, toward direction: SpatialNavigationDirection) -> LiveWindow?
@@ -49,6 +54,7 @@ extension AccessibilityPermissionService: AccessibilityPermissionMonitoring {}
 extension TargetCaptureService: TargetCapturing {}
 extension TargetResolutionService: TargetResolving {}
 extension FocusService: TargetFocusing {}
+extension RunningAppProvider: AppProviding {}
 extension AccessibilityWindowProvider: WindowProviding {}
 extension HUDWindowController: HUDPresenting {}
 extension SettingsWindowController: SettingsWindowPresenting {}
@@ -68,12 +74,14 @@ final class AppCommandCenter {
     private let captureService: any TargetCapturing
     private let resolutionService: any TargetResolving
     private let focusService: any TargetFocusing
+    private let appProvider: any AppProviding
     private let windowProvider: any WindowProviding
     private let hudController: any HUDPresenting
     private let setHotkeyRecordingActive: (Bool) -> Void
     private var liveSlotWindows: [Int: LiveWindow] = [:]
     private var liveDynamicWindows: [String: LiveWindow] = [:]
     private var liveGridWindows: [String: LiveWindow] = [:]
+    private var lastObservedExternalFocusSignature: String?
     private weak var settingsWindow: NSWindow?
     private var dynamicHotkeyCaptureController: DynamicHotkeyCaptureController?
 
@@ -88,6 +96,7 @@ final class AppCommandCenter {
         captureService: any TargetCapturing,
         resolutionService: any TargetResolving,
         focusService: any TargetFocusing,
+        appProvider: any AppProviding,
         windowProvider: any WindowProviding,
         hudController: any HUDPresenting,
         setHotkeyRecordingActive: @escaping (Bool) -> Void
@@ -102,6 +111,7 @@ final class AppCommandCenter {
         self.captureService = captureService
         self.resolutionService = resolutionService
         self.focusService = focusService
+        self.appProvider = appProvider
         self.windowProvider = windowProvider
         self.hudController = hudController
         self.setHotkeyRecordingActive = setHotkeyRecordingActive
@@ -219,6 +229,40 @@ final class AppCommandCenter {
         )
     }
 
+    func syncGridSelectionToFocusedTarget() {
+        syncGridSession()
+
+        if let focusedWindow = windowProvider.focusedWindow(),
+           let match = gridMatch(for: focusedWindow) {
+            gridSession.select(layerID: match.layerID, columnID: match.columnID, in: gridStore.columns, layers: gridStore.layers)
+            return
+        }
+
+        guard let focusedApp = appProvider.focusedApp(),
+              focusedApp.bundleId != Bundle.main.bundleIdentifier,
+              let match = gridMatch(forBundleID: focusedApp.bundleId) else {
+            return
+        }
+
+        gridSession.select(layerID: match.layerID, columnID: match.columnID, in: gridStore.columns, layers: gridStore.layers)
+    }
+
+    func syncGridSelectionToFocusedTargetIfNeeded() {
+        let observation = currentExternalFocusObservation()
+        guard observation.signature != lastObservedExternalFocusSignature else {
+            return
+        }
+
+        lastObservedExternalFocusSignature = observation.signature
+
+        guard let match = observation.match else {
+            return
+        }
+
+        syncGridSession()
+        gridSession.select(layerID: match.layerID, columnID: match.columnID, in: gridStore.columns, layers: gridStore.layers)
+    }
+
     func showHeldHUD() {
         hudController.showPersistent(model: hudOverviewModel())
     }
@@ -229,7 +273,7 @@ final class AppCommandCenter {
 
     func showGridHUD() {
         hudController.show(
-            model: gridMinimapModel(movement: .neutral, hint: nil),
+            model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .expanded),
             timeout: gridHUDTimeout
         )
     }
@@ -385,8 +429,7 @@ final class AppCommandCenter {
             return
         }
 
-        let outcome = focusService.focus(target: binding.target)
-        showGridHintForOutcome(outcome, fallbackLabel: app.name, movement: .neutral)
+        _ = focusService.focus(target: binding.target)
     }
 
     func captureGridStandaloneApp(_ appID: String) {
@@ -779,7 +822,8 @@ final class AppCommandCenter {
         hudController.show(
             model: gridMinimapModel(
                 movement: movement,
-                hint: GridHUDHint(title: title, detail: detail, tone: tone)
+                hint: GridHUDHint(title: title, detail: detail, tone: tone),
+                detailMode: .compact
             ),
             timeout: gridHUDTimeout
         )
@@ -793,7 +837,7 @@ final class AppCommandCenter {
         switch outcome {
         case .focused:
             hudController.show(
-                model: gridMinimapModel(movement: movement, hint: nil),
+                model: gridMinimapModel(movement: movement, hint: nil, detailMode: .compact),
                 timeout: gridHUDTimeout
             )
         case .launched(let appName):
@@ -1044,11 +1088,9 @@ final class AppCommandCenter {
         let group = layer.group(for: tool)
 
         guard let binding = group.activeBinding else {
-            showGridHint(
-                title: "\(tool.title) is empty in \(layer.name)",
-                detail: "Capture a target into this column first.",
-                tone: .neutral,
-                movement: movement
+            hudController.show(
+                model: gridMinimapModel(movement: movement, hint: nil, detailMode: .compact),
+                timeout: gridHUDTimeout
             )
             return
         }
@@ -1117,8 +1159,15 @@ final class AppCommandCenter {
         return textField.stringValue
     }
 
-    private func gridMinimapModel(movement: GridSelectionChange, hint: GridHUDHint?) -> HUDModel {
-        HUDModel.gridMinimap(
+    private func gridMinimapModel(
+        movement: GridSelectionChange,
+        hint: GridHUDHint?,
+        detailMode: GridMinimapModel.DetailMode = .compact
+    ) -> HUDModel {
+        let selectedLayerIndex = max(0, gridStore.layers.firstIndex(where: { $0.id == gridSession.currentLayerID }) ?? 0)
+        let selectedColumnIndex = max(0, gridStore.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0)
+
+        return HUDModel.gridMinimap(
             GridMinimapModel(
                 layers: gridStore.layers.map { layer in
                     GridMinimapLayer(
@@ -1131,7 +1180,7 @@ final class AppCommandCenter {
                                 id: column.id,
                                 name: column.name,
                                 iconSymbol: column.iconSymbol,
-                                isSelected: gridSession.currentLayerID == layer.id && gridSession.currentColumnID == column.id,
+                                bundleId: group.activeBinding?.bundleId,
                                 isFilled: !group.bindings.isEmpty,
                                 activeLabel: group.activeBinding?.label
                             )
@@ -1141,9 +1190,121 @@ final class AppCommandCenter {
                 },
                 movement: movement,
                 hint: hint,
-                animateSelectionMotion: settings.animateGridMinimapSelection
+                animateSelectionMotion: settings.animateGridMinimapSelection,
+                detailMode: detailMode,
+                selectedLayerIndex: selectedLayerIndex,
+                selectedColumnIndex: selectedColumnIndex
             )
         )
+    }
+
+    private func gridMatch(for liveWindow: LiveWindow) -> (layerID: String, columnID: String)? {
+        let exactMatches = matchingGridCells { target in
+            matches(liveWindow: liveWindow, target: target)
+        }
+
+        if let preferred = preferredGridMatch(from: exactMatches) {
+            return preferred
+        }
+
+        return preferredGridMatch(from: matchingGridCells { target in
+            target.bundleId == liveWindow.bundleId
+        })
+    }
+
+    private func gridMatch(forBundleID bundleID: String) -> (layerID: String, columnID: String)? {
+        preferredGridMatch(from: matchingGridCells { target in
+            target.bundleId == bundleID
+        })
+    }
+
+    private func currentExternalFocusObservation() -> (signature: String?, match: (layerID: String, columnID: String)?) {
+        if let focusedWindow = windowProvider.focusedWindow() {
+            return (
+                signature: externalFocusSignature(for: focusedWindow),
+                match: gridMatch(for: focusedWindow)
+            )
+        }
+
+        guard let focusedApp = appProvider.focusedApp() else {
+            return (nil, nil)
+        }
+
+        let signature = "app:\(focusedApp.bundleId)#\(focusedApp.pid)"
+        guard focusedApp.bundleId != Bundle.main.bundleIdentifier else {
+            return (signature, nil)
+        }
+
+        return (signature, gridMatch(forBundleID: focusedApp.bundleId))
+    }
+
+    private func matchingGridCells(where predicate: (Target) -> Bool) -> [(layerID: String, columnID: String)] {
+        gridStore.layers.flatMap { layer in
+            gridStore.columns.compactMap { column in
+                guard let binding = layer.group(for: column).activeBinding,
+                      predicate(binding.target) else {
+                    return nil
+                }
+
+                return (layerID: layer.id, columnID: column.id)
+            }
+        }
+    }
+
+    private func preferredGridMatch(from matches: [(layerID: String, columnID: String)]) -> (layerID: String, columnID: String)? {
+        guard !matches.isEmpty else {
+            return nil
+        }
+
+        if let currentLayerID = gridSession.currentLayerID,
+           let currentLayerMatch = matches.first(where: { $0.layerID == currentLayerID }) {
+            return currentLayerMatch
+        }
+
+        return matches.first
+    }
+
+    private func matches(liveWindow: LiveWindow, target: Target) -> Bool {
+        guard case .window(let windowTarget) = target,
+              windowTarget.bundleId == liveWindow.bundleId else {
+            return false
+        }
+
+        if let windowID = windowTarget.windowID, let liveWindowID = liveWindow.windowID {
+            return windowID == liveWindowID
+        }
+
+        if let targetTitle = normalizedWindowText(windowTarget.windowTitle),
+           let liveTitle = normalizedWindowText(liveWindow.title),
+           let targetFrame = windowTarget.frame,
+           let liveFrame = liveWindow.frame {
+            return targetTitle == liveTitle && targetFrame == liveFrame
+        }
+
+        if let targetTitle = normalizedWindowText(windowTarget.windowTitle),
+           let liveTitle = normalizedWindowText(liveWindow.title) {
+            return targetTitle == liveTitle
+        }
+
+        if let targetFrame = windowTarget.frame,
+           let liveFrame = liveWindow.frame {
+            return targetFrame == liveFrame
+        }
+
+        return false
+    }
+
+    private func normalizedWindowText(_ text: String?) -> String? {
+        let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let trimmed, !trimmed.isEmpty else {
+            return nil
+        }
+
+        return trimmed
+    }
+
+    private func externalFocusSignature(for liveWindow: LiveWindow) -> String {
+        "window:\(liveWindow.bundleId)#\(liveWindow.pid)#\(liveWindow.windowID ?? -1)#\(normalizedWindowText(liveWindow.title) ?? "")#\(liveWindow.frame?.x ?? -1)#\(liveWindow.frame?.y ?? -1)#\(liveWindow.frame?.width ?? -1)#\(liveWindow.frame?.height ?? -1)"
     }
 }
 
@@ -1181,6 +1342,17 @@ private extension DynamicHotkeyAssignment {
 private extension GridBinding {
     var bundleId: String {
         switch target {
+        case .app(let target):
+            return target.bundleId
+        case .window(let target):
+            return target.bundleId
+        }
+    }
+}
+
+private extension Target {
+    var bundleId: String {
+        switch self {
         case .app(let target):
             return target.bundleId
         case .window(let target):

@@ -414,14 +414,17 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
                         name: "Project 1",
                         color: .cobalt,
                         columns: [
-                            GridMinimapColumn(id: "terminal", name: "Terminal", iconSymbol: "terminal", isSelected: true, isFilled: true, activeLabel: "Shell")
+                            GridMinimapColumn(id: "terminal", name: "Terminal", iconSymbol: "terminal", bundleId: "com.example.term", isFilled: true, activeLabel: "Shell")
                         ],
                         isCurrent: true
                     )
                 ],
                 movement: .neutral,
                 hint: nil,
-                animateSelectionMotion: true
+                animateSelectionMotion: true,
+                detailMode: .compact,
+                selectedLayerIndex: 0,
+                selectedColumnIndex: 0
             )
         )
 
@@ -433,9 +436,9 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
                         name: "Project 1",
                         color: .cobalt,
                         columns: [
-                            GridMinimapColumn(id: "terminal", name: "Terminal", iconSymbol: "terminal", isSelected: false, isFilled: true, activeLabel: "Shell"),
-                            GridMinimapColumn(id: "ide", name: "IDE", iconSymbol: "curlybraces", isSelected: true, isFilled: false, activeLabel: nil),
-                            GridMinimapColumn(id: "browser", name: "Browser", iconSymbol: "globe", isSelected: false, isFilled: true, activeLabel: "Site")
+                            GridMinimapColumn(id: "terminal", name: "Terminal", iconSymbol: "terminal", bundleId: "com.example.term", isFilled: true, activeLabel: "Shell"),
+                            GridMinimapColumn(id: "ide", name: "IDE", iconSymbol: "curlybraces", bundleId: nil, isFilled: false, activeLabel: nil),
+                            GridMinimapColumn(id: "browser", name: "Browser", iconSymbol: "globe", bundleId: "com.example.browser", isFilled: true, activeLabel: "Site")
                         ],
                         isCurrent: true
                     ),
@@ -444,21 +447,202 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
                         name: "Project 2",
                         color: .rose,
                         columns: [
-                            GridMinimapColumn(id: "terminal", name: "Terminal", iconSymbol: "terminal", isSelected: false, isFilled: true, activeLabel: "Shell"),
-                            GridMinimapColumn(id: "ide", name: "IDE", iconSymbol: "curlybraces", isSelected: false, isFilled: true, activeLabel: "Editor"),
-                            GridMinimapColumn(id: "browser", name: "Browser", iconSymbol: "globe", isSelected: false, isFilled: false, activeLabel: nil)
+                            GridMinimapColumn(id: "terminal", name: "Terminal", iconSymbol: "terminal", bundleId: "com.example.term", isFilled: true, activeLabel: "Shell"),
+                            GridMinimapColumn(id: "ide", name: "IDE", iconSymbol: "curlybraces", bundleId: "com.example.ide", isFilled: true, activeLabel: "Editor"),
+                            GridMinimapColumn(id: "browser", name: "Browser", iconSymbol: "globe", bundleId: nil, isFilled: false, activeLabel: nil)
                         ],
                         isCurrent: false
                     )
                 ],
                 movement: .neutral,
                 hint: GridHUDHint(title: "Hint", detail: "Detail", tone: .neutral),
-                animateSelectionMotion: true
+                animateSelectionMotion: true,
+                detailMode: .expanded,
+                selectedLayerIndex: 0,
+                selectedColumnIndex: 1
             )
         )
 
         XCTAssertGreaterThan(expanded.preferredWidth, compact.preferredWidth)
         XCTAssertGreaterThan(expanded.preferredHeight, compact.preferredHeight)
+    }
+
+    func testShowGridHUDUsesExpandedMinimapDetail() async {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+        let hud = FakeHUDPresenter()
+
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            hudPresenter: hud
+        )
+
+        commandCenter.showGridHUD()
+
+        guard case .gridMinimap(let minimap)? = hud.lastModel else {
+            return XCTFail("Expected grid minimap HUD")
+        }
+
+        XCTAssertEqual(minimap.detailMode, .expanded)
+    }
+
+    func testSyncGridSelectionToFocusedWindowSelectsMatchingCell() async throws {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+
+        let ideColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .ide))
+        let secondLayerID = try XCTUnwrap(gridStore.layers.dropFirst().first?.id)
+        let liveWindow = LiveWindow(
+            bundleId: "com.example.editor",
+            appName: "Editor",
+            pid: 44,
+            title: "Repo",
+            windowID: 99,
+            frame: WindowFrame(x: 10, y: 10, width: 1200, height: 800),
+            isMain: true,
+            isFocused: true,
+            axElement: nil
+        )
+
+        _ = gridStore.replaceBinding(
+            layerID: secondLayerID,
+            tool: ideColumn,
+            bindingID: nil,
+            target: .window(
+                WindowTarget(
+                    bundleId: liveWindow.bundleId,
+                    appName: liveWindow.appName,
+                    pid: liveWindow.pid,
+                    windowTitle: liveWindow.title,
+                    windowID: liveWindow.windowID,
+                    frame: liveWindow.frame,
+                    capturedAt: .now
+                )
+            )
+        )
+
+        let windowProvider = FakeWindowProvider()
+        windowProvider.focusedWindowValue = liveWindow
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            windowProvider: windowProvider
+        )
+
+        commandCenter.syncGridSelectionToFocusedTarget()
+
+        XCTAssertEqual(gridSession.currentLayerID, secondLayerID)
+        XCTAssertEqual(gridSession.currentColumnID, ideColumn.id)
+    }
+
+    func testSyncGridSelectionToFocusedWindowPrefersCurrentLayerWhenDuplicated() async throws {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+
+        let browserColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .browser))
+        let firstLayerID = try XCTUnwrap(gridStore.layers.first?.id)
+        let secondLayerID = try XCTUnwrap(gridStore.layers.dropFirst().first?.id)
+        let liveWindow = LiveWindow(
+            bundleId: "com.example.browser",
+            appName: "Browser",
+            pid: 88,
+            title: "Docs",
+            windowID: 501,
+            frame: WindowFrame(x: 40, y: 40, width: 900, height: 700),
+            isMain: true,
+            isFocused: true,
+            axElement: nil
+        )
+        let target = Target.window(
+            WindowTarget(
+                bundleId: liveWindow.bundleId,
+                appName: liveWindow.appName,
+                pid: liveWindow.pid,
+                windowTitle: liveWindow.title,
+                windowID: liveWindow.windowID,
+                frame: liveWindow.frame,
+                capturedAt: .now
+            )
+        )
+
+        _ = gridStore.replaceBinding(layerID: firstLayerID, tool: browserColumn, bindingID: nil, target: target)
+        _ = gridStore.replaceBinding(layerID: secondLayerID, tool: browserColumn, bindingID: nil, target: target)
+        _ = gridSession.selectLayer(id: secondLayerID)
+
+        let windowProvider = FakeWindowProvider()
+        windowProvider.focusedWindowValue = liveWindow
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            windowProvider: windowProvider
+        )
+
+        commandCenter.syncGridSelectionToFocusedTarget()
+
+        XCTAssertEqual(gridSession.currentLayerID, secondLayerID)
+        XCTAssertEqual(gridSession.currentColumnID, browserColumn.id)
+    }
+
+    func testExternalGridSyncDoesNotOverrideManualEmptySlotSelectionWithoutFocusChange() async throws {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+
+        let browserColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .browser))
+        let ideColumn = try XCTUnwrap(gridStore.defaultColumn(kind: .ide))
+        let firstLayerID = try XCTUnwrap(gridStore.layers.first?.id)
+        let liveWindow = LiveWindow(
+            bundleId: "com.example.browser",
+            appName: "Browser",
+            pid: 31,
+            title: "Docs",
+            windowID: 901,
+            frame: WindowFrame(x: 60, y: 60, width: 1024, height: 768),
+            isMain: true,
+            isFocused: true,
+            axElement: nil
+        )
+
+        _ = gridStore.replaceBinding(
+            layerID: firstLayerID,
+            tool: browserColumn,
+            bindingID: nil,
+            target: .window(
+                WindowTarget(
+                    bundleId: liveWindow.bundleId,
+                    appName: liveWindow.appName,
+                    pid: liveWindow.pid,
+                    windowTitle: liveWindow.title,
+                    windowID: liveWindow.windowID,
+                    frame: liveWindow.frame,
+                    capturedAt: .now
+                )
+            )
+        )
+
+        let windowProvider = FakeWindowProvider()
+        windowProvider.focusedWindowValue = liveWindow
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            windowProvider: windowProvider
+        )
+
+        commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
+        XCTAssertEqual(gridSession.currentColumnID, browserColumn.id)
+
+        _ = gridSession.selectTool(ideColumn, in: gridStore.columns)
+        commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
+
+        XCTAssertEqual(gridSession.currentColumnID, ideColumn.id)
     }
 
     private func makeCommandCenter(
@@ -468,7 +652,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         gridSession: GridSession? = nil,
         captureService: FakeCaptureService = FakeCaptureService(),
         resolutionService: FakeResolutionService = FakeResolutionService(),
-        focusService: FakeFocusService = FakeFocusService()
+        focusService: FakeFocusService = FakeFocusService(),
+        appProvider: FakeAppProvider = FakeAppProvider(),
+        windowProvider: FakeWindowProvider = FakeWindowProvider(),
+        hudPresenter: FakeHUDPresenter = FakeHUDPresenter()
     ) -> AppCommandCenter {
         AppCommandCenter(
             settings: makeSettings(),
@@ -481,8 +668,9 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             captureService: captureService,
             resolutionService: resolutionService,
             focusService: focusService,
-            windowProvider: FakeWindowProvider(),
-            hudController: FakeHUDPresenter(),
+            appProvider: appProvider,
+            windowProvider: windowProvider,
+            hudController: hudPresenter,
             setHotkeyRecordingActive: { _ in }
         )
     }
@@ -651,9 +839,19 @@ private final class FakeFocusService: TargetFocusing {
     }
 }
 
+private final class FakeAppProvider: AppProviding {
+    var focusedAppValue: LiveApp?
+
+    func focusedApp() -> LiveApp? {
+        focusedAppValue
+    }
+}
+
 private final class FakeWindowProvider: WindowProviding {
+    var focusedWindowValue: LiveWindow?
+
     func focusedWindow() -> LiveWindow? {
-        nil
+        focusedWindowValue
     }
 
     func visibleWindow(from reference: LiveWindow, toward direction: SpatialNavigationDirection) -> LiveWindow? {
@@ -662,7 +860,15 @@ private final class FakeWindowProvider: WindowProviding {
 }
 
 private final class FakeHUDPresenter: HUDPresenting {
-    func show(model: HUDModel, timeout: Double) {}
-    func showPersistent(model: HUDModel) {}
+    private(set) var lastModel: HUDModel?
+
+    func show(model: HUDModel, timeout: Double) {
+        lastModel = model
+    }
+
+    func showPersistent(model: HUDModel) {
+        lastModel = model
+    }
+
     func hide() {}
 }

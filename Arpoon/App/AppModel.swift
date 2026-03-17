@@ -26,6 +26,7 @@ final class AppModel: ObservableObject {
         commands: commands
     )
     private var started = false
+    private var gridFocusSyncTask: Task<Void, Never>?
 
     private init() {
         settings = SettingsStore()
@@ -86,6 +87,7 @@ final class AppModel: ObservableObject {
             captureService: captureService,
             resolutionService: resolutionService,
             focusService: focusService,
+            appProvider: appProvider,
             windowProvider: windowProvider,
             hudController: hudController,
             setHotkeyRecordingActive: { isActive in
@@ -233,6 +235,20 @@ final class AppModel: ObservableObject {
             await gridStore.load()
             gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
             runtimeCoordinator.start()
+            startGridFocusSyncLoop()
+        }
+    }
+
+    private func startGridFocusSyncLoop() {
+        gridFocusSyncTask?.cancel()
+        gridFocusSyncTask = Task { [weak self] in
+            while let self, !Task.isCancelled {
+                await MainActor.run {
+                    self.commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
+                }
+
+                try? await Task.sleep(nanoseconds: 350_000_000)
+            }
         }
     }
 }

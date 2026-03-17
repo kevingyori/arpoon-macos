@@ -17,7 +17,7 @@ struct GridMinimapColumn: Identifiable, Hashable {
     let id: String
     let name: String
     let iconSymbol: String
-    let isSelected: Bool
+    let bundleId: String?
     let isFilled: Bool
     let activeLabel: String?
 }
@@ -31,10 +31,18 @@ struct GridMinimapLayer: Identifiable, Hashable {
 }
 
 struct GridMinimapModel: Hashable {
+    enum DetailMode: Hashable {
+        case compact
+        case expanded
+    }
+
     let layers: [GridMinimapLayer]
     let movement: GridSelectionChange
     let hint: GridHUDHint?
     let animateSelectionMotion: Bool
+    let detailMode: DetailMode
+    let selectedLayerIndex: Int
+    let selectedColumnIndex: Int
 
     var maxColumnCount: Int {
         layers.map(\.columns.count).max() ?? 0
@@ -77,7 +85,12 @@ enum HUDModel {
             return 420
         case .gridMinimap(let minimap):
             let columns = max(1, minimap.maxColumnCount)
-            return 56.0 + (Double(columns) * 110.0) + (Double(max(0, columns - 1)) * 10.0)
+            let cellWidth = minimap.detailMode == .compact ? 64.0 : 88.0
+            let spacing = minimap.detailMode == .compact ? 8.0 : 10.0
+            let rowLabelWidth = minimap.detailMode == .compact ? 120.0 : 140.0
+            let rowLabelTotalWidth = rowLabelWidth + 20.0
+            let cellTotalWidth = cellWidth + 16.0
+            return 36.0 + rowLabelTotalWidth + (Double(columns) * cellTotalWidth) + (Double(max(0, columns - 1)) * spacing)
         }
     }
 
@@ -93,8 +106,10 @@ enum HUDModel {
             return min(420, baseHeight + (Double(entries.count) * 36.0))
         case .gridMinimap(let minimap):
             let rows = max(1, minimap.layers.count)
-            let hintHeight = minimap.hint == nil ? 0.0 : 64.0
-            return 28.0 + (Double(rows) * 84.0) + (Double(max(0, rows - 1)) * 14.0) + hintHeight
+            let rowHeight = minimap.detailMode == .compact ? 40.0 : 54.0
+            let spacing = minimap.detailMode == .compact ? 8.0 : 10.0
+            let hintHeight = minimap.hint == nil ? 0.0 : 56.0
+            return 28.0 + (Double(rows) * rowHeight) + (Double(max(0, rows - 1)) * spacing) + hintHeight
         }
     }
 
