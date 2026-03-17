@@ -1,31 +1,31 @@
 import Foundation
 
-enum TheoColumnKind: String, Codable, Hashable {
+enum GridColumnKind: String, Codable, Hashable {
     case terminal
     case ide
     case browser
     case custom
 }
 
-struct TheoToolColumn: Codable, Identifiable, Hashable {
+struct GridToolColumn: Codable, Identifiable, Hashable {
     let id: String
-    let kind: TheoColumnKind
+    let kind: GridColumnKind
     let name: String
     let iconSymbol: String
 
-    static let terminal = TheoToolColumn(
+    static let terminal = GridToolColumn(
         id: "terminal",
         kind: .terminal,
         name: "Terminal",
         iconSymbol: "terminal"
     )
-    static let ide = TheoToolColumn(
+    static let ide = GridToolColumn(
         id: "ide",
         kind: .ide,
         name: "IDE",
         iconSymbol: "curlybraces"
     )
-    static let browser = TheoToolColumn(
+    static let browser = GridToolColumn(
         id: "browser",
         kind: .browser,
         name: "Browser",
@@ -57,24 +57,24 @@ struct TheoToolColumn: Codable, Identifiable, Hashable {
         }
     }
 
-    func renaming(_ name: String) -> TheoToolColumn {
-        TheoToolColumn(id: id, kind: kind, name: name, iconSymbol: iconSymbol)
+    func renaming(_ name: String) -> GridToolColumn {
+        GridToolColumn(id: id, kind: kind, name: name, iconSymbol: iconSymbol)
     }
 
-    func updatingIcon(_ iconSymbol: String) -> TheoToolColumn {
-        TheoToolColumn(id: id, kind: kind, name: name, iconSymbol: iconSymbol)
+    func updatingIcon(_ iconSymbol: String) -> GridToolColumn {
+        GridToolColumn(id: id, kind: kind, name: name, iconSymbol: iconSymbol)
     }
 
     static func custom(
         id: String = UUID().uuidString,
         name: String,
         iconSymbol: String = "square.stack.3d.up"
-    ) -> TheoToolColumn {
-        TheoToolColumn(id: id, kind: .custom, name: name, iconSymbol: iconSymbol)
+    ) -> GridToolColumn {
+        GridToolColumn(id: id, kind: .custom, name: name, iconSymbol: iconSymbol)
     }
 }
 
-enum TheoLayerColor: String, CaseIterable, Codable, Identifiable, Hashable {
+enum GridLayerColor: String, CaseIterable, Codable, Identifiable, Hashable {
     case ember
     case amber
     case moss
@@ -91,7 +91,7 @@ enum TheoLayerColor: String, CaseIterable, Codable, Identifiable, Hashable {
     }
 }
 
-struct TheoBinding: Codable, Identifiable, Hashable {
+struct GridBinding: Codable, Identifiable, Hashable {
     let id: String
     let label: String
     let target: Target
@@ -100,22 +100,22 @@ struct TheoBinding: Codable, Identifiable, Hashable {
     let updatedAt: Date
 }
 
-struct TheoToolGroup: Codable, Hashable {
-    let bindings: [TheoBinding]
+struct GridToolGroup: Codable, Hashable {
+    let bindings: [GridBinding]
     let activeBindingID: String?
 
-    init(bindings: [TheoBinding] = [], activeBindingID: String? = nil) {
+    init(bindings: [GridBinding] = [], activeBindingID: String? = nil) {
         self.bindings = bindings
         self.activeBindingID = activeBindingID
     }
 }
 
-struct TheoStandaloneApp: Codable, Identifiable, Hashable {
+struct GridStandaloneApp: Codable, Identifiable, Hashable {
     let id: String
     let name: String
     let iconSymbol: String
     let shortcut: HotkeyShortcut?
-    let binding: TheoBinding?
+    let binding: GridBinding?
     let createdAt: Date
     let updatedAt: Date
 
@@ -124,7 +124,7 @@ struct TheoStandaloneApp: Codable, Identifiable, Hashable {
         name: String,
         iconSymbol: String = "app.fill",
         shortcut: HotkeyShortcut? = nil,
-        binding: TheoBinding? = nil,
+        binding: GridBinding? = nil,
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {
@@ -137,8 +137,8 @@ struct TheoStandaloneApp: Codable, Identifiable, Hashable {
         self.updatedAt = updatedAt
     }
 
-    func updatingName(_ name: String) -> TheoStandaloneApp {
-        TheoStandaloneApp(
+    func updatingName(_ name: String) -> GridStandaloneApp {
+        GridStandaloneApp(
             id: id,
             name: name,
             iconSymbol: iconSymbol,
@@ -149,8 +149,8 @@ struct TheoStandaloneApp: Codable, Identifiable, Hashable {
         )
     }
 
-    func updatingIcon(_ iconSymbol: String) -> TheoStandaloneApp {
-        TheoStandaloneApp(
+    func updatingIcon(_ iconSymbol: String) -> GridStandaloneApp {
+        GridStandaloneApp(
             id: id,
             name: name,
             iconSymbol: iconSymbol,
@@ -161,8 +161,8 @@ struct TheoStandaloneApp: Codable, Identifiable, Hashable {
         )
     }
 
-    func updatingShortcut(_ shortcut: HotkeyShortcut?) -> TheoStandaloneApp {
-        TheoStandaloneApp(
+    func updatingShortcut(_ shortcut: HotkeyShortcut?) -> GridStandaloneApp {
+        GridStandaloneApp(
             id: id,
             name: name,
             iconSymbol: iconSymbol,
@@ -173,8 +173,8 @@ struct TheoStandaloneApp: Codable, Identifiable, Hashable {
         )
     }
 
-    func updatingBinding(_ binding: TheoBinding?) -> TheoStandaloneApp {
-        TheoStandaloneApp(
+    func updatingBinding(_ binding: GridBinding?) -> GridStandaloneApp {
+        GridStandaloneApp(
             id: id,
             name: name,
             iconSymbol: iconSymbol,
@@ -186,31 +186,31 @@ struct TheoStandaloneApp: Codable, Identifiable, Hashable {
     }
 }
 
-struct TheoWorkspaceState: Codable, Hashable {
-    let layers: [TheoLayer]
-    let standaloneApps: [TheoStandaloneApp]
+struct GridWorkspaceState: Codable, Hashable {
+    let layers: [GridLayer]
+    let standaloneApps: [GridStandaloneApp]
 
-    init(layers: [TheoLayer] = [], standaloneApps: [TheoStandaloneApp] = []) {
+    init(layers: [GridLayer] = [], standaloneApps: [GridStandaloneApp] = []) {
         self.layers = layers
         self.standaloneApps = standaloneApps
     }
 }
 
-struct TheoLayer: Codable, Identifiable, Hashable {
+struct GridLayer: Codable, Identifiable, Hashable {
     let id: String
     let name: String
-    let color: TheoLayerColor
-    let columns: [TheoToolColumn]
-    let groups: [String: TheoToolGroup]
+    let color: GridLayerColor
+    let columns: [GridToolColumn]
+    let groups: [String: GridToolGroup]
     let createdAt: Date
     let updatedAt: Date
 
     init(
         id: String = UUID().uuidString,
         name: String,
-        color: TheoLayerColor,
-        columns: [TheoToolColumn] = TheoToolColumn.defaults,
-        groups: [String: TheoToolGroup] = TheoToolColumn.defaults.reduce(into: [:]) { $0[$1.id] = TheoToolGroup() },
+        color: GridLayerColor,
+        columns: [GridToolColumn] = GridToolColumn.defaults,
+        groups: [String: GridToolGroup] = GridToolColumn.defaults.reduce(into: [:]) { $0[$1.id] = GridToolGroup() },
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {
@@ -223,22 +223,22 @@ struct TheoLayer: Codable, Identifiable, Hashable {
         self.updatedAt = updatedAt
     }
 
-    func group(for column: TheoToolColumn) -> TheoToolGroup {
-        groups[column.id] ?? TheoToolGroup()
+    func group(for column: GridToolColumn) -> GridToolGroup {
+        groups[column.id] ?? GridToolGroup()
     }
 
-    func column(id: String) -> TheoToolColumn? {
+    func column(id: String) -> GridToolColumn? {
         columns.first(where: { $0.id == id })
     }
 
-    func defaultColumn(kind: TheoColumnKind) -> TheoToolColumn? {
+    func defaultColumn(kind: GridColumnKind) -> GridToolColumn? {
         columns.first(where: { $0.kind == kind })
     }
 
-    func updatingGroup(_ group: TheoToolGroup, for column: TheoToolColumn) -> TheoLayer {
+    func updatingGroup(_ group: GridToolGroup, for column: GridToolColumn) -> GridLayer {
         var groups = groups
         groups[column.id] = group
-        return TheoLayer(
+        return GridLayer(
             id: id,
             name: name,
             color: color,
@@ -249,8 +249,8 @@ struct TheoLayer: Codable, Identifiable, Hashable {
         )
     }
 
-    func updatingName(_ name: String) -> TheoLayer {
-        TheoLayer(
+    func updatingName(_ name: String) -> GridLayer {
+        GridLayer(
             id: id,
             name: name,
             color: color,
@@ -261,8 +261,8 @@ struct TheoLayer: Codable, Identifiable, Hashable {
         )
     }
 
-    func updatingColor(_ color: TheoLayerColor) -> TheoLayer {
-        TheoLayer(
+    func updatingColor(_ color: GridLayerColor) -> GridLayer {
+        GridLayer(
             id: id,
             name: name,
             color: color,
@@ -273,8 +273,8 @@ struct TheoLayer: Codable, Identifiable, Hashable {
         )
     }
 
-    func updatingColumns(_ columns: [TheoToolColumn]) -> TheoLayer {
-        TheoLayer(
+    func updatingColumns(_ columns: [GridToolColumn]) -> GridLayer {
+        GridLayer(
             id: id,
             name: name,
             color: color,
@@ -286,8 +286,8 @@ struct TheoLayer: Codable, Identifiable, Hashable {
     }
 }
 
-extension TheoToolGroup {
-    var activeBinding: TheoBinding? {
+extension GridToolGroup {
+    var activeBinding: GridBinding? {
         if let activeBindingID,
            let binding = bindings.first(where: { $0.id == activeBindingID }) {
             return binding
@@ -296,7 +296,7 @@ extension TheoToolGroup {
         return bindings.first
     }
 
-    func normalized() -> TheoToolGroup {
+    func normalized() -> GridToolGroup {
         let normalizedActiveID: String?
 
         if let activeBindingID,
@@ -306,6 +306,6 @@ extension TheoToolGroup {
             normalizedActiveID = bindings.first?.id
         }
 
-        return TheoToolGroup(bindings: bindings, activeBindingID: normalizedActiveID)
+        return GridToolGroup(bindings: bindings, activeBindingID: normalizedActiveID)
     }
 }

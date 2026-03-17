@@ -47,8 +47,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 },
                 slotStore: appModel.slotStore,
                 dynamicHotkeys: appModel.dynamicHotkeyStore,
-                theoStore: appModel.theoStore,
-                theoSession: appModel.theoSession,
+                gridStore: appModel.gridStore,
+                gridSession: appModel.gridSession,
                 settings: appModel.settings,
                 permissions: appModel.accessibilityPermissions
             )

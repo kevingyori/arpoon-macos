@@ -7,13 +7,13 @@ enum HUDTone {
     case neutral
 }
 
-struct TheoHUDHint: Hashable {
+struct GridHUDHint: Hashable {
     let title: String
     let detail: String?
     let tone: HUDTone
 }
 
-struct TheoMinimapColumn: Identifiable, Hashable {
+struct GridMinimapColumn: Identifiable, Hashable {
     let id: String
     let name: String
     let iconSymbol: String
@@ -22,18 +22,18 @@ struct TheoMinimapColumn: Identifiable, Hashable {
     let activeLabel: String?
 }
 
-struct TheoMinimapLayer: Identifiable, Hashable {
+struct GridMinimapLayer: Identifiable, Hashable {
     let id: String
     let name: String
-    let color: TheoLayerColor
-    let columns: [TheoMinimapColumn]
+    let color: GridLayerColor
+    let columns: [GridMinimapColumn]
     let isCurrent: Bool
 }
 
-struct TheoMinimapModel: Hashable {
-    let layers: [TheoMinimapLayer]
-    let movement: TheoSelectionChange
-    let hint: TheoHUDHint?
+struct GridMinimapModel: Hashable {
+    let layers: [GridMinimapLayer]
+    let movement: GridSelectionChange
+    let hint: GridHUDHint?
 }
 
 struct HUDOverviewEntry: Identifiable {
@@ -60,7 +60,7 @@ enum HUDModel {
         entries: [HUDOverviewEntry],
         accessibilityTrusted: Bool
     )
-    case theoMinimap(TheoMinimapModel)
+    case gridMinimap(GridMinimapModel)
 
     var preferredWidth: Double {
         switch self {
@@ -70,7 +70,7 @@ enum HUDModel {
             return 46
         case .overview:
             return 420
-        case .theoMinimap:
+        case .gridMinimap:
             return 420
         }
     }
@@ -85,7 +85,7 @@ enum HUDModel {
         case .overview(_, _, _, let entries, let accessibilityTrusted):
             let baseHeight = accessibilityTrusted ? 84.0 : 116.0
             return min(420, baseHeight + (Double(entries.count) * 36.0))
-        case .theoMinimap(let minimap):
+        case .gridMinimap(let minimap):
             let hintHeight = minimap.hint == nil ? 0.0 : 48.0
             return min(480, 86.0 + (Double(minimap.layers.count) * 38.0) + hintHeight)
         }
@@ -93,7 +93,7 @@ enum HUDModel {
 
     var animationOffset: (x: Double, y: Double) {
         switch self {
-        case .theoMinimap(let minimap):
+        case .gridMinimap(let minimap):
             switch minimap.movement {
             case .layer(let step):
                 return (0, step >= 0 ? -18 : 18)

@@ -3,20 +3,25 @@ import SwiftUI
 
 private enum SettingsPane: String, CaseIterable, Identifiable {
     case general
-    case theo
+    case grid
 
     var id: Self { self }
 
     var title: String {
-        rawValue.capitalized
+        switch self {
+        case .general:
+            return "General"
+        case .grid:
+            return "The Grid"
+        }
     }
 }
 
 struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
-    @ObservedObject var theoStore: TheoStore
-    @ObservedObject var theoSession: TheoSession
+    @ObservedObject var gridStore: GridStore
+    @ObservedObject var gridSession: GridSession
     @ObservedObject var permissions: AccessibilityPermissionService
     let commands: AppCommands
 
@@ -48,11 +53,11 @@ struct SettingsView: View {
                             commands: commands,
                             activeRecorderID: $activeRecorderID
                         )
-                    case .theo:
-                        TheoSettingsPane(
+                    case .grid:
+                        GridSettingsPane(
                             settings: settings,
-                            theoStore: theoStore,
-                            theoSession: theoSession,
+                            gridStore: gridStore,
+                            gridSession: gridSession,
                             commands: commands,
                             activeRecorderID: $activeRecorderID
                         )
@@ -75,8 +80,8 @@ struct SettingsView: View {
         .onDisappear {
             commands.setHotkeyRecordingActive(false)
         }
-        .onReceive(theoStore.$layers) { layers in
-            theoSession.sync(layers: layers)
+        .onReceive(gridStore.$layers) { layers in
+            gridSession.sync(layers: layers)
         }
     }
 }
@@ -120,13 +125,13 @@ private struct GeneralSettingsPane: View {
                         shortcutGroup(title: "Dynamic Hotkeys", actions: HotkeyAction.dynamicActions)
                         shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
                         dynamicHotkeyGroup
-                    case .theo:
-                        Text("Theo uses semantic project-layer navigation. Direct jump keys follow the current layer order, not permanent layer IDs, and standalone app shortcuts stay the same across projects.")
+                    case .grid:
+                        Text("The Grid. A digital frontier. Direct jump keys follow the current layer order, not permanent layer IDs, and standalone app shortcuts stay the same across projects.")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
 
-                        shortcutGroup(title: "Theo Projects", actions: HotkeyAction.theoNavigationActions)
-                        shortcutGroup(title: "Theo Tools", actions: HotkeyAction.theoToolActions)
+                        shortcutGroup(title: "The Grid Projects", actions: HotkeyAction.gridNavigationActions)
+                        shortcutGroup(title: "The Grid Tools", actions: HotkeyAction.gridToolActions)
                     }
 
                     HStack {

@@ -1,6 +1,6 @@
 import SwiftUI
 
-extension TheoToolColumn {
+extension GridToolColumn {
     static let iconOptions = [
         "app.fill",
         "terminal",
@@ -18,7 +18,7 @@ extension TheoToolColumn {
     ]
 }
 
-extension TheoLayerColor {
+extension GridLayerColor {
     var swiftUIColor: Color {
         switch self {
         case .ember:

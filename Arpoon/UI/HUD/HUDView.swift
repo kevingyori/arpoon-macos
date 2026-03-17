@@ -21,8 +21,8 @@ struct HUDView: View {
                         entries: entries,
                         accessibilityTrusted: accessibilityTrusted
                     )
-                case .theoMinimap(let minimap):
-                    theoMinimapView(minimap)
+                case .gridMinimap(let minimap):
+                    gridMinimapView(minimap)
                 }
             }
             .padding(containerPadding)
@@ -135,13 +135,13 @@ struct HUDView: View {
     }
 
     @ViewBuilder
-    private func theoMinimapView(_ minimap: TheoMinimapModel) -> some View {
+    private func gridMinimapView(_ minimap: GridMinimapModel) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Theo")
+                Text("The Grid")
                     .font(.system(size: 17, weight: .semibold))
 
-                Text("Project layers and semantic tool columns.")
+                Text("A digital frontier")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -161,7 +161,7 @@ struct HUDView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(layer.columns) { column in
-                                theoColumnView(column, layerColor: layer.color, isCurrentLayer: layer.isCurrent)
+                                gridColumnView(column, layerColor: layer.color, isCurrentLayer: layer.isCurrent)
                             }
                         }
                     }
@@ -199,7 +199,7 @@ struct HUDView: View {
     }
 
     @ViewBuilder
-    private func theoColumnView(_ column: TheoMinimapColumn, layerColor: TheoLayerColor, isCurrentLayer: Bool) -> some View {
+    private func gridColumnView(_ column: GridMinimapColumn, layerColor: GridLayerColor, isCurrentLayer: Bool) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 Image(systemName: column.iconSymbol)
@@ -243,7 +243,7 @@ struct HUDView: View {
             return 10
         case .overview:
             return 18
-        case .theoMinimap:
+        case .gridMinimap:
             return 18
         }
     }
@@ -256,7 +256,7 @@ struct HUDView: View {
             return 23
         case .overview:
             return 20
-        case .theoMinimap:
+        case .gridMinimap:
             return 20
         }
     }

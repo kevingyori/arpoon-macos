@@ -12,17 +12,17 @@ protocol HotkeyControlling: AnyObject {
     var onFocusVisibleAppDown: (() -> Void)? { get set }
     var onAddDynamicHotkey: (() -> Void)? { get set }
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)? { get set }
-    var onTheoNextLayer: (() -> Void)? { get set }
-    var onTheoPreviousLayer: (() -> Void)? { get set }
-    var onTheoJumpLayer: ((Int) -> Void)? { get set }
-    var onTheoFocusTerminal: (() -> Void)? { get set }
-    var onTheoFocusIDE: (() -> Void)? { get set }
-    var onTheoFocusBrowser: (() -> Void)? { get set }
-    var onTheoCycleTerminal: (() -> Void)? { get set }
-    var onTheoCycleBrowser: (() -> Void)? { get set }
-    var onTheoBindCurrent: (() -> Void)? { get set }
-    var onTheoShowHUD: (() -> Void)? { get set }
-    var onTheoStandaloneApp: ((String) -> Void)? { get set }
+    var onGridNextLayer: (() -> Void)? { get set }
+    var onGridPreviousLayer: (() -> Void)? { get set }
+    var onGridJumpLayer: ((Int) -> Void)? { get set }
+    var onGridFocusTerminal: (() -> Void)? { get set }
+    var onGridFocusIDE: (() -> Void)? { get set }
+    var onGridFocusBrowser: (() -> Void)? { get set }
+    var onGridCycleTerminal: (() -> Void)? { get set }
+    var onGridCycleBrowser: (() -> Void)? { get set }
+    var onGridBindCurrent: (() -> Void)? { get set }
+    var onGridShowHUD: (() -> Void)? { get set }
+    var onGridStandaloneApp: ((String) -> Void)? { get set }
 
     func apply(configuration: HotkeyConfiguration)
     func suspend()
@@ -40,17 +40,17 @@ final class HotkeyController: HotkeyControlling {
     var onFocusVisibleAppDown: (() -> Void)?
     var onAddDynamicHotkey: (() -> Void)?
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)?
-    var onTheoNextLayer: (() -> Void)?
-    var onTheoPreviousLayer: (() -> Void)?
-    var onTheoJumpLayer: ((Int) -> Void)?
-    var onTheoFocusTerminal: (() -> Void)?
-    var onTheoFocusIDE: (() -> Void)?
-    var onTheoFocusBrowser: (() -> Void)?
-    var onTheoCycleTerminal: (() -> Void)?
-    var onTheoCycleBrowser: (() -> Void)?
-    var onTheoBindCurrent: (() -> Void)?
-    var onTheoShowHUD: (() -> Void)?
-    var onTheoStandaloneApp: ((String) -> Void)?
+    var onGridNextLayer: (() -> Void)?
+    var onGridPreviousLayer: (() -> Void)?
+    var onGridJumpLayer: ((Int) -> Void)?
+    var onGridFocusTerminal: (() -> Void)?
+    var onGridFocusIDE: (() -> Void)?
+    var onGridFocusBrowser: (() -> Void)?
+    var onGridCycleTerminal: (() -> Void)?
+    var onGridCycleBrowser: (() -> Void)?
+    var onGridBindCurrent: (() -> Void)?
+    var onGridShowHUD: (() -> Void)?
+    var onGridStandaloneApp: ((String) -> Void)?
 
     private let hotKeyCenter = GlobalHotKeyCenter.shared
     private var configuration: HotkeyConfiguration?
@@ -104,8 +104,8 @@ final class HotkeyController: HotkeyControlling {
                     }
                 }
             }
-        case .theo:
-            for binding in configuration.theoStandaloneBindings {
+        case .grid:
+            for binding in configuration.gridStandaloneBindings {
                 let shortcut = binding.shortcut
                 guard registeredShortcuts.insert(shortcut).inserted else {
                     continue
@@ -113,7 +113,7 @@ final class HotkeyController: HotkeyControlling {
 
                 hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
                     Task { @MainActor in
-                        self?.onTheoStandaloneApp?(binding.appID)
+                        self?.onGridStandaloneApp?(binding.appID)
                     }
                 }
             }
@@ -162,28 +162,28 @@ final class HotkeyController: HotkeyControlling {
             onFocusVisibleAppDown?()
         case .addDynamicHotkey:
             onAddDynamicHotkey?()
-        case .theoNextLayer:
-            onTheoNextLayer?()
-        case .theoPreviousLayer:
-            onTheoPreviousLayer?()
-        case .theoJumpLayer:
+        case .gridNextLayer:
+            onGridNextLayer?()
+        case .gridPreviousLayer:
+            onGridPreviousLayer?()
+        case .gridJumpLayer:
             if let slot = action.slot {
-                onTheoJumpLayer?(slot)
+                onGridJumpLayer?(slot)
             }
-        case .theoFocusTerminal:
-            onTheoFocusTerminal?()
-        case .theoFocusIDE:
-            onTheoFocusIDE?()
-        case .theoFocusBrowser:
-            onTheoFocusBrowser?()
-        case .theoCycleTerminal:
-            onTheoCycleTerminal?()
-        case .theoCycleBrowser:
-            onTheoCycleBrowser?()
-        case .theoBindCurrent:
-            onTheoBindCurrent?()
-        case .theoShowHUD:
-            onTheoShowHUD?()
+        case .gridFocusTerminal:
+            onGridFocusTerminal?()
+        case .gridFocusIDE:
+            onGridFocusIDE?()
+        case .gridFocusBrowser:
+            onGridFocusBrowser?()
+        case .gridCycleTerminal:
+            onGridCycleTerminal?()
+        case .gridCycleBrowser:
+            onGridCycleBrowser?()
+        case .gridBindCurrent:
+            onGridBindCurrent?()
+        case .gridShowHUD:
+            onGridShowHUD?()
         }
     }
 }

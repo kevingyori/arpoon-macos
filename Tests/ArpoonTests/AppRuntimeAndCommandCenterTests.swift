@@ -16,7 +16,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             settings: settings,
             accessibilityPermissions: permissions,
             dynamicHotkeyStore: dynamicStore,
-            theoStore: makeTheoStore(),
+            gridStore: makeGridStore(),
             hotkeyController: hotkeys,
             optionHoldHUDController: optionHold
         )
@@ -45,7 +45,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             settings: makeSettings(),
             accessibilityPermissions: FakePermissionService(),
             dynamicHotkeyStore: makeDynamicHotkeyStore(),
-            theoStore: makeTheoStore(),
+            gridStore: makeGridStore(),
             hotkeyController: hotkeys,
             optionHoldHUDController: optionHold
         )
@@ -144,8 +144,8 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
     }
 
-    func testTheoStoreSeedsThreeLayersOnFirstLoad() async {
-        let store = makeTheoStore()
+    func testGridStoreSeedsThreeLayersOnFirstLoad() async {
+        let store = makeGridStore()
 
         await store.load()
 
@@ -153,74 +153,74 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(store.layers.map(\.name), ["Project 1", "Project 2", "Project 3"])
     }
 
-    func testTheoBindUsesCurrentLayerAndTool() async throws {
-        let theoStore = makeTheoStore()
-        let theoSession = TheoSession()
-        await theoStore.load()
-        theoSession.sync(layers: theoStore.layers)
-        let firstLayer = try XCTUnwrap(theoStore.layers.first)
+    func testGridBindUsesCurrentLayerAndTool() async throws {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        gridSession.sync(layers: gridStore.layers)
+        let firstLayer = try XCTUnwrap(gridStore.layers.first)
         let browserColumn = try XCTUnwrap(firstLayer.defaultColumn(kind: .browser))
         let terminalColumn = try XCTUnwrap(firstLayer.defaultColumn(kind: .terminal))
-        _ = theoSession.selectTool(browserColumn, in: firstLayer)
+        _ = gridSession.selectTool(browserColumn, in: firstLayer)
 
         let target = Target.app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
         let capture = FakeCaptureService()
         capture.outcome = CaptureOutcome(target: target, source: .appFallback, liveWindow: nil)
 
         let commandCenter = makeCommandCenter(
-            theoStore: theoStore,
-            theoSession: theoSession,
+            gridStore: gridStore,
+            gridSession: gridSession,
             captureService: capture
         )
 
-        commandCenter.bindFocusedTargetToTheoCurrentContext()
+        commandCenter.bindFocusedTargetToGridCurrentContext()
 
-        let updatedLayer = try XCTUnwrap(theoStore.layers.first)
+        let updatedLayer = try XCTUnwrap(gridStore.layers.first)
         XCTAssertEqual(updatedLayer.group(for: browserColumn).activeBinding?.target, target)
         XCTAssertTrue(updatedLayer.group(for: terminalColumn).bindings.isEmpty)
     }
 
-    func testTheoJumpUsesCurrentToolAcrossLayers() async throws {
-        let theoStore = makeTheoStore()
-        let theoSession = TheoSession()
-        await theoStore.load()
+    func testGridJumpUsesCurrentToolAcrossLayers() async throws {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
 
         let browserOne = Target.app(AppTarget(bundleId: "com.example.browser.one", appName: "Browser One"))
         let browserTwo = Target.app(AppTarget(bundleId: "com.example.browser.two", appName: "Browser Two"))
-        let firstLayerID = try XCTUnwrap(theoStore.layers.first?.id)
-        let secondLayerID = try XCTUnwrap(theoStore.layers.dropFirst().first?.id)
-        let browserColumn = try XCTUnwrap(theoStore.layers.first?.defaultColumn(kind: .browser))
-        _ = theoStore.replaceBinding(layerID: firstLayerID, tool: browserColumn, bindingID: nil, target: browserOne)
-        _ = theoStore.replaceBinding(layerID: secondLayerID, tool: browserColumn, bindingID: nil, target: browserTwo)
+        let firstLayerID = try XCTUnwrap(gridStore.layers.first?.id)
+        let secondLayerID = try XCTUnwrap(gridStore.layers.dropFirst().first?.id)
+        let browserColumn = try XCTUnwrap(gridStore.layers.first?.defaultColumn(kind: .browser))
+        _ = gridStore.replaceBinding(layerID: firstLayerID, tool: browserColumn, bindingID: nil, target: browserOne)
+        _ = gridStore.replaceBinding(layerID: secondLayerID, tool: browserColumn, bindingID: nil, target: browserTwo)
 
-        theoSession.sync(layers: theoStore.layers)
-        _ = theoSession.selectTool(browserColumn, in: theoStore.layers.first)
+        gridSession.sync(layers: gridStore.layers)
+        _ = gridSession.selectTool(browserColumn, in: gridStore.layers.first)
 
         let focus = FakeFocusService()
         focus.targetOutcome = .focused(label: "Browser Two", strategy: nil)
 
         let commandCenter = makeCommandCenter(
-            theoStore: theoStore,
-            theoSession: theoSession,
+            gridStore: gridStore,
+            gridSession: gridSession,
             focusService: focus
         )
 
-        commandCenter.jumpToTheoLayer(2)
+        commandCenter.jumpToGridLayer(2)
 
         XCTAssertEqual(focus.focusedTargets.last, browserTwo)
-        XCTAssertEqual(theoSession.currentLayerID, secondLayerID)
-        XCTAssertEqual(theoSession.currentTool(in: theoStore.layer(id: secondLayerID)), browserColumn)
+        XCTAssertEqual(gridSession.currentLayerID, secondLayerID)
+        XCTAssertEqual(gridSession.currentTool(in: gridStore.layer(id: secondLayerID)), browserColumn)
     }
 
-    func testTheoStorePersistsCustomColumnsAlongsideDefaults() async throws {
-        let store = makeTheoStore()
+    func testGridStorePersistsCustomColumnsAlongsideDefaults() async throws {
+        let store = makeGridStore()
 
         await store.load()
 
         let layer = try XCTUnwrap(store.layers.first)
         let customColumn = try XCTUnwrap(store.addCustomColumn(layerID: layer.id))
-        store.renameColumn(layerID: layer.id, columnID: TheoToolColumn.terminal.id, name: "Shells")
-        store.setColumnIcon(layerID: layer.id, columnID: TheoToolColumn.browser.id, iconSymbol: "safari")
+        store.renameColumn(layerID: layer.id, columnID: GridToolColumn.terminal.id, name: "Shells")
+        store.setColumnIcon(layerID: layer.id, columnID: GridToolColumn.browser.id, iconSymbol: "safari")
         store.renameColumn(layerID: layer.id, columnID: customColumn.id, name: "Docs")
         store.setColumnIcon(layerID: layer.id, columnID: customColumn.id, iconSymbol: "book")
 
@@ -232,17 +232,17 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(updatedLayer.column(id: customColumn.id)?.iconSymbol, "book")
     }
 
-    func testTheoStandaloneAppShortcutJumpsToSharedAppTarget() async throws {
-        let theoStore = makeTheoStore()
-        await theoStore.load()
+    func testGridStandaloneAppShortcutJumpsToSharedAppTarget() async throws {
+        let gridStore = makeGridStore()
+        await gridStore.load()
 
-        let app = theoStore.addStandaloneApp()
-        theoStore.renameStandaloneApp(id: app.id, name: "Music")
-        theoStore.setStandaloneAppShortcut(
+        let app = gridStore.addStandaloneApp()
+        gridStore.renameStandaloneApp(id: app.id, name: "Music")
+        gridStore.setStandaloneAppShortcut(
             id: app.id,
             shortcut: HotkeyShortcut(keyCode: UInt32(kVK_ANSI_M), modifiers: UInt32(optionKey))
         )
-        _ = theoStore.replaceStandaloneAppBinding(
+        _ = gridStore.replaceStandaloneAppBinding(
             id: app.id,
             target: .app(AppTarget(bundleId: "com.example.music", appName: "Music"))
         )
@@ -251,11 +251,11 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         focus.targetOutcome = .focused(label: "Music", strategy: nil)
 
         let commandCenter = makeCommandCenter(
-            theoStore: theoStore,
+            gridStore: gridStore,
             focusService: focus
         )
 
-        commandCenter.jumpToTheoStandaloneApp(app.id)
+        commandCenter.jumpToGridStandaloneApp(app.id)
 
         XCTAssertEqual(
             focus.focusedTargets.last,
@@ -266,8 +266,8 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
     private func makeCommandCenter(
         slotStore: SlotStore? = nil,
         dynamicStore: DynamicHotkeyStore? = nil,
-        theoStore: TheoStore? = nil,
-        theoSession: TheoSession? = nil,
+        gridStore: GridStore? = nil,
+        gridSession: GridSession? = nil,
         captureService: FakeCaptureService = FakeCaptureService(),
         resolutionService: FakeResolutionService = FakeResolutionService(),
         focusService: FakeFocusService = FakeFocusService()
@@ -277,8 +277,8 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             accessibilityPermissions: FakePermissionService(),
             slotStore: slotStore ?? makeSlotStore(),
             dynamicHotkeyStore: dynamicStore ?? makeDynamicHotkeyStore(),
-            theoStore: theoStore ?? makeTheoStore(),
-            theoSession: theoSession ?? TheoSession(),
+            gridStore: gridStore ?? makeGridStore(),
+            gridSession: gridSession ?? GridSession(),
             labelPolicy: TargetLabelPolicy(),
             captureService: captureService,
             resolutionService: resolutionService,
@@ -307,9 +307,9 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
     }
 
-    private func makeTheoStore() -> TheoStore {
-        TheoStore(
-            store: InMemoryTheoLayerStore(),
+    private func makeGridStore() -> GridStore {
+        GridStore(
+            store: InMemoryGridLayerStore(),
             labelPolicy: TargetLabelPolicy()
         )
     }
@@ -339,14 +339,14 @@ private final class InMemoryDynamicHotkeyAssignmentStore: DynamicHotkeyAssignmen
     }
 }
 
-private final class InMemoryTheoLayerStore: TheoLayerStore {
-    private var state = TheoWorkspaceState()
+private final class InMemoryGridLayerStore: GridLayerStore {
+    private var state = GridWorkspaceState()
 
-    func loadState() async throws -> TheoWorkspaceState {
+    func loadState() async throws -> GridWorkspaceState {
         state
     }
 
-    func saveState(_ state: TheoWorkspaceState) async throws {
+    func saveState(_ state: GridWorkspaceState) async throws {
         self.state = state
     }
 }
@@ -375,17 +375,17 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onFocusVisibleAppDown: (() -> Void)?
     var onAddDynamicHotkey: (() -> Void)?
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)?
-    var onTheoNextLayer: (() -> Void)?
-    var onTheoPreviousLayer: (() -> Void)?
-    var onTheoJumpLayer: ((Int) -> Void)?
-    var onTheoFocusTerminal: (() -> Void)?
-    var onTheoFocusIDE: (() -> Void)?
-    var onTheoFocusBrowser: (() -> Void)?
-    var onTheoCycleTerminal: (() -> Void)?
-    var onTheoCycleBrowser: (() -> Void)?
-    var onTheoBindCurrent: (() -> Void)?
-    var onTheoShowHUD: (() -> Void)?
-    var onTheoStandaloneApp: ((String) -> Void)?
+    var onGridNextLayer: (() -> Void)?
+    var onGridPreviousLayer: (() -> Void)?
+    var onGridJumpLayer: ((Int) -> Void)?
+    var onGridFocusTerminal: (() -> Void)?
+    var onGridFocusIDE: (() -> Void)?
+    var onGridFocusBrowser: (() -> Void)?
+    var onGridCycleTerminal: (() -> Void)?
+    var onGridCycleBrowser: (() -> Void)?
+    var onGridBindCurrent: (() -> Void)?
+    var onGridShowHUD: (() -> Void)?
+    var onGridStandaloneApp: ((String) -> Void)?
 
     private(set) var configurations: [HotkeyConfiguration] = []
     private(set) var suspendCount = 0

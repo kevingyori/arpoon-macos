@@ -14,22 +14,22 @@ final class AppRuntimeCoordinator {
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)?
     var onShowHeldHUD: (() -> Void)?
     var onHideHUD: (() -> Void)?
-    var onTheoNextLayer: (() -> Void)?
-    var onTheoPreviousLayer: (() -> Void)?
-    var onTheoJumpLayer: ((Int) -> Void)?
-    var onTheoFocusTerminal: (() -> Void)?
-    var onTheoFocusIDE: (() -> Void)?
-    var onTheoFocusBrowser: (() -> Void)?
-    var onTheoCycleTerminal: (() -> Void)?
-    var onTheoCycleBrowser: (() -> Void)?
-    var onTheoBindCurrent: (() -> Void)?
-    var onTheoShowHUD: (() -> Void)?
-    var onTheoStandaloneApp: ((String) -> Void)?
+    var onGridNextLayer: (() -> Void)?
+    var onGridPreviousLayer: (() -> Void)?
+    var onGridJumpLayer: ((Int) -> Void)?
+    var onGridFocusTerminal: (() -> Void)?
+    var onGridFocusIDE: (() -> Void)?
+    var onGridFocusBrowser: (() -> Void)?
+    var onGridCycleTerminal: (() -> Void)?
+    var onGridCycleBrowser: (() -> Void)?
+    var onGridBindCurrent: (() -> Void)?
+    var onGridShowHUD: (() -> Void)?
+    var onGridStandaloneApp: ((String) -> Void)?
 
     private let settings: SettingsStore
     private let accessibilityPermissions: any AccessibilityPermissionMonitoring
     private let dynamicHotkeyStore: DynamicHotkeyStore
-    private let theoStore: TheoStore
+    private let gridStore: GridStore
     private let hotkeyController: any HotkeyControlling
     private let optionHoldHUDController: any OptionHoldHUDControlling
     private var cancellables = Set<AnyCancellable>()
@@ -39,14 +39,14 @@ final class AppRuntimeCoordinator {
         settings: SettingsStore,
         accessibilityPermissions: any AccessibilityPermissionMonitoring,
         dynamicHotkeyStore: DynamicHotkeyStore,
-        theoStore: TheoStore,
+        gridStore: GridStore,
         hotkeyController: any HotkeyControlling,
         optionHoldHUDController: any OptionHoldHUDControlling
     ) {
         self.settings = settings
         self.accessibilityPermissions = accessibilityPermissions
         self.dynamicHotkeyStore = dynamicHotkeyStore
-        self.theoStore = theoStore
+        self.gridStore = gridStore
         self.hotkeyController = hotkeyController
         self.optionHoldHUDController = optionHoldHUDController
 
@@ -77,38 +77,38 @@ final class AppRuntimeCoordinator {
         hotkeyController.onDynamicHotkey = { [weak self] shortcut in
             self?.onDynamicHotkey?(shortcut)
         }
-        hotkeyController.onTheoNextLayer = { [weak self] in
-            self?.onTheoNextLayer?()
+        hotkeyController.onGridNextLayer = { [weak self] in
+            self?.onGridNextLayer?()
         }
-        hotkeyController.onTheoPreviousLayer = { [weak self] in
-            self?.onTheoPreviousLayer?()
+        hotkeyController.onGridPreviousLayer = { [weak self] in
+            self?.onGridPreviousLayer?()
         }
-        hotkeyController.onTheoJumpLayer = { [weak self] slot in
-            self?.onTheoJumpLayer?(slot)
+        hotkeyController.onGridJumpLayer = { [weak self] slot in
+            self?.onGridJumpLayer?(slot)
         }
-        hotkeyController.onTheoFocusTerminal = { [weak self] in
-            self?.onTheoFocusTerminal?()
+        hotkeyController.onGridFocusTerminal = { [weak self] in
+            self?.onGridFocusTerminal?()
         }
-        hotkeyController.onTheoFocusIDE = { [weak self] in
-            self?.onTheoFocusIDE?()
+        hotkeyController.onGridFocusIDE = { [weak self] in
+            self?.onGridFocusIDE?()
         }
-        hotkeyController.onTheoFocusBrowser = { [weak self] in
-            self?.onTheoFocusBrowser?()
+        hotkeyController.onGridFocusBrowser = { [weak self] in
+            self?.onGridFocusBrowser?()
         }
-        hotkeyController.onTheoCycleTerminal = { [weak self] in
-            self?.onTheoCycleTerminal?()
+        hotkeyController.onGridCycleTerminal = { [weak self] in
+            self?.onGridCycleTerminal?()
         }
-        hotkeyController.onTheoCycleBrowser = { [weak self] in
-            self?.onTheoCycleBrowser?()
+        hotkeyController.onGridCycleBrowser = { [weak self] in
+            self?.onGridCycleBrowser?()
         }
-        hotkeyController.onTheoBindCurrent = { [weak self] in
-            self?.onTheoBindCurrent?()
+        hotkeyController.onGridBindCurrent = { [weak self] in
+            self?.onGridBindCurrent?()
         }
-        hotkeyController.onTheoShowHUD = { [weak self] in
-            self?.onTheoShowHUD?()
+        hotkeyController.onGridShowHUD = { [weak self] in
+            self?.onGridShowHUD?()
         }
-        hotkeyController.onTheoStandaloneApp = { [weak self] id in
-            self?.onTheoStandaloneApp?(id)
+        hotkeyController.onGridStandaloneApp = { [weak self] id in
+            self?.onGridStandaloneApp?(id)
         }
 
         optionHoldHUDController.onShow = { [weak self] in
@@ -134,18 +134,18 @@ final class AppRuntimeCoordinator {
                 dynamicHotkeyStore.$assignments.map { assignments in
                     assignments.map(\.shortcut)
                 },
-                theoStore.$standaloneApps.map { apps in
+                gridStore.$standaloneApps.map { apps in
                     apps.compactMap { app in
-                        app.shortcut.map { HotkeyConfiguration.TheoStandaloneBinding(appID: app.id, shortcut: $0) }
+                        app.shortcut.map { HotkeyConfiguration.GridStandaloneBinding(appID: app.id, shortcut: $0) }
                     }
                 }
             )
-            .map { scheme, hotkeys, dynamicShortcuts, theoStandaloneBindings in
+            .map { scheme, hotkeys, dynamicShortcuts, gridStandaloneBindings in
                 HotkeyConfiguration(
                     scheme: scheme,
                     hotkeys: hotkeys,
                     dynamicShortcuts: dynamicShortcuts,
-                    theoStandaloneBindings: theoStandaloneBindings
+                    gridStandaloneBindings: gridStandaloneBindings
                 )
             }
             .removeDuplicates()

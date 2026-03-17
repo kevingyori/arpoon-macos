@@ -9,14 +9,14 @@ struct AppCommands {
     let clearSlot: (Int) -> Void
     let jumpToDynamicHotkey: (HotkeyShortcut) -> Void
     let clearDynamicHotkey: (HotkeyShortcut) -> Void
-    let jumpToTheoLayer: (Int) -> Void
-    let focusTheoTool: (TheoToolColumn) -> Void
-    let cycleTheoTool: (TheoToolColumn) -> Void
-    let bindFocusedTargetToTheoCurrentContext: () -> Void
-    let captureTheoBinding: (String, TheoToolColumn, String?) -> Void
-    let appendTheoBinding: (String, TheoToolColumn) -> Void
-    let jumpToTheoStandaloneApp: (String) -> Void
-    let captureTheoStandaloneApp: (String) -> Void
+    let jumpToGridLayer: (Int) -> Void
+    let focusGridTool: (GridToolColumn) -> Void
+    let cycleGridTool: (GridToolColumn) -> Void
+    let bindFocusedTargetToGridCurrentContext: () -> Void
+    let captureGridBinding: (String, GridToolColumn, String?) -> Void
+    let appendGridBinding: (String, GridToolColumn) -> Void
+    let jumpToGridStandaloneApp: (String) -> Void
+    let captureGridStandaloneApp: (String) -> Void
     let setHotkeyRecordingActive: (Bool) -> Void
     let registerSettingsWindow: (NSWindow) -> Void
 }

@@ -61,8 +61,8 @@ final class AppCommandCenter {
     private let accessibilityPermissions: any AccessibilityPermissionMonitoring
     private let slotStore: SlotStore
     private let dynamicHotkeyStore: DynamicHotkeyStore
-    private let theoStore: TheoStore
-    private let theoSession: TheoSession
+    private let gridStore: GridStore
+    private let gridSession: GridSession
     private let labelPolicy: TargetLabelPolicy
     private let captureService: any TargetCapturing
     private let resolutionService: any TargetResolving
@@ -72,7 +72,7 @@ final class AppCommandCenter {
     private let setHotkeyRecordingActive: (Bool) -> Void
     private var liveSlotWindows: [Int: LiveWindow] = [:]
     private var liveDynamicWindows: [String: LiveWindow] = [:]
-    private var liveTheoWindows: [String: LiveWindow] = [:]
+    private var liveGridWindows: [String: LiveWindow] = [:]
     private weak var settingsWindow: NSWindow?
     private var dynamicHotkeyCaptureController: DynamicHotkeyCaptureController?
 
@@ -81,8 +81,8 @@ final class AppCommandCenter {
         accessibilityPermissions: any AccessibilityPermissionMonitoring,
         slotStore: SlotStore,
         dynamicHotkeyStore: DynamicHotkeyStore,
-        theoStore: TheoStore,
-        theoSession: TheoSession,
+        gridStore: GridStore,
+        gridSession: GridSession,
         labelPolicy: TargetLabelPolicy,
         captureService: any TargetCapturing,
         resolutionService: any TargetResolving,
@@ -95,8 +95,8 @@ final class AppCommandCenter {
         self.accessibilityPermissions = accessibilityPermissions
         self.slotStore = slotStore
         self.dynamicHotkeyStore = dynamicHotkeyStore
-        self.theoStore = theoStore
-        self.theoSession = theoSession
+        self.gridStore = gridStore
+        self.gridSession = gridSession
         self.labelPolicy = labelPolicy
         self.captureService = captureService
         self.resolutionService = resolutionService
@@ -226,50 +226,50 @@ final class AppCommandCenter {
         hudController.hide()
     }
 
-    func showTheoHUD() {
+    func showGridHUD() {
         hudController.show(
-            model: theoMinimapModel(movement: .neutral, hint: nil),
+            model: gridMinimapModel(movement: .neutral, hint: nil),
             timeout: settings.hudTimeout
         )
     }
 
-    func moveToNextTheoLayer() {
-        jumpBetweenTheoLayers(step: 1)
+    func moveToNextGridLayer() {
+        jumpBetweenGridLayers(step: 1)
     }
 
-    func moveToPreviousTheoLayer() {
-        jumpBetweenTheoLayers(step: -1)
+    func moveToPreviousGridLayer() {
+        jumpBetweenGridLayers(step: -1)
     }
 
-    func jumpToTheoLayer(_ position: Int) {
-        syncTheoSession()
-        guard let movement = theoSession.selectLayer(at: position, in: theoStore.layers) else {
-            showTheoHint(
+    func jumpToGridLayer(_ position: Int) {
+        syncGridSession()
+        guard let movement = gridSession.selectLayer(at: position, in: gridStore.layers) else {
+            showGridHint(
                 title: "Project \(position) isn’t set up yet",
-                detail: "Add or reorder layers in Theo settings.",
+                detail: "Add or reorder layers in The Grid settings.",
                 tone: .warning,
                 movement: .neutral
             )
             return
         }
 
-        focusCurrentTheoSelection(after: movement)
+        focusCurrentGridSelection(after: movement)
     }
 
-    func focusTheoTool(_ tool: TheoToolColumn) {
-        syncTheoSession()
-        let movement = theoSession.selectTool(tool, in: currentTheoLayer())
-        focusCurrentTheoSelection(after: movement)
+    func focusGridTool(_ tool: GridToolColumn) {
+        syncGridSession()
+        let movement = gridSession.selectTool(tool, in: currentGridLayer())
+        focusCurrentGridSelection(after: movement)
     }
 
-    func cycleTheoTool(_ tool: TheoToolColumn) {
-        syncTheoSession()
-        _ = theoSession.selectTool(tool, in: currentTheoLayer())
+    func cycleGridTool(_ tool: GridToolColumn) {
+        syncGridSession()
+        _ = gridSession.selectTool(tool, in: currentGridLayer())
 
-        guard let layer = currentTheoLayer() else {
-            showTheoHint(
-                title: "Theo has no projects yet",
-                detail: "Open Theo settings to add a project layer.",
+        guard let layer = currentGridLayer() else {
+            showGridHint(
+                title: "The Grid has no projects yet",
+                detail: "Open The Grid settings to add a project layer.",
                 tone: .neutral,
                 movement: .neutral
             )
@@ -278,7 +278,7 @@ final class AppCommandCenter {
 
         let group = layer.group(for: tool)
         guard !group.bindings.isEmpty else {
-            showTheoHint(
+            showGridHint(
                 title: "\(tool.title) is empty in \(layer.name)",
                 detail: "Capture a target into this column first.",
                 tone: .neutral,
@@ -288,7 +288,7 @@ final class AppCommandCenter {
         }
 
         guard tool.supportsMultipleBindings else {
-            focusTheoTool(tool)
+            focusGridTool(tool)
             return
         }
 
@@ -297,37 +297,37 @@ final class AppCommandCenter {
         } ?? 0
         let nextIndex = (currentIndex + 1) % group.bindings.count
         let binding = group.bindings[nextIndex]
-        theoStore.setActiveBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
-        presentTheoJump(binding: binding, movement: .neutral)
+        gridStore.setActiveBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
+        presentGridJump(binding: binding, movement: .neutral)
     }
 
-    func bindFocusedTargetToTheoCurrentContext() {
-        syncTheoSession()
-        guard let layer = currentTheoLayer() else {
-            showTheoHint(
-                title: "Theo has no projects yet",
-                detail: "Open Theo settings to add a project layer.",
+    func bindFocusedTargetToGridCurrentContext() {
+        syncGridSession()
+        guard let layer = currentGridLayer() else {
+            showGridHint(
+                title: "The Grid has no projects yet",
+                detail: "Open The Grid settings to add a project layer.",
                 tone: .neutral,
                 movement: .neutral
             )
             return
         }
 
-        guard let tool = theoSession.currentTool(in: layer) else {
-            showTheoHint(
-                title: "Theo has no active column",
-                detail: "Select or add a Theo column first.",
+        guard let tool = gridSession.currentTool(in: layer) else {
+            showGridHint(
+                title: "The Grid has no active column",
+                detail: "Select or add a column in The Grid first.",
                 tone: .neutral,
                 movement: .neutral
             )
             return
         }
-        captureTheoBinding(layerID: layer.id, tool: tool, bindingID: layer.group(for: tool).activeBinding?.id)
+        captureGridBinding(layerID: layer.id, tool: tool, bindingID: layer.group(for: tool).activeBinding?.id)
     }
 
-    func captureTheoBinding(layerID: String, tool: TheoToolColumn, bindingID: String?) {
+    func captureGridBinding(layerID: String, tool: GridToolColumn, bindingID: String?) {
         guard let outcome = captureService.captureFocusedTarget() else {
-            showTheoHint(
+            showGridHint(
                 title: "Couldn’t capture the current target",
                 detail: "Focus an app or window and try again.",
                 tone: .warning,
@@ -336,31 +336,31 @@ final class AppCommandCenter {
             return
         }
 
-        syncTheoSession()
-        _ = theoSession.selectLayer(id: layerID)
-        _ = theoSession.selectTool(tool, in: theoStore.layer(id: layerID))
+        syncGridSession()
+        _ = gridSession.selectLayer(id: layerID)
+        _ = gridSession.selectTool(tool, in: gridStore.layer(id: layerID))
 
-        guard let binding = theoStore.replaceBinding(layerID: layerID, tool: tool, bindingID: bindingID, target: outcome.target) else {
+        guard let binding = gridStore.replaceBinding(layerID: layerID, tool: tool, bindingID: bindingID, target: outcome.target) else {
             return
         }
 
-        updateTheoLiveWindowCache(for: binding.id, liveWindow: outcome.liveWindow)
-        showTheoHint(
+        updateGridLiveWindowCache(for: binding.id, liveWindow: outcome.liveWindow)
+        showGridHint(
             title: "\(binding.label) saved to \(tool.title)",
-            detail: theoCaptureDetail(for: outcome, tool: tool),
+            detail: gridCaptureDetail(for: outcome, tool: tool),
             tone: .success,
             movement: .neutral
         )
     }
 
-    func appendTheoBinding(layerID: String, tool: TheoToolColumn) {
+    func appendGridBinding(layerID: String, tool: GridToolColumn) {
         guard tool.supportsMultipleBindings else {
-            captureTheoBinding(layerID: layerID, tool: tool, bindingID: nil)
+            captureGridBinding(layerID: layerID, tool: tool, bindingID: nil)
             return
         }
 
         guard let outcome = captureService.captureFocusedTarget() else {
-            showTheoHint(
+            showGridHint(
                 title: "Couldn’t capture the current target",
                 detail: "Focus an app or window and try again.",
                 tone: .warning,
@@ -369,28 +369,28 @@ final class AppCommandCenter {
             return
         }
 
-        syncTheoSession()
-        _ = theoSession.selectLayer(id: layerID)
-        _ = theoSession.selectTool(tool, in: theoStore.layer(id: layerID))
+        syncGridSession()
+        _ = gridSession.selectLayer(id: layerID)
+        _ = gridSession.selectTool(tool, in: gridStore.layer(id: layerID))
 
-        guard let binding = theoStore.appendBinding(layerID: layerID, tool: tool, target: outcome.target) else {
+        guard let binding = gridStore.appendBinding(layerID: layerID, tool: tool, target: outcome.target) else {
             return
         }
 
-        updateTheoLiveWindowCache(for: binding.id, liveWindow: outcome.liveWindow)
-        showTheoHint(
+        updateGridLiveWindowCache(for: binding.id, liveWindow: outcome.liveWindow)
+        showGridHint(
             title: "\(binding.label) added to \(tool.title)",
-            detail: theoCaptureDetail(for: outcome, tool: tool),
+            detail: gridCaptureDetail(for: outcome, tool: tool),
             tone: .success,
             movement: .neutral
         )
     }
 
-    func jumpToTheoStandaloneApp(_ appID: String) {
-        guard let app = theoStore.standaloneApp(id: appID) else {
-            showTheoHint(
+    func jumpToGridStandaloneApp(_ appID: String) {
+        guard let app = gridStore.standaloneApp(id: appID) else {
+            showGridHint(
                 title: "Standalone app is missing",
-                detail: "Re-open Theo settings and add it again.",
+                detail: "Re-open The Grid settings and add it again.",
                 tone: .warning,
                 movement: .neutral
             )
@@ -398,7 +398,7 @@ final class AppCommandCenter {
         }
 
         guard let binding = app.binding else {
-            showTheoHint(
+            showGridHint(
                 title: "\(app.name) is empty",
                 detail: "Capture an app target first.",
                 tone: .neutral,
@@ -408,12 +408,12 @@ final class AppCommandCenter {
         }
 
         let outcome = focusService.focus(target: binding.target)
-        showTheoHintForOutcome(outcome, fallbackLabel: app.name, movement: .neutral)
+        showGridHintForOutcome(outcome, fallbackLabel: app.name, movement: .neutral)
     }
 
-    func captureTheoStandaloneApp(_ appID: String) {
+    func captureGridStandaloneApp(_ appID: String) {
         guard let outcome = captureService.captureFocusedTarget() else {
-            showTheoHint(
+            showGridHint(
                 title: "Couldn’t capture the current app",
                 detail: "Focus an app and try again.",
                 tone: .warning,
@@ -422,9 +422,9 @@ final class AppCommandCenter {
             return
         }
 
-        guard let app = theoStore.replaceStandaloneAppBinding(
+        guard let app = gridStore.replaceStandaloneAppBinding(
             id: appID,
-            target: standaloneTheoTarget(from: outcome.target)
+            target: standaloneGridTarget(from: outcome.target)
         ) else {
             return
         }
@@ -432,12 +432,12 @@ final class AppCommandCenter {
         let detail: String
         switch outcome.target {
         case .app:
-            detail = "Theo saved the app target for \(app.name)."
+            detail = "The Grid saved the app target for \(app.name)."
         case .window:
-            detail = "Theo saved the app target for \(app.name), not the current window."
+            detail = "The Grid saved the app target for \(app.name), not the current window."
         }
 
-        showTheoHint(
+        showGridHint(
             title: "\(app.name) saved",
             detail: detail,
             tone: .success,
@@ -600,8 +600,8 @@ final class AppCommandCenter {
         liveDynamicWindows[shortcut.storageKey] != nil
     }
 
-    func hasCachedTheoWindow(for bindingID: String) -> Bool {
-        liveTheoWindows[bindingID] != nil
+    func hasCachedGridWindow(for bindingID: String) -> Bool {
+        liveGridWindows[bindingID] != nil
     }
 
     private func presentJump<Assignment>(
@@ -659,30 +659,30 @@ final class AppCommandCenter {
         }
     }
 
-    private func presentTheoJump(binding: TheoBinding, movement: TheoSelectionChange) {
-        if let liveWindow = liveTheoWindows[binding.id] {
+    private func presentGridJump(binding: GridBinding, movement: GridSelectionChange) {
+        if let liveWindow = liveGridWindows[binding.id] {
             let liveOutcome = focusService.focus(liveWindow: liveWindow, strategy: .liveSessionWindow)
             if case .focused = liveOutcome {
-                showTheoHintForOutcome(liveOutcome, fallbackLabel: binding.label, movement: movement)
+                showGridHintForOutcome(liveOutcome, fallbackLabel: binding.label, movement: movement)
                 return
             }
         }
 
         if let resolvedWindow = resolveLiveWindow(for: binding.target) {
-            updateTheoLiveWindowCache(for: binding.id, liveWindow: resolvedWindow.window)
+            updateGridLiveWindowCache(for: binding.id, liveWindow: resolvedWindow.window)
             let resolvedOutcome = focusService.focus(
                 liveWindow: resolvedWindow.window,
                 strategy: resolvedWindow.strategy
             )
 
             if case .focused = resolvedOutcome {
-                showTheoHintForOutcome(resolvedOutcome, fallbackLabel: binding.label, movement: movement)
+                showGridHintForOutcome(resolvedOutcome, fallbackLabel: binding.label, movement: movement)
                 return
             }
         }
 
         let outcome = focusService.focus(target: binding.target)
-        showTheoHintForOutcome(outcome, fallbackLabel: binding.label, movement: movement)
+        showGridHintForOutcome(outcome, fallbackLabel: binding.label, movement: movement)
     }
 
     private func showMessage(title: String, detail: String?, tone: HUDTone) {
@@ -723,41 +723,41 @@ final class AppCommandCenter {
         )
     }
 
-    private func showTheoHint(
+    private func showGridHint(
         title: String,
         detail: String?,
         tone: HUDTone,
-        movement: TheoSelectionChange
+        movement: GridSelectionChange
     ) {
         hudController.show(
-            model: theoMinimapModel(
+            model: gridMinimapModel(
                 movement: movement,
-                hint: TheoHUDHint(title: title, detail: detail, tone: tone)
+                hint: GridHUDHint(title: title, detail: detail, tone: tone)
             ),
             timeout: settings.hudTimeout
         )
     }
 
-    private func showTheoHintForOutcome(
+    private func showGridHintForOutcome(
         _ outcome: FocusOutcome,
         fallbackLabel: String,
-        movement: TheoSelectionChange
+        movement: GridSelectionChange
     ) {
         switch outcome {
         case .focused:
             hudController.show(
-                model: theoMinimapModel(movement: movement, hint: nil),
+                model: gridMinimapModel(movement: movement, hint: nil),
                 timeout: settings.hudTimeout
             )
         case .launched(let appName):
-            showTheoHint(
+            showGridHint(
                 title: "Launching \(appName)",
-                detail: "Theo opened the app because it wasn’t running.",
+                detail: "The Grid opened the app because it wasn’t running.",
                 tone: .success,
                 movement: movement
             )
         case .unavailable(let reason):
-            showTheoHint(
+            showGridHint(
                 title: "\(fallbackLabel) is unavailable",
                 detail: reason,
                 tone: .warning,
@@ -845,8 +845,8 @@ final class AppCommandCenter {
                 },
                 accessibilityTrusted: accessibilityPermissions.isTrusted
             )
-        case .theo:
-            return theoMinimapModel(movement: .neutral, hint: nil)
+        case .grid:
+            return gridMinimapModel(movement: .neutral, hint: nil)
         }
     }
 
@@ -866,11 +866,11 @@ final class AppCommandCenter {
         }
     }
 
-    private func updateTheoLiveWindowCache(for bindingID: String, liveWindow: LiveWindow?) {
+    private func updateGridLiveWindowCache(for bindingID: String, liveWindow: LiveWindow?) {
         if let liveWindow {
-            liveTheoWindows[bindingID] = liveWindow
+            liveGridWindows[bindingID] = liveWindow
         } else {
-            liveTheoWindows.removeValue(forKey: bindingID)
+            liveGridWindows.removeValue(forKey: bindingID)
         }
     }
 
@@ -887,49 +887,49 @@ final class AppCommandCenter {
         }
     }
 
-    private func syncTheoSession() {
-        theoSession.sync(layers: theoStore.layers)
+    private func syncGridSession() {
+        gridSession.sync(layers: gridStore.layers)
     }
 
-    private func currentTheoLayer() -> TheoLayer? {
-        syncTheoSession()
-        guard let currentLayerID = theoSession.currentLayerID else {
+    private func currentGridLayer() -> GridLayer? {
+        syncGridSession()
+        guard let currentLayerID = gridSession.currentLayerID else {
             return nil
         }
 
-        return theoStore.layer(id: currentLayerID)
+        return gridStore.layer(id: currentLayerID)
     }
 
-    private func jumpBetweenTheoLayers(step: Int) {
-        syncTheoSession()
-        guard let movement = theoSession.selectAdjacentLayer(step: step, in: theoStore.layers) else {
-            showTheoHint(
-                title: "Theo has no projects yet",
-                detail: "Open Theo settings to add a project layer.",
+    private func jumpBetweenGridLayers(step: Int) {
+        syncGridSession()
+        guard let movement = gridSession.selectAdjacentLayer(step: step, in: gridStore.layers) else {
+            showGridHint(
+                title: "The Grid has no projects yet",
+                detail: "Open The Grid settings to add a project layer.",
                 tone: .neutral,
                 movement: .neutral
             )
             return
         }
 
-        focusCurrentTheoSelection(after: movement)
+        focusCurrentGridSelection(after: movement)
     }
 
-    private func focusCurrentTheoSelection(after movement: TheoSelectionChange) {
-        guard let layer = currentTheoLayer() else {
-            showTheoHint(
-                title: "Theo has no projects yet",
-                detail: "Open Theo settings to add a project layer.",
+    private func focusCurrentGridSelection(after movement: GridSelectionChange) {
+        guard let layer = currentGridLayer() else {
+            showGridHint(
+                title: "The Grid has no projects yet",
+                detail: "Open The Grid settings to add a project layer.",
                 tone: .neutral,
                 movement: movement
             )
             return
         }
 
-        guard let tool = theoSession.currentTool(in: layer) else {
-            showTheoHint(
-                title: "Theo has no active column",
-                detail: "Select or add a Theo column first.",
+        guard let tool = gridSession.currentTool(in: layer) else {
+            showGridHint(
+                title: "The Grid has no active column",
+                detail: "Select or add a column in The Grid first.",
                 tone: .neutral,
                 movement: movement
             )
@@ -938,7 +938,7 @@ final class AppCommandCenter {
         let group = layer.group(for: tool)
 
         guard let binding = group.activeBinding else {
-            showTheoHint(
+            showGridHint(
                 title: "\(tool.title) is empty in \(layer.name)",
                 detail: "Capture a target into this column first.",
                 tone: .neutral,
@@ -947,19 +947,19 @@ final class AppCommandCenter {
             return
         }
 
-        presentTheoJump(binding: binding, movement: movement)
+        presentGridJump(binding: binding, movement: movement)
     }
 
-    private func theoCaptureDetail(for outcome: CaptureOutcome, tool: TheoToolColumn) -> String {
+    private func gridCaptureDetail(for outcome: CaptureOutcome, tool: GridToolColumn) -> String {
         switch outcome.source {
         case .window:
-            return "Theo saved the focused window to \(tool.title.lowercased())."
+            return "The Grid saved the focused window to \(tool.title.lowercased())."
         case .appFallback:
-            return "Window capture wasn’t available, so Theo saved the app instead."
+            return "Window capture wasn’t available, so The Grid saved the app instead."
         }
     }
 
-    private func standaloneTheoTarget(from target: Target) -> Target {
+    private func standaloneGridTarget(from target: Target) -> Target {
         switch target {
         case .app:
             return target
@@ -973,26 +973,26 @@ final class AppCommandCenter {
         }
     }
 
-    private func theoMinimapModel(movement: TheoSelectionChange, hint: TheoHUDHint?) -> HUDModel {
-        HUDModel.theoMinimap(
-            TheoMinimapModel(
-                layers: theoStore.layers.map { layer in
-                    TheoMinimapLayer(
+    private func gridMinimapModel(movement: GridSelectionChange, hint: GridHUDHint?) -> HUDModel {
+        HUDModel.gridMinimap(
+            GridMinimapModel(
+                layers: gridStore.layers.map { layer in
+                    GridMinimapLayer(
                         id: layer.id,
                         name: layer.name,
                         color: layer.color,
                         columns: layer.columns.map { column in
                             let group = layer.group(for: column)
-                            return TheoMinimapColumn(
+                            return GridMinimapColumn(
                                 id: column.id,
                                 name: column.name,
                                 iconSymbol: column.iconSymbol,
-                                isSelected: theoSession.currentLayerID == layer.id && theoSession.currentColumnID == column.id,
+                                isSelected: gridSession.currentLayerID == layer.id && gridSession.currentColumnID == column.id,
                                 isFilled: !group.bindings.isEmpty,
                                 activeLabel: group.activeBinding?.label
                             )
                         },
-                        isCurrent: theoSession.currentLayerID == layer.id
+                        isCurrent: gridSession.currentLayerID == layer.id
                     )
                 },
                 movement: movement,
@@ -1009,7 +1009,7 @@ private protocol AssignmentPresenting {
 
 extension SlotAssignment: AssignmentPresenting {}
 extension DynamicHotkeyAssignment: AssignmentPresenting {}
-extension TheoBinding: AssignmentPresenting {}
+extension GridBinding: AssignmentPresenting {}
 
 private extension SlotAssignment {
     var bundleId: String {
@@ -1033,7 +1033,7 @@ private extension DynamicHotkeyAssignment {
     }
 }
 
-private extension TheoBinding {
+private extension GridBinding {
     var bundleId: String {
         switch target {
         case .app(let target):

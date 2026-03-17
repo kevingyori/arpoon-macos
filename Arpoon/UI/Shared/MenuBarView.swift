@@ -6,8 +6,8 @@ struct MenuBarView: View {
 
     @ObservedObject var slotStore: SlotStore
     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
-    @ObservedObject var theoStore: TheoStore
-    @ObservedObject var theoSession: TheoSession
+    @ObservedObject var gridStore: GridStore
+    @ObservedObject var gridSession: GridSession
     @ObservedObject var settings: SettingsStore
     @ObservedObject var permissions: AccessibilityPermissionService
 
@@ -32,8 +32,8 @@ struct MenuBarView: View {
             footer
         }
         .frame(width: 372)
-        .onReceive(theoStore.$layers) { layers in
-            theoSession.sync(layers: layers)
+        .onReceive(gridStore.$layers) { layers in
+            gridSession.sync(layers: layers)
         }
     }
 
@@ -107,8 +107,8 @@ struct MenuBarView: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
-            case .theo:
-                Text("Theo keeps project layers and tool columns stable. Move layers with Option + [ / ], focus tools with Option + T/I/B, and bind the focused target with Option + A.")
+            case .grid:
+                Text("The Grid. A digital frontier. Move layers with Option + [ / ], focus tools with Option + T/I/B, and bind the focused target with Option + A.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -130,8 +130,8 @@ struct MenuBarView: View {
                 staticAssignments
             case .dynamicWindows:
                 dynamicAssignments
-            case .theo:
-                theoAssignments
+            case .grid:
+                gridAssignments
             }
         }
     }
@@ -208,12 +208,12 @@ struct MenuBarView: View {
     }
 
     @ViewBuilder
-    private var theoAssignments: some View {
-        if theoStore.layers.isEmpty {
-            emptyState("No Theo layers configured yet.")
+    private var gridAssignments: some View {
+        if gridStore.layers.isEmpty {
+            emptyState("No project layers configured yet.")
         } else {
             VStack(alignment: .leading, spacing: 14) {
-                if let layer = currentTheoLayer {
+                if let layer = currentGridLayer {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
                             Circle()
@@ -225,7 +225,7 @@ struct MenuBarView: View {
 
                             Spacer()
 
-                            Text(currentTheoColumn(in: layer)?.title ?? "No column")
+                            Text(currentGridColumn(in: layer)?.title ?? "No column")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.secondary)
                         }
@@ -235,24 +235,24 @@ struct MenuBarView: View {
                                 ForEach(layer.columns) { tool in
                                     Button {
                                         dismissPopover()
-                                        if let index = theoStore.layers.firstIndex(where: { $0.id == layer.id }) {
-                                            commands.jumpToTheoLayer(index + 1)
+                                        if let index = gridStore.layers.firstIndex(where: { $0.id == layer.id }) {
+                                            commands.jumpToGridLayer(index + 1)
                                         }
-                                        commands.focusTheoTool(tool)
+                                        commands.focusGridTool(tool)
                                     } label: {
                                         Label(tool.title, systemImage: tool.iconSymbol)
                                     }
                                     .controlSize(.small)
-                                    .theoToolButtonStyle(tool.id == theoSession.currentColumnID)
+                                    .gridToolButtonStyle(tool.id == gridSession.currentColumnID)
                                 }
                             }
                         }
 
                         HStack(spacing: 8) {
-                            if let currentTool = currentTheoColumn(in: layer), currentTool.supportsMultipleBindings {
+                            if let currentTool = currentGridColumn(in: layer), currentTool.supportsMultipleBindings {
                                 Button("Cycle \(currentTool.title)") {
                                     dismissPopover()
-                                    commands.cycleTheoTool(currentTool)
+                                    commands.cycleGridTool(currentTool)
                                 }
                                 .controlSize(.small)
                                 .buttonStyle(.bordered)
@@ -260,7 +260,7 @@ struct MenuBarView: View {
 
                             Button("Bind Current") {
                                 dismissPopover()
-                                commands.bindFocusedTargetToTheoCurrentContext()
+                                commands.bindFocusedTargetToGridCurrentContext()
                             }
                             .controlSize(.small)
                             .buttonStyle(.bordered)
@@ -269,10 +269,10 @@ struct MenuBarView: View {
                 }
 
                 VStack(spacing: 0) {
-                    ForEach(Array(theoStore.layers.enumerated()), id: \.element.id) { index, layer in
+                    ForEach(Array(gridStore.layers.enumerated()), id: \.element.id) { index, layer in
                         Button {
                             dismissPopover()
-                            commands.jumpToTheoLayer(index + 1)
+                            commands.jumpToGridLayer(index + 1)
                         } label: {
                             HStack(spacing: 10) {
                                 Text("\(index + 1)")
@@ -287,10 +287,10 @@ struct MenuBarView: View {
                                             .frame(width: 8, height: 8)
 
                                         Text(layer.name)
-                                            .font(.system(size: 12.5, weight: layer.id == theoSession.currentLayerID ? .semibold : .medium))
+                                            .font(.system(size: 12.5, weight: layer.id == gridSession.currentLayerID ? .semibold : .medium))
                                     }
 
-                                    Text(theoSummary(for: layer))
+                                    Text(gridSummary(for: layer))
                                         .font(.system(size: 11))
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
@@ -303,23 +303,23 @@ struct MenuBarView: View {
                         }
                         .buttonStyle(.plain)
 
-                        if index < theoStore.layers.count - 1 {
+                        if index < gridStore.layers.count - 1 {
                             Divider()
                                 .padding(.leading, 34)
                         }
                     }
                 }
 
-                if !theoStore.standaloneApps.isEmpty {
+                if !gridStore.standaloneApps.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Standalone Apps")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(.secondary)
 
-                        ForEach(theoStore.standaloneApps) { app in
+                        ForEach(gridStore.standaloneApps) { app in
                             Button {
                                 dismissPopover()
-                                commands.jumpToTheoStandaloneApp(app.id)
+                                commands.jumpToGridStandaloneApp(app.id)
                             } label: {
                                 HStack(spacing: 10) {
                                     Image(systemName: app.iconSymbol)
@@ -356,7 +356,7 @@ struct MenuBarView: View {
 
     private var footer: some View {
         HStack {
-            Text(settings.hotkeyScheme == .theo ? "Theo reflects the current layer and tool." : "Jump with a row click.")
+            Text(settings.hotkeyScheme == .grid ? "The Grid reflects the current layer and tool." : "Jump with a row click.")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
@@ -377,8 +377,8 @@ struct MenuBarView: View {
             return slotStore.assignments.count
         case .dynamicWindows:
             return dynamicHotkeys.assignments.count
-        case .theo:
-            return theoStore.layers.count
+        case .grid:
+            return gridStore.layers.count
         }
     }
 
@@ -388,8 +388,8 @@ struct MenuBarView: View {
             return "Binding"
         case .dynamicWindows:
             return "Dynamic Hotkeys"
-        case .theo:
-            return "Theo"
+        case .grid:
+            return "The Grid"
         }
     }
 
@@ -399,18 +399,18 @@ struct MenuBarView: View {
             return "Current Slots"
         case .dynamicWindows:
             return "Current Hotkeys"
-        case .theo:
+        case .grid:
             return "Project Layers"
         }
     }
 
-    private var currentTheoLayer: TheoLayer? {
-        if let currentLayerID = theoSession.currentLayerID,
-           let layer = theoStore.layer(id: currentLayerID) {
+    private var currentGridLayer: GridLayer? {
+        if let currentLayerID = gridSession.currentLayerID,
+           let layer = gridStore.layer(id: currentLayerID) {
             return layer
         }
 
-        return theoStore.layers.first
+        return gridStore.layers.first
     }
 
     private func sectionLabel(_ title: String) -> some View {
@@ -471,7 +471,7 @@ struct MenuBarView: View {
         }
     }
 
-    private func theoSummary(for layer: TheoLayer) -> String {
+    private func gridSummary(for layer: GridLayer) -> String {
         layer.columns.map { tool in
             let label = layer.group(for: tool).activeBinding?.label ?? "empty"
             return "\(tool.title): \(label)"
@@ -479,13 +479,13 @@ struct MenuBarView: View {
         .joined(separator: " • ")
     }
 
-    private func currentTheoColumn(in layer: TheoLayer) -> TheoToolColumn? {
-        theoSession.currentTool(in: layer)
+    private func currentGridColumn(in layer: GridLayer) -> GridToolColumn? {
+        gridSession.currentTool(in: layer)
     }
 }
 
 private extension View {
-    func theoToolButtonStyle(_ isCurrent: Bool) -> some View {
+    func gridToolButtonStyle(_ isCurrent: Bool) -> some View {
         if isCurrent {
             return AnyView(self.buttonStyle(.borderedProminent))
         }

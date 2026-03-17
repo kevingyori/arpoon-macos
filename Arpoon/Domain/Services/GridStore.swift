@@ -2,15 +2,15 @@ import Combine
 import Foundation
 
 @MainActor
-final class TheoStore: ObservableObject {
-    @Published private(set) var layers: [TheoLayer] = []
-    @Published private(set) var standaloneApps: [TheoStandaloneApp] = []
+final class GridStore: ObservableObject {
+    @Published private(set) var layers: [GridLayer] = []
+    @Published private(set) var standaloneApps: [GridStandaloneApp] = []
 
-    private let store: TheoLayerStore
+    private let store: GridLayerStore
     private let labelPolicy: TargetLabelPolicy
     private var persistenceTask: Task<Void, Never>?
 
-    init(store: TheoLayerStore, labelPolicy: TargetLabelPolicy) {
+    init(store: GridLayerStore, labelPolicy: TargetLabelPolicy) {
         self.store = store
         self.labelPolicy = labelPolicy
     }
@@ -33,11 +33,11 @@ final class TheoStore: ObservableObject {
         }
     }
 
-    func layer(id: String) -> TheoLayer? {
+    func layer(id: String) -> GridLayer? {
         layers.first(where: { $0.id == id })
     }
 
-    func layer(at position: Int) -> TheoLayer? {
+    func layer(at position: Int) -> GridLayer? {
         guard position >= 1, position <= layers.count else {
             return nil
         }
@@ -45,17 +45,17 @@ final class TheoStore: ObservableObject {
         return layers[position - 1]
     }
 
-    func standaloneApp(id: String) -> TheoStandaloneApp? {
+    func standaloneApp(id: String) -> GridStandaloneApp? {
         standaloneApps.first(where: { $0.id == id })
     }
 
     @discardableResult
-    func addLayer() -> TheoLayer? {
+    func addLayer() -> GridLayer? {
         guard layers.count < 9 else {
             return nil
         }
 
-        let layer = TheoLayer(
+        let layer = GridLayer(
             name: "Project \(layers.count + 1)",
             color: Self.defaultColor(for: layers.count)
         )
@@ -82,7 +82,7 @@ final class TheoStore: ObservableObject {
         updateLayer(id: id) { $0.updatingName(name.isEmpty ? "Untitled Project" : name) }
     }
 
-    func setColor(_ color: TheoLayerColor, forLayerID id: String) {
+    func setColor(_ color: GridLayerColor, forLayerID id: String) {
         updateLayer(id: id) { $0.updatingColor(color) }
     }
 
@@ -107,11 +107,11 @@ final class TheoStore: ObservableObject {
     }
 
     @discardableResult
-    func addCustomColumn(layerID: String) -> TheoToolColumn? {
-        var created: TheoToolColumn?
+    func addCustomColumn(layerID: String) -> GridToolColumn? {
+        var created: GridToolColumn?
         updateLayer(id: layerID) { layer in
             let index = layer.columns.filter { $0.kind == .custom }.count + 1
-            let column = TheoToolColumn.custom(name: "Custom \(index)")
+            let column = GridToolColumn.custom(name: "Custom \(index)")
             created = column
             return layer.updatingColumns(layer.columns + [column])
         }
@@ -123,7 +123,7 @@ final class TheoStore: ObservableObject {
             let columns = layer.columns.filter { $0.id != columnID }
             var groups = layer.groups
             groups.removeValue(forKey: columnID)
-            return TheoLayer(
+            return GridLayer(
                 id: layer.id,
                 name: layer.name,
                 color: layer.color,
@@ -136,8 +136,8 @@ final class TheoStore: ObservableObject {
     }
 
     @discardableResult
-    func addStandaloneApp() -> TheoStandaloneApp {
-        let app = TheoStandaloneApp(name: "Standalone App \(standaloneApps.count + 1)")
+    func addStandaloneApp() -> GridStandaloneApp {
+        let app = GridStandaloneApp(name: "Standalone App \(standaloneApps.count + 1)")
         standaloneApps.append(app)
         persist()
         return app
@@ -173,11 +173,11 @@ final class TheoStore: ObservableObject {
     }
 
     @discardableResult
-    func replaceStandaloneAppBinding(id: String, target: Target) -> TheoStandaloneApp? {
-        var updatedApp: TheoStandaloneApp?
+    func replaceStandaloneAppBinding(id: String, target: Target) -> GridStandaloneApp? {
+        var updatedApp: GridStandaloneApp?
         updateStandaloneApp(id: id) { app in
             let existing = app.binding
-            let binding = TheoBinding(
+            let binding = GridBinding(
                 id: existing?.id ?? UUID().uuidString,
                 label: labelPolicy.label(for: target),
                 target: target,
@@ -192,13 +192,13 @@ final class TheoStore: ObservableObject {
         return updatedApp
     }
 
-    func setActiveBinding(layerID: String, tool: TheoToolColumn, bindingID: String?) {
+    func setActiveBinding(layerID: String, tool: GridToolColumn, bindingID: String?) {
         updateToolGroup(layerID: layerID, tool: tool) { group in
-            TheoToolGroup(bindings: group.bindings, activeBindingID: bindingID).normalized()
+            GridToolGroup(bindings: group.bindings, activeBindingID: bindingID).normalized()
         }
     }
 
-    func renameBinding(layerID: String, tool: TheoToolColumn, bindingID: String, label: String) {
+    func renameBinding(layerID: String, tool: GridToolColumn, bindingID: String, label: String) {
         updateToolGroup(layerID: layerID, tool: tool) { group in
             let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
             let bindings = group.bindings.map { binding in
@@ -206,7 +206,7 @@ final class TheoStore: ObservableObject {
                     return binding
                 }
 
-                return TheoBinding(
+                return GridBinding(
                     id: binding.id,
                     label: trimmed.isEmpty ? defaultLabel(for: tool, group: group) : trimmed,
                     target: binding.target,
@@ -216,11 +216,11 @@ final class TheoStore: ObservableObject {
                 )
             }
 
-            return TheoToolGroup(bindings: bindings, activeBindingID: group.activeBindingID).normalized()
+            return GridToolGroup(bindings: bindings, activeBindingID: group.activeBindingID).normalized()
         }
     }
 
-    func moveBindings(layerID: String, tool: TheoToolColumn, fromOffsets: IndexSet, toOffset: Int) {
+    func moveBindings(layerID: String, tool: GridToolColumn, fromOffsets: IndexSet, toOffset: Int) {
         guard tool.supportsMultipleBindings else {
             return
         }
@@ -228,27 +228,27 @@ final class TheoStore: ObservableObject {
         updateToolGroup(layerID: layerID, tool: tool) { group in
             var bindings = group.bindings
             bindings.move(fromOffsets: fromOffsets, toOffset: toOffset)
-            return TheoToolGroup(bindings: bindings, activeBindingID: group.activeBindingID).normalized()
+            return GridToolGroup(bindings: bindings, activeBindingID: group.activeBindingID).normalized()
         }
     }
 
-    func clearBinding(layerID: String, tool: TheoToolColumn, bindingID: String) {
+    func clearBinding(layerID: String, tool: GridToolColumn, bindingID: String) {
         updateToolGroup(layerID: layerID, tool: tool) { group in
             let bindings = group.bindings.filter { $0.id != bindingID }
             let activeBindingID = group.activeBindingID == bindingID ? nil : group.activeBindingID
-            return TheoToolGroup(bindings: bindings, activeBindingID: activeBindingID).normalized()
+            return GridToolGroup(bindings: bindings, activeBindingID: activeBindingID).normalized()
         }
     }
 
-    func appendBinding(layerID: String, tool: TheoToolColumn, target: Target) -> TheoBinding? {
+    func appendBinding(layerID: String, tool: GridToolColumn, target: Target) -> GridBinding? {
         guard tool.supportsMultipleBindings else {
             return replaceBinding(layerID: layerID, tool: tool, bindingID: nil, target: target)
         }
 
-        var createdBinding: TheoBinding?
+        var createdBinding: GridBinding?
         updateToolGroup(layerID: layerID, tool: tool) { group in
             let label = defaultLabel(for: tool, group: group)
-            let binding = TheoBinding(
+            let binding = GridBinding(
                 id: UUID().uuidString,
                 label: labelPolicy.label(for: target),
                 target: target,
@@ -257,19 +257,19 @@ final class TheoStore: ObservableObject {
                 updatedAt: .now
             )
             createdBinding = binding
-            return TheoToolGroup(bindings: group.bindings + [binding], activeBindingID: binding.id).normalized()
+            return GridToolGroup(bindings: group.bindings + [binding], activeBindingID: binding.id).normalized()
         }
         return createdBinding
     }
 
     @discardableResult
-    func replaceBinding(layerID: String, tool: TheoToolColumn, bindingID: String?, target: Target) -> TheoBinding? {
-        var updatedBinding: TheoBinding?
+    func replaceBinding(layerID: String, tool: GridToolColumn, bindingID: String?, target: Target) -> GridBinding? {
+        var updatedBinding: GridBinding?
         updateToolGroup(layerID: layerID, tool: tool) { group in
             if !tool.supportsMultipleBindings {
                 let existing = group.bindings.first
                 let label = existing?.archetypeHint ?? tool.suggestedLabels.first ?? labelPolicy.label(for: target)
-                let binding = TheoBinding(
+                let binding = GridBinding(
                     id: existing?.id ?? UUID().uuidString,
                     label: labelPolicy.label(for: target),
                     target: target,
@@ -278,7 +278,7 @@ final class TheoStore: ObservableObject {
                     updatedAt: .now
                 )
                 updatedBinding = binding
-                return TheoToolGroup(bindings: [binding], activeBindingID: binding.id).normalized()
+                return GridToolGroup(bindings: [binding], activeBindingID: binding.id).normalized()
             }
 
             if let resolvedBinding = resolveBinding(bindingID: bindingID, in: group) {
@@ -287,7 +287,7 @@ final class TheoStore: ObservableObject {
                         return binding
                     }
 
-                    let updated = TheoBinding(
+                    let updated = GridBinding(
                         id: binding.id,
                         label: labelPolicy.label(for: target),
                         target: target,
@@ -299,11 +299,11 @@ final class TheoStore: ObservableObject {
                     return updated
                 }
 
-                return TheoToolGroup(bindings: bindings, activeBindingID: resolvedBinding.id).normalized()
+                return GridToolGroup(bindings: bindings, activeBindingID: resolvedBinding.id).normalized()
             }
 
             let label = defaultLabel(for: tool, group: group)
-            let binding = TheoBinding(
+            let binding = GridBinding(
                 id: UUID().uuidString,
                 label: labelPolicy.label(for: target),
                 target: target,
@@ -312,12 +312,12 @@ final class TheoStore: ObservableObject {
                 updatedAt: .now
             )
             updatedBinding = binding
-            return TheoToolGroup(bindings: group.bindings + [binding], activeBindingID: binding.id).normalized()
+            return GridToolGroup(bindings: group.bindings + [binding], activeBindingID: binding.id).normalized()
         }
         return updatedBinding
     }
 
-    private func resolveBinding(bindingID: String?, in group: TheoToolGroup) -> TheoBinding? {
+    private func resolveBinding(bindingID: String?, in group: GridToolGroup) -> GridBinding? {
         if let bindingID,
            let binding = group.bindings.first(where: { $0.id == bindingID }) {
             return binding
@@ -326,7 +326,7 @@ final class TheoStore: ObservableObject {
         return group.activeBinding
     }
 
-    private func updateLayer(id: String, transform: (TheoLayer) -> TheoLayer) {
+    private func updateLayer(id: String, transform: (GridLayer) -> GridLayer) {
         guard let index = layers.firstIndex(where: { $0.id == id }) else {
             return
         }
@@ -335,7 +335,7 @@ final class TheoStore: ObservableObject {
         persist()
     }
 
-    private func updateToolGroup(layerID: String, tool: TheoToolColumn, transform: (TheoToolGroup) -> TheoToolGroup) {
+    private func updateToolGroup(layerID: String, tool: GridToolColumn, transform: (GridToolGroup) -> GridToolGroup) {
         updateLayer(id: layerID) { layer in
             let updatedGroup = transform(layer.group(for: tool)).normalized()
             return layer.updatingGroup(updatedGroup, for: tool)
@@ -349,7 +349,7 @@ final class TheoStore: ObservableObject {
         persistenceTask = Task {
             do {
                 try await store.saveState(
-                    TheoWorkspaceState(
+                    GridWorkspaceState(
                         layers: layers,
                         standaloneApps: standaloneApps
                     )
@@ -360,7 +360,7 @@ final class TheoStore: ObservableObject {
         }
     }
 
-    private func updateStandaloneApp(id: String, transform: (TheoStandaloneApp) -> TheoStandaloneApp) {
+    private func updateStandaloneApp(id: String, transform: (GridStandaloneApp) -> GridStandaloneApp) {
         guard let index = standaloneApps.firstIndex(where: { $0.id == id }) else {
             return
         }
@@ -369,7 +369,7 @@ final class TheoStore: ObservableObject {
         persist()
     }
 
-    private func defaultLabel(for tool: TheoToolColumn, group: TheoToolGroup) -> String {
+    private func defaultLabel(for tool: GridToolColumn, group: GridToolGroup) -> String {
         let taken = Set(group.bindings.compactMap(\.archetypeHint))
         if let label = tool.suggestedLabels.first(where: { !taken.contains($0) }) {
             return label
@@ -378,43 +378,43 @@ final class TheoStore: ObservableObject {
         return "\(tool.title.lowercased()) \(group.bindings.count + 1)"
     }
 
-    private static func seedLayers() -> [TheoLayer] {
+    private static func seedLayers() -> [GridLayer] {
         (0 ..< 3).map { index in
-            TheoLayer(
+            GridLayer(
                 name: "Project \(index + 1)",
                 color: defaultColor(for: index)
             )
         }
     }
 
-    private static func defaultColor(for index: Int) -> TheoLayerColor {
-        TheoLayerColor.allCases[index % TheoLayerColor.allCases.count]
+    private static func defaultColor(for index: Int) -> GridLayerColor {
+        GridLayerColor.allCases[index % GridLayerColor.allCases.count]
     }
 
-    private static func normalized(layers: [TheoLayer]) -> [TheoLayer] {
+    private static func normalized(layers: [GridLayer]) -> [GridLayer] {
         let trimmed = Array(layers.prefix(9))
         let normalized = trimmed.map { layer in
-            let defaults = TheoToolColumn.defaults.map { defaultColumn in
+            let defaults = GridToolColumn.defaults.map { defaultColumn in
                 if let existing = layer.columns.first(where: { $0.id == defaultColumn.id }) {
                     return existing
                 }
 
                 return defaultColumn
             }
-            let defaultIDs = Set(TheoToolColumn.defaults.map(\.id))
+            let defaultIDs = Set(GridToolColumn.defaults.map(\.id))
             let customColumns = layer.columns.filter { column in
                 column.kind == .custom && !defaultIDs.contains(column.id)
             }
             let columns = defaults + customColumns
-            var groups: [String: TheoToolGroup] = [:]
+            var groups: [String: GridToolGroup] = [:]
 
             for column in columns {
-                let existing = layer.groups[column.id] ?? TheoToolGroup()
-                let normalizedGroup: TheoToolGroup
+                let existing = layer.groups[column.id] ?? GridToolGroup()
+                let normalizedGroup: GridToolGroup
                 if column.supportsMultipleBindings {
                     normalizedGroup = existing.normalized()
                 } else {
-                    normalizedGroup = TheoToolGroup(
+                    normalizedGroup = GridToolGroup(
                         bindings: Array(existing.bindings.prefix(1)),
                         activeBindingID: existing.activeBindingID
                     ).normalized()
@@ -422,7 +422,7 @@ final class TheoStore: ObservableObject {
                 groups[column.id] = normalizedGroup
             }
 
-            return TheoLayer(
+            return GridLayer(
                 id: layer.id,
                 name: layer.name.isEmpty ? "Untitled Project" : layer.name,
                 color: layer.color,
@@ -436,9 +436,9 @@ final class TheoStore: ObservableObject {
         return normalized.isEmpty ? seedLayers() : normalized
     }
 
-    private static func normalized(standaloneApps: [TheoStandaloneApp]) -> [TheoStandaloneApp] {
+    private static func normalized(standaloneApps: [GridStandaloneApp]) -> [GridStandaloneApp] {
         standaloneApps.map { app in
-            TheoStandaloneApp(
+            GridStandaloneApp(
                 id: app.id,
                 name: app.name.isEmpty ? "Untitled App" : app.name,
                 iconSymbol: app.iconSymbol.isEmpty ? "app.fill" : app.iconSymbol,

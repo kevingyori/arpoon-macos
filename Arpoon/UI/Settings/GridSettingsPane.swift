@@ -2,10 +2,10 @@ import AppKit
 import Carbon
 import SwiftUI
 
-struct TheoSettingsPane: View {
+struct GridSettingsPane: View {
     @ObservedObject var settings: SettingsStore
-    @ObservedObject var theoStore: TheoStore
-    @ObservedObject var theoSession: TheoSession
+    @ObservedObject var gridStore: GridStore
+    @ObservedObject var gridSession: GridSession
     let commands: AppCommands
     @Binding var activeRecorderID: String?
 
@@ -21,10 +21,10 @@ struct TheoSettingsPane: View {
             }
         }
         .onAppear {
-            syncSelection(with: theoStore.layers)
+            syncSelection(with: gridStore.layers)
         }
-        .onReceive(theoStore.$layers) { layers in
-            theoSession.sync(layers: layers)
+        .onReceive(gridStore.$layers) { layers in
+            gridSession.sync(layers: layers)
             syncSelection(with: layers)
         }
     }
@@ -38,20 +38,20 @@ struct TheoSettingsPane: View {
 
                     Spacer()
 
-                    Text("\(theoStore.layers.count)/9")
+                    Text("\(gridStore.layers.count)/9")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
                         .foregroundStyle(.secondary)
                 }
 
                 Button("Add Layer") {
-                    if let layer = theoStore.addLayer() {
+                    if let layer = gridStore.addLayer() {
                         selectedLayerID = layer.id
                     }
                 }
-                .disabled(theoStore.layers.count >= 9)
+                .disabled(gridStore.layers.count >= 9)
 
                 VStack(spacing: 8) {
-                    ForEach(Array(theoStore.layers.enumerated()), id: \.element.id) { index, layer in
+                    ForEach(Array(gridStore.layers.enumerated()), id: \.element.id) { index, layer in
                         VStack(alignment: .leading, spacing: 8) {
                             Button {
                                 selectedLayerID = layer.id
@@ -83,7 +83,7 @@ struct TheoSettingsPane: View {
 
                             HStack(spacing: 6) {
                                 Button {
-                                    theoStore.moveLayers(fromOffsets: IndexSet(integer: index), toOffset: max(index - 1, 0))
+                                    gridStore.moveLayers(fromOffsets: IndexSet(integer: index), toOffset: max(index - 1, 0))
                                 } label: {
                                     Image(systemName: "arrow.up")
                                 }
@@ -91,20 +91,20 @@ struct TheoSettingsPane: View {
                                 .disabled(index == 0)
 
                                 Button {
-                                    theoStore.moveLayers(fromOffsets: IndexSet(integer: index), toOffset: min(index + 2, theoStore.layers.count))
+                                    gridStore.moveLayers(fromOffsets: IndexSet(integer: index), toOffset: min(index + 2, gridStore.layers.count))
                                 } label: {
                                     Image(systemName: "arrow.down")
                                 }
                                 .buttonStyle(.borderless)
-                                .disabled(index == theoStore.layers.count - 1)
+                                .disabled(index == gridStore.layers.count - 1)
 
                                 Spacer()
 
                                 Button("Remove") {
-                                    theoStore.removeLayer(id: layer.id)
+                                    gridStore.removeLayer(id: layer.id)
                                 }
                                 .buttonStyle(.borderless)
-                                .disabled(theoStore.layers.count == 1)
+                                .disabled(gridStore.layers.count == 1)
                             }
                             .font(.system(size: 11))
                         }
@@ -121,10 +121,10 @@ struct TheoSettingsPane: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Theo Layer")
+                        Text("The Grid")
                             .font(.system(size: 17, weight: .semibold))
 
-                        Text("Edit semantic tool columns and ordered subtargets for this project context.")
+                        Text("A digital frontier")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -133,13 +133,13 @@ struct TheoSettingsPane: View {
 
                     if let index = layerIndex(layer) {
                         Button("Jump Here") {
-                            commands.jumpToTheoLayer(index + 1)
+                            commands.jumpToGridLayer(index + 1)
                         }
                         .buttonStyle(.bordered)
                     }
 
                     Button("Add Custom Column") {
-                        _ = theoStore.addCustomColumn(layerID: layer.id)
+                        _ = gridStore.addCustomColumn(layerID: layer.id)
                     }
                     .buttonStyle(.borderedProminent)
                 }
@@ -154,7 +154,7 @@ struct TheoSettingsPane: View {
                             "Project name",
                             text: Binding(
                                 get: { layer.name },
-                                set: { theoStore.renameLayer(id: layer.id, name: $0) }
+                                set: { gridStore.renameLayer(id: layer.id, name: $0) }
                             )
                         )
                         .textFieldStyle(.roundedBorder)
@@ -167,9 +167,9 @@ struct TheoSettingsPane: View {
 
                         Picker("Color", selection: Binding(
                             get: { layer.color },
-                            set: { theoStore.setColor($0, forLayerID: layer.id) }
+                            set: { gridStore.setColor($0, forLayerID: layer.id) }
                         )) {
-                            ForEach(TheoLayerColor.allCases) { color in
+                            ForEach(GridLayerColor.allCases) { color in
                                 Text(color.title).tag(color)
                             }
                         }
@@ -185,7 +185,7 @@ struct TheoSettingsPane: View {
             .frame(maxWidth: .infinity, alignment: .topLeading)
         } else {
             GroupBox {
-                Text("Choose a Theo layer to edit.")
+                Text("Choose a project layer to edit.")
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -203,7 +203,7 @@ struct TheoSettingsPane: View {
                         Text("Standalone Apps")
                             .font(.system(size: 17, weight: .semibold))
 
-                        Text("Theo-wide apps keep the same shortcut no matter which project layer is active.")
+                        Text("The Grid keeps these app shortcuts fixed across every project layer.")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -211,22 +211,22 @@ struct TheoSettingsPane: View {
                     Spacer()
 
                     Button("Add Standalone App") {
-                        _ = theoStore.addStandaloneApp()
+                        _ = gridStore.addStandaloneApp()
                     }
                     .buttonStyle(.borderedProminent)
                 }
 
-                if theoStore.standaloneApps.isEmpty {
+                if gridStore.standaloneApps.isEmpty {
                     Text("No standalone apps yet.")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 8)
                 } else {
-                    ForEach(theoStore.standaloneApps) { app in
-                        TheoStandaloneAppRow(
+                    ForEach(gridStore.standaloneApps) { app in
+                        GridStandaloneAppRow(
                             app: app,
                             settings: settings,
-                            theoStore: theoStore,
+                            gridStore: gridStore,
                             commands: commands,
                             activeRecorderID: $activeRecorderID
                         )
@@ -238,7 +238,7 @@ struct TheoSettingsPane: View {
     }
 
     @ViewBuilder
-    private func toolGroup(for tool: TheoToolColumn, in layer: TheoLayer) -> some View {
+    private func toolGroup(for tool: GridToolColumn, in layer: GridLayer) -> some View {
         let group = layer.group(for: tool)
 
         GroupBox {
@@ -257,27 +257,27 @@ struct TheoSettingsPane: View {
 
                     Button("Focus") {
                         if let index = layerIndex(layer) {
-                            commands.jumpToTheoLayer(index + 1)
+                            commands.jumpToGridLayer(index + 1)
                         }
-                        commands.focusTheoTool(tool)
+                        commands.focusGridTool(tool)
                     }
                     .buttonStyle(.bordered)
 
                     Button("Use Current Target") {
-                        commands.captureTheoBinding(layer.id, tool, group.activeBinding?.id)
+                        commands.captureGridBinding(layer.id, tool, group.activeBinding?.id)
                     }
                     .buttonStyle(.borderedProminent)
 
                     if tool.supportsMultipleBindings {
                         Button("Append Subtarget") {
-                            commands.appendTheoBinding(layer.id, tool)
+                            commands.appendGridBinding(layer.id, tool)
                         }
                         .buttonStyle(.bordered)
                     }
 
                     if tool.kind == .custom {
                         Button("Remove") {
-                            theoStore.removeCustomColumn(layerID: layer.id, columnID: tool.id)
+                            gridStore.removeCustomColumn(layerID: layer.id, columnID: tool.id)
                         }
                         .buttonStyle(.borderless)
                     }
@@ -293,7 +293,7 @@ struct TheoSettingsPane: View {
                             "Column name",
                             text: Binding(
                                 get: { tool.title },
-                                set: { theoStore.renameColumn(layerID: layer.id, columnID: tool.id, name: $0) }
+                                set: { gridStore.renameColumn(layerID: layer.id, columnID: tool.id, name: $0) }
                             )
                         )
                         .textFieldStyle(.roundedBorder)
@@ -306,9 +306,9 @@ struct TheoSettingsPane: View {
 
                         Picker("Icon", selection: Binding(
                             get: { tool.iconSymbol },
-                            set: { theoStore.setColumnIcon(layerID: layer.id, columnID: tool.id, iconSymbol: $0) }
+                            set: { gridStore.setColumnIcon(layerID: layer.id, columnID: tool.id, iconSymbol: $0) }
                         )) {
-                            ForEach(TheoToolColumn.iconOptions, id: \.self) { icon in
+                            ForEach(GridToolColumn.iconOptions, id: \.self) { icon in
                                 Label(icon, systemImage: icon).tag(icon)
                             }
                         }
@@ -327,7 +327,7 @@ struct TheoSettingsPane: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(spacing: 10) {
                                 Button {
-                                    theoStore.setActiveBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
+                                    gridStore.setActiveBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
                                 } label: {
                                     Image(systemName: group.activeBinding?.id == binding.id ? "largecircle.fill.circle" : "circle")
                                 }
@@ -337,18 +337,18 @@ struct TheoSettingsPane: View {
                                     "Label",
                                     text: Binding(
                                         get: { binding.label },
-                                        set: { theoStore.renameBinding(layerID: layer.id, tool: tool, bindingID: binding.id, label: $0) }
+                                        set: { gridStore.renameBinding(layerID: layer.id, tool: tool, bindingID: binding.id, label: $0) }
                                     )
                                 )
                                 .textFieldStyle(.roundedBorder)
 
                                 Button("Replace") {
-                                    commands.captureTheoBinding(layer.id, tool, binding.id)
+                                    commands.captureGridBinding(layer.id, tool, binding.id)
                                 }
                                 .buttonStyle(.bordered)
 
                                 Button("Clear") {
-                                    theoStore.clearBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
+                                    gridStore.clearBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
                                 }
                                 .buttonStyle(.borderless)
                             }
@@ -362,7 +362,7 @@ struct TheoSettingsPane: View {
                                     Spacer()
 
                                     Button {
-                                        theoStore.moveBindings(
+                                        gridStore.moveBindings(
                                             layerID: layer.id,
                                             tool: tool,
                                             fromOffsets: IndexSet(integer: index),
@@ -375,7 +375,7 @@ struct TheoSettingsPane: View {
                                     .disabled(index == 0)
 
                                     Button {
-                                        theoStore.moveBindings(
+                                        gridStore.moveBindings(
                                             layerID: layer.id,
                                             tool: tool,
                                             fromOffsets: IndexSet(integer: index),
@@ -397,15 +397,15 @@ struct TheoSettingsPane: View {
         }
     }
 
-    private var selectedLayer: TheoLayer? {
+    private var selectedLayer: GridLayer? {
         guard let selectedLayerID else {
-            return theoStore.layers.first
+            return gridStore.layers.first
         }
 
-        return theoStore.layer(id: selectedLayerID) ?? theoStore.layers.first
+        return gridStore.layer(id: selectedLayerID) ?? gridStore.layers.first
     }
 
-    private func syncSelection(with layers: [TheoLayer]) {
+    private func syncSelection(with layers: [GridLayer]) {
         if let selectedLayerID,
            layers.contains(where: { $0.id == selectedLayerID }) {
             return
@@ -414,16 +414,16 @@ struct TheoSettingsPane: View {
         selectedLayerID = layers.first?.id
     }
 
-    private func layerIndex(_ layer: TheoLayer) -> Int? {
-        theoStore.layers.firstIndex(where: { $0.id == layer.id })
+    private func layerIndex(_ layer: GridLayer) -> Int? {
+        gridStore.layers.firstIndex(where: { $0.id == layer.id })
     }
 }
 
-private struct TheoStandaloneAppRow: View {
-    let app: TheoStandaloneApp
+private struct GridStandaloneAppRow: View {
+    let app: GridStandaloneApp
 
     @ObservedObject var settings: SettingsStore
-    @ObservedObject var theoStore: TheoStore
+    @ObservedObject var gridStore: GridStore
     let commands: AppCommands
     @Binding var activeRecorderID: String?
 
@@ -431,7 +431,7 @@ private struct TheoStandaloneAppRow: View {
     @State private var errorMessage: String?
 
     private var recorderID: String {
-        "theo-standalone-\(app.id)"
+        "grid-standalone-\(app.id)"
     }
 
     private var isRecording: Bool {
@@ -454,7 +454,7 @@ private struct TheoStandaloneAppRow: View {
                         "Standalone app name",
                         text: Binding(
                             get: { app.name },
-                            set: { theoStore.renameStandaloneApp(id: app.id, name: $0) }
+                            set: { gridStore.renameStandaloneApp(id: app.id, name: $0) }
                         )
                     )
                     .textFieldStyle(.roundedBorder)
@@ -471,9 +471,9 @@ private struct TheoStandaloneAppRow: View {
 
                     Picker("Icon", selection: Binding(
                         get: { app.iconSymbol },
-                        set: { theoStore.setStandaloneAppIcon(id: app.id, iconSymbol: $0) }
+                        set: { gridStore.setStandaloneAppIcon(id: app.id, iconSymbol: $0) }
                     )) {
-                        ForEach(TheoToolColumn.iconOptions, id: \.self) { icon in
+                        ForEach(GridToolColumn.iconOptions, id: \.self) { icon in
                             Label(icon, systemImage: icon).tag(icon)
                         }
                     }
@@ -484,12 +484,12 @@ private struct TheoStandaloneAppRow: View {
                 Spacer()
 
                 Button("Jump") {
-                    commands.jumpToTheoStandaloneApp(app.id)
+                    commands.jumpToGridStandaloneApp(app.id)
                 }
                 .buttonStyle(.bordered)
 
                 Button("Use Current App") {
-                    commands.captureTheoStandaloneApp(app.id)
+                    commands.captureGridStandaloneApp(app.id)
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -518,7 +518,7 @@ private struct TheoStandaloneAppRow: View {
 
                         Button("Clear Shortcut") {
                             errorMessage = nil
-                            theoStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
+                            gridStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
                             activeRecorderID = nil
                         }
                         .buttonStyle(.bordered)
@@ -529,13 +529,13 @@ private struct TheoStandaloneAppRow: View {
                 Spacer()
 
                 Button("Clear Target") {
-                    theoStore.clearStandaloneAppBinding(id: app.id)
+                    gridStore.clearStandaloneAppBinding(id: app.id)
                 }
                 .buttonStyle(.bordered)
                 .disabled(app.binding == nil)
 
                 Button("Remove") {
-                    theoStore.removeStandaloneApp(id: app.id)
+                    gridStore.removeStandaloneApp(id: app.id)
                 }
                 .buttonStyle(.borderless)
             }
@@ -586,7 +586,7 @@ private struct TheoStandaloneAppRow: View {
         }
 
         if keyCode == UInt32(kVK_Delete) || keyCode == UInt32(kVK_ForwardDelete) {
-            theoStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
+            gridStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
             errorMessage = nil
             activeRecorderID = nil
             return
@@ -597,21 +597,21 @@ private struct TheoStandaloneAppRow: View {
             return
         }
 
-        if let duplicateAction = HotkeyAction.activeActions(for: .theo).first(where: { action in
+        if let duplicateAction = HotkeyAction.activeActions(for: .grid).first(where: { action in
             settings.shortcut(for: action) == shortcut
         }) {
             errorMessage = "Already assigned to \(duplicateAction.title)."
             return
         }
 
-        if let duplicateApp = theoStore.standaloneApps.first(where: {
+        if let duplicateApp = gridStore.standaloneApps.first(where: {
             $0.id != app.id && $0.shortcut == shortcut
         }) {
             errorMessage = "Already assigned to \(duplicateApp.name)."
             return
         }
 
-        theoStore.setStandaloneAppShortcut(id: app.id, shortcut: shortcut)
+        gridStore.setStandaloneAppShortcut(id: app.id, shortcut: shortcut)
         errorMessage = nil
         activeRecorderID = nil
     }

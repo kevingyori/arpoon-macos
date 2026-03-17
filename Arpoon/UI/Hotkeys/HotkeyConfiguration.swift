@@ -6,7 +6,7 @@ struct HotkeyConfiguration: Equatable {
         let shortcut: HotkeyShortcut
     }
 
-    struct TheoStandaloneBinding: Equatable {
+    struct GridStandaloneBinding: Equatable {
         let appID: String
         let shortcut: HotkeyShortcut
     }
@@ -14,13 +14,13 @@ struct HotkeyConfiguration: Equatable {
     let scheme: HotkeyScheme
     let actionBindings: [ActionBinding]
     let dynamicShortcuts: [HotkeyShortcut]
-    let theoStandaloneBindings: [TheoStandaloneBinding]
+    let gridStandaloneBindings: [GridStandaloneBinding]
 
     init(
         scheme: HotkeyScheme,
         hotkeys: [HotkeyAction: HotkeyShortcut],
         dynamicShortcuts: [HotkeyShortcut],
-        theoStandaloneBindings: [TheoStandaloneBinding]
+        gridStandaloneBindings: [GridStandaloneBinding]
     ) {
         self.scheme = scheme
         actionBindings = HotkeyAction.activeActions(for: scheme)
@@ -35,10 +35,10 @@ struct HotkeyConfiguration: Equatable {
             self.dynamicShortcuts = []
         }
 
-        if scheme == .theo {
-            self.theoStandaloneBindings = theoStandaloneBindings.sorted { $0.appID < $1.appID }
+        if scheme == .grid {
+            self.gridStandaloneBindings = gridStandaloneBindings.sorted { $0.appID < $1.appID }
         } else {
-            self.theoStandaloneBindings = []
+            self.gridStandaloneBindings = []
         }
     }
 }

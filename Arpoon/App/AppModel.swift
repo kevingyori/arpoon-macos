@@ -9,8 +9,8 @@ final class AppModel: ObservableObject {
     let accessibilityPermissions: AccessibilityPermissionService
     let slotStore: SlotStore
     let dynamicHotkeyStore: DynamicHotkeyStore
-    let theoStore: TheoStore
-    let theoSession: TheoSession
+    let gridStore: GridStore
+    let gridSession: GridSession
     let commands: AppCommands
 
     private let commandCenter: AppCommandCenter
@@ -18,8 +18,8 @@ final class AppModel: ObservableObject {
     private lazy var settingsWindowController = SettingsWindowController(
         settings: settings,
         dynamicHotkeys: dynamicHotkeyStore,
-        theoStore: theoStore,
-        theoSession: theoSession,
+        gridStore: gridStore,
+        gridSession: gridSession,
         permissions: accessibilityPermissions,
         commands: commands
     )
@@ -38,9 +38,9 @@ final class AppModel: ObservableObject {
         slotStore = SlotStore(store: assignmentStore, labelPolicy: labelPolicy)
         let dynamicAssignmentStore = JSONDynamicHotkeyAssignmentStore()
         dynamicHotkeyStore = DynamicHotkeyStore(store: dynamicAssignmentStore, labelPolicy: labelPolicy)
-        let theoLayerStore = JSONTheoLayerStore()
-        theoStore = TheoStore(store: theoLayerStore, labelPolicy: labelPolicy)
-        theoSession = TheoSession()
+        let gridLayerStore = JSONGridLayerStore()
+        gridStore = GridStore(store: gridLayerStore, labelPolicy: labelPolicy)
+        gridSession = GridSession()
 
         let captureService = TargetCaptureService(
             appProvider: appProvider,
@@ -66,7 +66,7 @@ final class AppModel: ObservableObject {
             settings: settings,
             accessibilityPermissions: accessibilityPermissions,
             dynamicHotkeyStore: dynamicHotkeyStore,
-            theoStore: theoStore,
+            gridStore: gridStore,
             hotkeyController: hotkeyController,
             optionHoldHUDController: optionHoldHUDController
         )
@@ -75,8 +75,8 @@ final class AppModel: ObservableObject {
             accessibilityPermissions: accessibilityPermissions,
             slotStore: slotStore,
             dynamicHotkeyStore: dynamicHotkeyStore,
-            theoStore: theoStore,
-            theoSession: theoSession,
+            gridStore: gridStore,
+            gridSession: gridSession,
             labelPolicy: labelPolicy,
             captureService: captureService,
             resolutionService: resolutionService,
@@ -112,29 +112,29 @@ final class AppModel: ObservableObject {
             clearDynamicHotkey: { shortcut in
                 commandCenter.clearDynamicHotkey(shortcut: shortcut)
             },
-            jumpToTheoLayer: { position in
-                commandCenter.jumpToTheoLayer(position)
+            jumpToGridLayer: { position in
+                commandCenter.jumpToGridLayer(position)
             },
-            focusTheoTool: { tool in
-                commandCenter.focusTheoTool(tool)
+            focusGridTool: { tool in
+                commandCenter.focusGridTool(tool)
             },
-            cycleTheoTool: { tool in
-                commandCenter.cycleTheoTool(tool)
+            cycleGridTool: { tool in
+                commandCenter.cycleGridTool(tool)
             },
-            bindFocusedTargetToTheoCurrentContext: {
-                commandCenter.bindFocusedTargetToTheoCurrentContext()
+            bindFocusedTargetToGridCurrentContext: {
+                commandCenter.bindFocusedTargetToGridCurrentContext()
             },
-            captureTheoBinding: { layerID, tool, bindingID in
-                commandCenter.captureTheoBinding(layerID: layerID, tool: tool, bindingID: bindingID)
+            captureGridBinding: { layerID, tool, bindingID in
+                commandCenter.captureGridBinding(layerID: layerID, tool: tool, bindingID: bindingID)
             },
-            appendTheoBinding: { layerID, tool in
-                commandCenter.appendTheoBinding(layerID: layerID, tool: tool)
+            appendGridBinding: { layerID, tool in
+                commandCenter.appendGridBinding(layerID: layerID, tool: tool)
             },
-            jumpToTheoStandaloneApp: { appID in
-                commandCenter.jumpToTheoStandaloneApp(appID)
+            jumpToGridStandaloneApp: { appID in
+                commandCenter.jumpToGridStandaloneApp(appID)
             },
-            captureTheoStandaloneApp: { appID in
-                commandCenter.captureTheoStandaloneApp(appID)
+            captureGridStandaloneApp: { appID in
+                commandCenter.captureGridStandaloneApp(appID)
             },
             setHotkeyRecordingActive: { isActive in
                 runtimeCoordinator.setHotkeyRecordingActive(isActive)
@@ -177,38 +177,38 @@ final class AppModel: ObservableObject {
         runtimeCoordinator.onHideHUD = { [weak commandCenter] in
             commandCenter?.hideHUD()
         }
-        runtimeCoordinator.onTheoNextLayer = { [weak commandCenter] in
-            commandCenter?.moveToNextTheoLayer()
+        runtimeCoordinator.onGridNextLayer = { [weak commandCenter] in
+            commandCenter?.moveToNextGridLayer()
         }
-        runtimeCoordinator.onTheoPreviousLayer = { [weak commandCenter] in
-            commandCenter?.moveToPreviousTheoLayer()
+        runtimeCoordinator.onGridPreviousLayer = { [weak commandCenter] in
+            commandCenter?.moveToPreviousGridLayer()
         }
-        runtimeCoordinator.onTheoJumpLayer = { [weak commandCenter] slot in
-            commandCenter?.jumpToTheoLayer(slot)
+        runtimeCoordinator.onGridJumpLayer = { [weak commandCenter] slot in
+            commandCenter?.jumpToGridLayer(slot)
         }
-        runtimeCoordinator.onTheoFocusTerminal = { [weak commandCenter] in
-            commandCenter?.focusTheoTool(.terminal)
+        runtimeCoordinator.onGridFocusTerminal = { [weak commandCenter] in
+            commandCenter?.focusGridTool(.terminal)
         }
-        runtimeCoordinator.onTheoFocusIDE = { [weak commandCenter] in
-            commandCenter?.focusTheoTool(.ide)
+        runtimeCoordinator.onGridFocusIDE = { [weak commandCenter] in
+            commandCenter?.focusGridTool(.ide)
         }
-        runtimeCoordinator.onTheoFocusBrowser = { [weak commandCenter] in
-            commandCenter?.focusTheoTool(.browser)
+        runtimeCoordinator.onGridFocusBrowser = { [weak commandCenter] in
+            commandCenter?.focusGridTool(.browser)
         }
-        runtimeCoordinator.onTheoCycleTerminal = { [weak commandCenter] in
-            commandCenter?.cycleTheoTool(.terminal)
+        runtimeCoordinator.onGridCycleTerminal = { [weak commandCenter] in
+            commandCenter?.cycleGridTool(.terminal)
         }
-        runtimeCoordinator.onTheoCycleBrowser = { [weak commandCenter] in
-            commandCenter?.cycleTheoTool(.browser)
+        runtimeCoordinator.onGridCycleBrowser = { [weak commandCenter] in
+            commandCenter?.cycleGridTool(.browser)
         }
-        runtimeCoordinator.onTheoBindCurrent = { [weak commandCenter] in
-            commandCenter?.bindFocusedTargetToTheoCurrentContext()
+        runtimeCoordinator.onGridBindCurrent = { [weak commandCenter] in
+            commandCenter?.bindFocusedTargetToGridCurrentContext()
         }
-        runtimeCoordinator.onTheoShowHUD = { [weak commandCenter] in
-            commandCenter?.showTheoHUD()
+        runtimeCoordinator.onGridShowHUD = { [weak commandCenter] in
+            commandCenter?.showGridHUD()
         }
-        runtimeCoordinator.onTheoStandaloneApp = { [weak commandCenter] appID in
-            commandCenter?.jumpToTheoStandaloneApp(appID)
+        runtimeCoordinator.onGridStandaloneApp = { [weak commandCenter] appID in
+            commandCenter?.jumpToGridStandaloneApp(appID)
         }
 
         commandCenter.settingsWindowPresenterProvider = { [weak self] in
@@ -225,8 +225,8 @@ final class AppModel: ObservableObject {
         Task {
             await slotStore.load()
             await dynamicHotkeyStore.load()
-            await theoStore.load()
-            theoSession.sync(layers: theoStore.layers)
+            await gridStore.load()
+            gridSession.sync(layers: gridStore.layers)
             runtimeCoordinator.start()
         }
     }

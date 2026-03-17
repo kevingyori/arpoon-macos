@@ -1,13 +1,13 @@
 import Foundation
 
-final class JSONTheoLayerStore: TheoLayerStore {
+final class JSONGridLayerStore: GridLayerStore {
     private struct Payload: Codable {
-        let layers: [TheoLayer]
-        let standaloneApps: [TheoStandaloneApp]
+        let layers: [GridLayer]
+        let standaloneApps: [GridStandaloneApp]
     }
 
     private struct LegacyPayload: Codable {
-        let layers: [TheoLayer]
+        let layers: [GridLayer]
     }
 
     private let encoder: JSONEncoder
@@ -22,28 +22,28 @@ final class JSONTheoLayerStore: TheoLayerStore {
         decoder.dateDecodingStrategy = .iso8601
     }
 
-    func loadState() async throws -> TheoWorkspaceState {
+    func loadState() async throws -> GridWorkspaceState {
         let url = try fileURL()
         let decoder = self.decoder
         return try await Task.detached {
             guard FileManager.default.fileExists(atPath: url.path) else {
-                return TheoWorkspaceState()
+                return GridWorkspaceState()
             }
 
             let data = try Data(contentsOf: url)
             if let payload = try? decoder.decode(Payload.self, from: data) {
-                return TheoWorkspaceState(
+                return GridWorkspaceState(
                     layers: payload.layers,
                     standaloneApps: payload.standaloneApps
                 )
             }
 
             let legacy = try decoder.decode(LegacyPayload.self, from: data)
-            return TheoWorkspaceState(layers: legacy.layers)
+            return GridWorkspaceState(layers: legacy.layers)
         }.value
     }
 
-    func saveState(_ state: TheoWorkspaceState) async throws {
+    func saveState(_ state: GridWorkspaceState) async throws {
         let url = try fileURL()
         let encoder = self.encoder
         try await Task.detached {
