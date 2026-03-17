@@ -15,6 +15,15 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
             return "The Grid"
         }
     }
+
+    var symbolName: String {
+        switch self {
+        case .general:
+            return "slider.horizontal.3"
+        case .grid:
+            return "square.grid.3x3.fill"
+        }
+    }
 }
 
 struct SettingsView: View {
@@ -29,19 +38,43 @@ struct SettingsView: View {
     @State private var activeRecorderID: String?
     @State private var selectedPane: SettingsPane = .general
 
+    private let headerHorizontalPadding: CGFloat = 24
+    private let contentPadding: CGFloat = 24
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Picker("Pane", selection: $selectedPane) {
+            HStack(spacing: 10) {
                 ForEach(SettingsPane.allCases) { pane in
-                    Text(pane.title).tag(pane)
+                    Button {
+                        selectedPane = pane
+                    } label: {
+                        Label(pane.title, systemImage: pane.symbolName)
+                            .font(.system(size: 13, weight: selectedPane == pane ? .semibold : .medium))
+                            .foregroundStyle(selectedPane == pane ? .primary : .secondary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background {
+                                Capsule(style: .continuous)
+                                    .fill(selectedPane == pane ? Color.accentColor.opacity(0.16) : Color.clear)
+                            }
+                            .overlay {
+                                Capsule(style: .continuous)
+                                    .strokeBorder(
+                                        selectedPane == pane ? Color.accentColor.opacity(0.22) : Color.clear,
+                                        lineWidth: 1
+                                    )
+                            }
+                    }
+                    .buttonStyle(.plain)
                 }
+
+                Spacer(minLength: 0)
             }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
+            .padding(.horizontal, headerHorizontalPadding)
+            .padding(.top, 18)
+            .padding(.bottom, 12)
 
             Divider()
-                .padding(.top, 16)
 
             switch selectedPane {
             case .general:
@@ -55,7 +88,7 @@ struct SettingsView: View {
                             activeRecorderID: $activeRecorderID
                         )
                     }
-                    .padding(20)
+                    .padding(contentPadding)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             case .grid:
