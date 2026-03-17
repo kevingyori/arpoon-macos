@@ -21,6 +21,8 @@ struct HUDView: View {
                         entries: entries,
                         accessibilityTrusted: accessibilityTrusted
                     )
+                case .theoMinimap(let minimap):
+                    theoMinimapView(minimap)
                 }
             }
             .padding(containerPadding)
@@ -132,6 +134,106 @@ struct HUDView: View {
         }
     }
 
+    @ViewBuilder
+    private func theoMinimapView(_ minimap: TheoMinimapModel) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Theo")
+                    .font(.system(size: 17, weight: .semibold))
+
+                Text("Project layers and semantic tool columns.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(spacing: 12) {
+                Text("Project")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 120, alignment: .leading)
+
+                ForEach(TheoToolColumn.allCases) { tool in
+                    Label(tool.title, systemImage: tool.systemImage)
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+
+            ForEach(minimap.layers) { layer in
+                HStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(layer.color.swiftUIColor)
+                            .frame(width: 4, height: 26)
+
+                        Text(layer.name)
+                            .font(.system(size: 12.5, weight: layer.isCurrent ? .semibold : .medium))
+                            .lineLimit(1)
+                    }
+                    .frame(width: 120, alignment: .leading)
+
+                    ForEach(layer.columns) { column in
+                        theoColumnView(column, layerColor: layer.color, isCurrentLayer: layer.isCurrent)
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(layer.isCurrent ? layer.color.swiftUIColor.opacity(0.12) : Color.secondary.opacity(0.06))
+                )
+            }
+
+            if let hint = minimap.hint {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(hint.title)
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(color(for: hint.tone))
+
+                    if let detail = hint.detail, !detail.isEmpty {
+                        Text(detail)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.secondary.opacity(0.08))
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func theoColumnView(_ column: TheoMinimapColumn, layerColor: TheoLayerColor, isCurrentLayer: Bool) -> some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(column.isFilled ? layerColor.swiftUIColor : Color.secondary.opacity(0.22))
+                .frame(width: 7, height: 7)
+
+            Text(column.activeLabel ?? "empty")
+                .font(.system(size: 10.5, weight: column.isSelected ? .semibold : .medium))
+                .lineLimit(1)
+                .foregroundStyle(column.isFilled ? Color.primary : Color.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 7)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(column.isSelected ? layerColor.swiftUIColor.opacity(isCurrentLayer ? 0.22 : 0.16) : Color.secondary.opacity(0.08))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(column.isSelected ? layerColor.swiftUIColor.opacity(0.4) : Color.clear, lineWidth: 1)
+        )
+    }
+
     private var containerPadding: CGFloat {
         switch model {
         case .message:
@@ -139,6 +241,8 @@ struct HUDView: View {
         case .symbol:
             return 10
         case .overview:
+            return 18
+        case .theoMinimap:
             return 18
         }
     }
@@ -150,6 +254,8 @@ struct HUDView: View {
         case .symbol:
             return 23
         case .overview:
+            return 20
+        case .theoMinimap:
             return 20
         }
     }

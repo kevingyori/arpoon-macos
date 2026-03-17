@@ -9,6 +9,12 @@ struct AppCommands {
     let clearSlot: (Int) -> Void
     let jumpToDynamicHotkey: (HotkeyShortcut) -> Void
     let clearDynamicHotkey: (HotkeyShortcut) -> Void
+    let jumpToTheoLayer: (Int) -> Void
+    let focusTheoTool: (TheoToolColumn) -> Void
+    let cycleTheoTool: (TheoToolColumn) -> Void
+    let bindFocusedTargetToTheoCurrentContext: () -> Void
+    let captureTheoBinding: (String, TheoToolColumn, String?) -> Void
+    let appendTheoBinding: (String, TheoToolColumn) -> Void
     let setHotkeyRecordingActive: (Bool) -> Void
     let registerSettingsWindow: (NSWindow) -> Void
 }

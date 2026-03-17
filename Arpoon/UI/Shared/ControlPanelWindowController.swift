@@ -10,6 +10,8 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
                 dismissPopover: {},
                 slotStore: appModel.slotStore,
                 dynamicHotkeys: appModel.dynamicHotkeyStore,
+                theoStore: appModel.theoStore,
+                theoSession: appModel.theoSession,
                 settings: appModel.settings,
                 permissions: appModel.accessibilityPermissions
             )

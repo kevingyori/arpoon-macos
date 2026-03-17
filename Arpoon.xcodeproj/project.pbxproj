@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0E3C004D252001FD9A757442 /* JSONTheoLayerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C3FFBAA5C42F44029C12E4 /* JSONTheoLayerStore.swift */; };
 		13FA5D0D68BACCB7EB9F2CE7 /* TargetLabelPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88E5BAFB7FDE9C156B430C0 /* TargetLabelPolicy.swift */; };
 		16642193E70A6B5078EFB9F7 /* OptionHoldHUDController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB188FD750342ECE5E9FB625 /* OptionHoldHUDController.swift */; };
 		1812F9F59DAE5237B3AE36DB /* AppRuntimeAndCommandCenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B53C3057E7053F99C0F372 /* AppRuntimeAndCommandCenterTests.swift */; };
@@ -14,8 +15,10 @@
 		1B76314DCD041755C8D0C141 /* ArpoonStatusItemTemplate.svg in Resources */ = {isa = PBXBuildFile; fileRef = A1790640F3DF20A4E2B1CC22 /* ArpoonStatusItemTemplate.svg */; };
 		1F3184FAFE38CE167B1E3C75 /* FocusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D514ABF921ABA84FFB18328E /* FocusService.swift */; };
 		235E80AFBF670A194238F275 /* ArpoonStatusItemTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 68AEB03F38EF54D9513E4CF5 /* ArpoonStatusItemTemplate.pdf */; };
+		274654B2AB61AB8F180E0E02 /* TheoSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31B7C62A120A56E064A1F1B5 /* TheoSession.swift */; };
 		2A1D9B565730F496589D12BA /* HotkeyConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5A64B1C9DBA2FCC947296B /* HotkeyConfiguration.swift */; };
 		2B069C3A43608C4D04062093 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9D68426CD3319B171227149 /* AppDelegate.swift */; };
+		2B8F0FFC9A4852FED387EE92 /* TheoModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6917BF1BD42C0447741CA46C /* TheoModels.swift */; };
 		32039FD3926E4C1F86770852 /* ArpoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD456FB635AF6FDEE03A08B1 /* ArpoonApp.swift */; };
 		36EA5450D2470A1B5267FE50 /* JSONAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */; };
 		398CB1C61A08E2A0C176DB68 /* TargetResolutionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDE3692B52A17217431C179 /* TargetResolutionService.swift */; };
@@ -38,6 +41,9 @@
 		784B9C89CCC1217E264D8E0C /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3CF14EAC864AE6E4AD4C8D0 /* StatusItemController.swift */; };
 		7AE7207E8FF85A238A9278E7 /* SlotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB706286B84913284F0EB019 /* SlotStore.swift */; };
 		7DA7F576F8FC43B0E74227E0 /* TargetCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C8F4DD8F9D8025F85BB55B /* TargetCaptureService.swift */; };
+		83B0BF150C29B6223755CA76 /* TheoLayerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DECAC5AC06AD05635B9C05A /* TheoLayerStore.swift */; };
+		88C8B4ADC44277811F97146A /* TheoSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0508B7A9E3DF904FE88DA2D4 /* TheoSettingsPane.swift */; };
+		8B8060D540D720BD2876C6DA /* TheoUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3223E94DC58760DABD093613 /* TheoUI.swift */; };
 		96E4ABFD981DD96933A21FA8 /* HotkeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2363CE8C260D5533D61859B9 /* HotkeyController.swift */; };
 		9DE815D05021D4EE95B15C60 /* AppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AAD3A15928D6ADAB7AB19D4 /* AppIconView.swift */; };
 		9F856AE252B361E194FE7FBD /* SlotAssignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101332250301C279FAACB183 /* SlotAssignment.swift */; };
@@ -49,6 +55,7 @@
 		C9F8E99657C7478E15C9FAB8 /* AppCommandCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEDE966A407E8911B6157CF /* AppCommandCenter.swift */; };
 		CA927B35F5BAA71E7AF88408 /* HUDWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C4534FC70FA0A3E238FC7F /* HUDWindowController.swift */; };
 		CBA8168B90EDE12ED96E39E0 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06882F59C8D449A2357EF8D9 /* AppModel.swift */; };
+		CD8099BE7844D3A1162E0DAD /* TheoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1FCEA9E59CA9876CB77907 /* TheoStore.swift */; };
 		DCE1DBDAFA16133794336049 /* DynamicHotkeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8CCCF8D06F1AADFB5BAE6B /* DynamicHotkeyStore.swift */; };
 		E2C03D8AB7A05A073621DCCC /* AssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD964FEC1316C403F9B81B6 /* AssignmentStore.swift */; };
 		E2C83BB20C9D1C447F5524A3 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEC90199DF96151C50695B /* MenuBarView.swift */; };
@@ -70,6 +77,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0508B7A9E3DF904FE88DA2D4 /* TheoSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheoSettingsPane.swift; sourceTree = "<group>"; };
 		06882F59C8D449A2357EF8D9 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		0B687024CB78678408B17760 /* AccessibilityWindowProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityWindowProvider.swift; sourceTree = "<group>"; };
 		0CEDE966A407E8911B6157CF /* AppCommandCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCommandCenter.swift; sourceTree = "<group>"; };
@@ -80,6 +88,9 @@
 		20576B0C4205419731150495 /* TitleMatchPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleMatchPolicy.swift; sourceTree = "<group>"; };
 		2363CE8C260D5533D61859B9 /* HotkeyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyController.swift; sourceTree = "<group>"; };
 		2753ABB84682EBD417F90765 /* DynamicHotkeyAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyAssignmentStore.swift; sourceTree = "<group>"; };
+		2DECAC5AC06AD05635B9C05A /* TheoLayerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheoLayerStore.swift; sourceTree = "<group>"; };
+		31B7C62A120A56E064A1F1B5 /* TheoSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheoSession.swift; sourceTree = "<group>"; };
+		3223E94DC58760DABD093613 /* TheoUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheoUI.swift; sourceTree = "<group>"; };
 		3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONAssignmentStore.swift; sourceTree = "<group>"; };
 		41905081B395CDD394D2AA53 /* ControlPanelWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanelWindowController.swift; sourceTree = "<group>"; };
 		505037AA2B824883562E0B6A /* GlassKeyPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKeyPanel.swift; sourceTree = "<group>"; };
@@ -88,12 +99,15 @@
 		5E004B849CDF768E17F8D99F /* GlobalHotKeyCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyCenter.swift; sourceTree = "<group>"; };
 		61885319E1A75B41FA73D79F /* LiveWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWindow.swift; sourceTree = "<group>"; };
 		68AEB03F38EF54D9513E4CF5 /* ArpoonStatusItemTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = ArpoonStatusItemTemplate.pdf; sourceTree = "<group>"; };
+		6917BF1BD42C0447741CA46C /* TheoModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheoModels.swift; sourceTree = "<group>"; };
 		6BDE3692B52A17217431C179 /* TargetResolutionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetResolutionService.swift; sourceTree = "<group>"; };
 		6C8AA0643B06F6D2FE9EDD23 /* JSONDynamicHotkeyAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDynamicHotkeyAssignmentStore.swift; sourceTree = "<group>"; };
 		71600255BD0E1A41BF6BF8D2 /* AppRuntimeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRuntimeCoordinator.swift; sourceTree = "<group>"; };
+		7C1FCEA9E59CA9876CB77907 /* TheoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheoStore.swift; sourceTree = "<group>"; };
 		7C9E5DEE440535264242E9CC /* MacOSFocusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSFocusController.swift; sourceTree = "<group>"; };
 		82C4534FC70FA0A3E238FC7F /* HUDWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDWindowController.swift; sourceTree = "<group>"; };
 		83B6A6383ECCC5D131E07E2A /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
+		88C3FFBAA5C42F44029C12E4 /* JSONTheoLayerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONTheoLayerStore.swift; sourceTree = "<group>"; };
 		8DAEC90199DF96151C50695B /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		962EED9020BCE6D2782B239D /* ArpoonTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ArpoonTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9AAD3A15928D6ADAB7AB19D4 /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
@@ -143,6 +157,7 @@
 				F2742A046F84717DE703BC81 /* GlassPanelSurface.swift */,
 				8DAEC90199DF96151C50695B /* MenuBarView.swift */,
 				B3CF14EAC864AE6E4AD4C8D0 /* StatusItemController.swift */,
+				3223E94DC58760DABD093613 /* TheoUI.swift */,
 				A77998A385542B61F7DD8F33 /* WindowAccessor.swift */,
 			);
 			path = Shared;
@@ -193,6 +208,9 @@
 				BB706286B84913284F0EB019 /* SlotStore.swift */,
 				C3C8F4DD8F9D8025F85BB55B /* TargetCaptureService.swift */,
 				6BDE3692B52A17217431C179 /* TargetResolutionService.swift */,
+				2DECAC5AC06AD05635B9C05A /* TheoLayerStore.swift */,
+				31B7C62A120A56E064A1F1B5 /* TheoSession.swift */,
+				7C1FCEA9E59CA9876CB77907 /* TheoStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -222,6 +240,7 @@
 				FBBA207003F95549BF992D88 /* SettingsView.swift */,
 				11A707DE71C1F2EB1D638D3F /* SettingsWindowController.swift */,
 				EF01F9A38CAA7ACBA0710F27 /* ShortcutRecorderRow.swift */,
+				0508B7A9E3DF904FE88DA2D4 /* TheoSettingsPane.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -267,6 +286,7 @@
 				61885319E1A75B41FA73D79F /* LiveWindow.swift */,
 				101332250301C279FAACB183 /* SlotAssignment.swift */,
 				E59D5B08B432400809F73F6E /* Target.swift */,
+				6917BF1BD42C0447741CA46C /* TheoModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -287,6 +307,7 @@
 			children = (
 				3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */,
 				6C8AA0643B06F6D2FE9EDD23 /* JSONDynamicHotkeyAssignmentStore.swift */,
+				88C3FFBAA5C42F44029C12E4 /* JSONTheoLayerStore.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -374,7 +395,6 @@
 				};
 			};
 			buildConfigurationList = E8B7F7625C1F733C63173F4C /* Build configuration list for PBXProject "Arpoon" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -384,6 +404,7 @@
 			mainGroup = 00A640EAC6FA5D8745723F1A;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
+			productRefGroup = C58D499BDE76E6F2A70FD8F2 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -446,6 +467,7 @@
 				6354CD3B899625C4B3F076F0 /* HotkeyModels.swift in Sources */,
 				36EA5450D2470A1B5267FE50 /* JSONAssignmentStore.swift in Sources */,
 				F765943EAB72F590B73BCC44 /* JSONDynamicHotkeyAssignmentStore.swift in Sources */,
+				0E3C004D252001FD9A757442 /* JSONTheoLayerStore.swift in Sources */,
 				1A2D1D1658AB9CE857DCA79A /* LiveApp.swift in Sources */,
 				71D97E17941BCE9244AAD5E2 /* LiveWindow.swift in Sources */,
 				B874421BE5815DED193456F7 /* MacOSFocusController.swift in Sources */,
@@ -463,6 +485,12 @@
 				7DA7F576F8FC43B0E74227E0 /* TargetCaptureService.swift in Sources */,
 				13FA5D0D68BACCB7EB9F2CE7 /* TargetLabelPolicy.swift in Sources */,
 				398CB1C61A08E2A0C176DB68 /* TargetResolutionService.swift in Sources */,
+				83B0BF150C29B6223755CA76 /* TheoLayerStore.swift in Sources */,
+				2B8F0FFC9A4852FED387EE92 /* TheoModels.swift in Sources */,
+				274654B2AB61AB8F180E0E02 /* TheoSession.swift in Sources */,
+				88C8B4ADC44277811F97146A /* TheoSettingsPane.swift in Sources */,
+				CD8099BE7844D3A1162E0DAD /* TheoStore.swift in Sources */,
+				8B8060D540D720BD2876C6DA /* TheoUI.swift in Sources */,
 				FFA23E1801DBED48460E1D55 /* TitleMatchPolicy.swift in Sources */,
 				6B90D3954744FF1C41BB0198 /* WindowAccessor.swift in Sources */,
 			);

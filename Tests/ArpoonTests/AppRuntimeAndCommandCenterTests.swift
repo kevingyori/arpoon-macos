@@ -142,9 +142,74 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
     }
 
+    func testTheoStoreSeedsThreeLayersOnFirstLoad() async {
+        let store = makeTheoStore()
+
+        await store.load()
+
+        XCTAssertEqual(store.layers.count, 3)
+        XCTAssertEqual(store.layers.map(\.name), ["Project 1", "Project 2", "Project 3"])
+    }
+
+    func testTheoBindUsesCurrentLayerAndTool() async {
+        let theoStore = makeTheoStore()
+        let theoSession = TheoSession()
+        await theoStore.load()
+        theoSession.sync(layers: theoStore.layers)
+        _ = theoSession.selectTool(.browser)
+
+        let target = Target.app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
+        let capture = FakeCaptureService()
+        capture.outcome = CaptureOutcome(target: target, source: .appFallback, liveWindow: nil)
+
+        let commandCenter = makeCommandCenter(
+            theoStore: theoStore,
+            theoSession: theoSession,
+            captureService: capture
+        )
+
+        commandCenter.bindFocusedTargetToTheoCurrentContext()
+
+        XCTAssertEqual(theoStore.layers.first?.browserGroup.activeBinding?.target, target)
+        XCTAssertTrue(theoStore.layers.first?.terminalGroup.bindings.isEmpty ?? false)
+    }
+
+    func testTheoJumpUsesCurrentToolAcrossLayers() async throws {
+        let theoStore = makeTheoStore()
+        let theoSession = TheoSession()
+        await theoStore.load()
+
+        let browserOne = Target.app(AppTarget(bundleId: "com.example.browser.one", appName: "Browser One"))
+        let browserTwo = Target.app(AppTarget(bundleId: "com.example.browser.two", appName: "Browser Two"))
+        let firstLayerID = try XCTUnwrap(theoStore.layers.first?.id)
+        let secondLayerID = try XCTUnwrap(theoStore.layers.dropFirst().first?.id)
+        _ = theoStore.replaceBinding(layerID: firstLayerID, tool: .browser, bindingID: nil, target: browserOne)
+        _ = theoStore.replaceBinding(layerID: secondLayerID, tool: .browser, bindingID: nil, target: browserTwo)
+
+        theoSession.sync(layers: theoStore.layers)
+        _ = theoSession.selectTool(.browser)
+
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Browser Two", strategy: nil)
+
+        let commandCenter = makeCommandCenter(
+            theoStore: theoStore,
+            theoSession: theoSession,
+            focusService: focus
+        )
+
+        commandCenter.jumpToTheoLayer(2)
+
+        XCTAssertEqual(focus.focusedTargets.last, browserTwo)
+        XCTAssertEqual(theoSession.currentLayerID, secondLayerID)
+        XCTAssertEqual(theoSession.currentTool, .browser)
+    }
+
     private func makeCommandCenter(
         slotStore: SlotStore? = nil,
         dynamicStore: DynamicHotkeyStore? = nil,
+        theoStore: TheoStore? = nil,
+        theoSession: TheoSession? = nil,
         captureService: FakeCaptureService = FakeCaptureService(),
         resolutionService: FakeResolutionService = FakeResolutionService(),
         focusService: FakeFocusService = FakeFocusService()
@@ -154,6 +219,8 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             accessibilityPermissions: FakePermissionService(),
             slotStore: slotStore ?? makeSlotStore(),
             dynamicHotkeyStore: dynamicStore ?? makeDynamicHotkeyStore(),
+            theoStore: theoStore ?? makeTheoStore(),
+            theoSession: theoSession ?? TheoSession(),
             labelPolicy: TargetLabelPolicy(),
             captureService: captureService,
             resolutionService: resolutionService,
@@ -178,6 +245,13 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
     private func makeDynamicHotkeyStore() -> DynamicHotkeyStore {
         DynamicHotkeyStore(
             store: InMemoryDynamicHotkeyAssignmentStore(),
+            labelPolicy: TargetLabelPolicy()
+        )
+    }
+
+    private func makeTheoStore() -> TheoStore {
+        TheoStore(
+            store: InMemoryTheoLayerStore(),
             labelPolicy: TargetLabelPolicy()
         )
     }
@@ -207,6 +281,18 @@ private final class InMemoryDynamicHotkeyAssignmentStore: DynamicHotkeyAssignmen
     }
 }
 
+private final class InMemoryTheoLayerStore: TheoLayerStore {
+    private var layers: [TheoLayer] = []
+
+    func loadLayers() async throws -> [TheoLayer] {
+        layers
+    }
+
+    func saveLayers(_ layers: [TheoLayer]) async throws {
+        self.layers = layers
+    }
+}
+
 private final class FakePermissionService: AccessibilityPermissionMonitoring {
     var isTrusted = true
     private(set) var startMonitoringCount = 0
@@ -231,6 +317,16 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onFocusVisibleAppDown: (() -> Void)?
     var onAddDynamicHotkey: (() -> Void)?
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)?
+    var onTheoNextLayer: (() -> Void)?
+    var onTheoPreviousLayer: (() -> Void)?
+    var onTheoJumpLayer: ((Int) -> Void)?
+    var onTheoFocusTerminal: (() -> Void)?
+    var onTheoFocusIDE: (() -> Void)?
+    var onTheoFocusBrowser: (() -> Void)?
+    var onTheoCycleTerminal: (() -> Void)?
+    var onTheoCycleBrowser: (() -> Void)?
+    var onTheoBindCurrent: (() -> Void)?
+    var onTheoShowHUD: (() -> Void)?
 
     private(set) var configurations: [HotkeyConfiguration] = []
     private(set) var suspendCount = 0

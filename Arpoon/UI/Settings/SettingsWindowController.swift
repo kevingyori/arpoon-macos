@@ -8,6 +8,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     init(
         settings: SettingsStore,
         dynamicHotkeys: DynamicHotkeyStore,
+        theoStore: TheoStore,
+        theoSession: TheoSession,
         permissions: AccessibilityPermissionService,
         commands: AppCommands
     ) {
@@ -15,6 +17,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
             rootView: SettingsView(
                 settings: settings,
                 dynamicHotkeys: dynamicHotkeys,
+                theoStore: theoStore,
+                theoSession: theoSession,
                 permissions: permissions,
                 commands: commands
             )

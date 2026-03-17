@@ -7,6 +7,35 @@ enum HUDTone {
     case neutral
 }
 
+struct TheoHUDHint: Hashable {
+    let title: String
+    let detail: String?
+    let tone: HUDTone
+}
+
+struct TheoMinimapColumn: Identifiable, Hashable {
+    let tool: TheoToolColumn
+    let isSelected: Bool
+    let isFilled: Bool
+    let activeLabel: String?
+
+    var id: TheoToolColumn { tool }
+}
+
+struct TheoMinimapLayer: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let color: TheoLayerColor
+    let columns: [TheoMinimapColumn]
+    let isCurrent: Bool
+}
+
+struct TheoMinimapModel: Hashable {
+    let layers: [TheoMinimapLayer]
+    let movement: TheoSelectionChange
+    let hint: TheoHUDHint?
+}
+
 struct HUDOverviewEntry: Identifiable {
     let id: String
     let leadingText: String
@@ -31,6 +60,7 @@ enum HUDModel {
         entries: [HUDOverviewEntry],
         accessibilityTrusted: Bool
     )
+    case theoMinimap(TheoMinimapModel)
 
     var preferredWidth: Double {
         switch self {
@@ -39,6 +69,8 @@ enum HUDModel {
         case .symbol:
             return 46
         case .overview:
+            return 420
+        case .theoMinimap:
             return 420
         }
     }
@@ -53,6 +85,27 @@ enum HUDModel {
         case .overview(_, _, _, let entries, let accessibilityTrusted):
             let baseHeight = accessibilityTrusted ? 84.0 : 116.0
             return min(420, baseHeight + (Double(entries.count) * 36.0))
+        case .theoMinimap(let minimap):
+            let hintHeight = minimap.hint == nil ? 0.0 : 48.0
+            return min(440, 86.0 + (Double(minimap.layers.count) * 38.0) + hintHeight)
+        }
+    }
+
+    var animationOffset: (x: Double, y: Double) {
+        switch self {
+        case .theoMinimap(let minimap):
+            switch minimap.movement {
+            case .layer(let step):
+                return (0, step >= 0 ? -18 : 18)
+            case .tool(let from, let to):
+                let fromIndex = TheoToolColumn.allCases.firstIndex(of: from) ?? 0
+                let toIndex = TheoToolColumn.allCases.firstIndex(of: to) ?? 0
+                return (toIndex >= fromIndex ? -18 : 18, 0)
+            case .neutral:
+                return (0, 0)
+            }
+        default:
+            return (0, 0)
         }
     }
 }

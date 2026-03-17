@@ -12,6 +12,16 @@ protocol HotkeyControlling: AnyObject {
     var onFocusVisibleAppDown: (() -> Void)? { get set }
     var onAddDynamicHotkey: (() -> Void)? { get set }
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)? { get set }
+    var onTheoNextLayer: (() -> Void)? { get set }
+    var onTheoPreviousLayer: (() -> Void)? { get set }
+    var onTheoJumpLayer: ((Int) -> Void)? { get set }
+    var onTheoFocusTerminal: (() -> Void)? { get set }
+    var onTheoFocusIDE: (() -> Void)? { get set }
+    var onTheoFocusBrowser: (() -> Void)? { get set }
+    var onTheoCycleTerminal: (() -> Void)? { get set }
+    var onTheoCycleBrowser: (() -> Void)? { get set }
+    var onTheoBindCurrent: (() -> Void)? { get set }
+    var onTheoShowHUD: (() -> Void)? { get set }
 
     func apply(configuration: HotkeyConfiguration)
     func suspend()
@@ -29,6 +39,16 @@ final class HotkeyController: HotkeyControlling {
     var onFocusVisibleAppDown: (() -> Void)?
     var onAddDynamicHotkey: (() -> Void)?
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)?
+    var onTheoNextLayer: (() -> Void)?
+    var onTheoPreviousLayer: (() -> Void)?
+    var onTheoJumpLayer: ((Int) -> Void)?
+    var onTheoFocusTerminal: (() -> Void)?
+    var onTheoFocusIDE: (() -> Void)?
+    var onTheoFocusBrowser: (() -> Void)?
+    var onTheoCycleTerminal: (() -> Void)?
+    var onTheoCycleBrowser: (() -> Void)?
+    var onTheoBindCurrent: (() -> Void)?
+    var onTheoShowHUD: (() -> Void)?
 
     private let hotKeyCenter = GlobalHotKeyCenter.shared
     private var configuration: HotkeyConfiguration?
@@ -126,6 +146,28 @@ final class HotkeyController: HotkeyControlling {
             onFocusVisibleAppDown?()
         case .addDynamicHotkey:
             onAddDynamicHotkey?()
+        case .theoNextLayer:
+            onTheoNextLayer?()
+        case .theoPreviousLayer:
+            onTheoPreviousLayer?()
+        case .theoJumpLayer:
+            if let slot = action.slot {
+                onTheoJumpLayer?(slot)
+            }
+        case .theoFocusTerminal:
+            onTheoFocusTerminal?()
+        case .theoFocusIDE:
+            onTheoFocusIDE?()
+        case .theoFocusBrowser:
+            onTheoFocusBrowser?()
+        case .theoCycleTerminal:
+            onTheoCycleTerminal?()
+        case .theoCycleBrowser:
+            onTheoCycleBrowser?()
+        case .theoBindCurrent:
+            onTheoBindCurrent?()
+        case .theoShowHUD:
+            onTheoShowHUD?()
         }
     }
 }

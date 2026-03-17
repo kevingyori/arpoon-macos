@@ -14,6 +14,16 @@ final class AppRuntimeCoordinator {
     var onDynamicHotkey: ((HotkeyShortcut) -> Void)?
     var onShowHeldHUD: (() -> Void)?
     var onHideHUD: (() -> Void)?
+    var onTheoNextLayer: (() -> Void)?
+    var onTheoPreviousLayer: (() -> Void)?
+    var onTheoJumpLayer: ((Int) -> Void)?
+    var onTheoFocusTerminal: (() -> Void)?
+    var onTheoFocusIDE: (() -> Void)?
+    var onTheoFocusBrowser: (() -> Void)?
+    var onTheoCycleTerminal: (() -> Void)?
+    var onTheoCycleBrowser: (() -> Void)?
+    var onTheoBindCurrent: (() -> Void)?
+    var onTheoShowHUD: (() -> Void)?
 
     private let settings: SettingsStore
     private let accessibilityPermissions: any AccessibilityPermissionMonitoring
@@ -62,6 +72,36 @@ final class AppRuntimeCoordinator {
         }
         hotkeyController.onDynamicHotkey = { [weak self] shortcut in
             self?.onDynamicHotkey?(shortcut)
+        }
+        hotkeyController.onTheoNextLayer = { [weak self] in
+            self?.onTheoNextLayer?()
+        }
+        hotkeyController.onTheoPreviousLayer = { [weak self] in
+            self?.onTheoPreviousLayer?()
+        }
+        hotkeyController.onTheoJumpLayer = { [weak self] slot in
+            self?.onTheoJumpLayer?(slot)
+        }
+        hotkeyController.onTheoFocusTerminal = { [weak self] in
+            self?.onTheoFocusTerminal?()
+        }
+        hotkeyController.onTheoFocusIDE = { [weak self] in
+            self?.onTheoFocusIDE?()
+        }
+        hotkeyController.onTheoFocusBrowser = { [weak self] in
+            self?.onTheoFocusBrowser?()
+        }
+        hotkeyController.onTheoCycleTerminal = { [weak self] in
+            self?.onTheoCycleTerminal?()
+        }
+        hotkeyController.onTheoCycleBrowser = { [weak self] in
+            self?.onTheoCycleBrowser?()
+        }
+        hotkeyController.onTheoBindCurrent = { [weak self] in
+            self?.onTheoBindCurrent?()
+        }
+        hotkeyController.onTheoShowHUD = { [weak self] in
+            self?.onTheoShowHUD?()
         }
 
         optionHoldHUDController.onShow = { [weak self] in

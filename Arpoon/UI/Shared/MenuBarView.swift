@@ -6,6 +6,8 @@ struct MenuBarView: View {
 
     @ObservedObject var slotStore: SlotStore
     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
+    @ObservedObject var theoStore: TheoStore
+    @ObservedObject var theoSession: TheoSession
     @ObservedObject var settings: SettingsStore
     @ObservedObject var permissions: AccessibilityPermissionService
 
@@ -30,6 +32,9 @@ struct MenuBarView: View {
             footer
         }
         .frame(width: 372)
+        .onReceive(theoStore.$layers) { layers in
+            theoSession.sync(layers: layers)
+        }
     }
 
     private var header: some View {
@@ -85,18 +90,25 @@ struct MenuBarView: View {
 
     private var guidanceSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionLabel(settings.hotkeyScheme == .staticSlots ? "Binding" : "Dynamic Hotkeys")
+            sectionLabel(guidanceTitle)
 
-            if settings.hotkeyScheme == .staticSlots {
-                Text("Use your configured bind shortcuts while another app or window is focused. The menu bar popover is for reviewing, jumping, and clearing existing slots.")
+            switch settings.hotkeyScheme {
+            case .staticSlots:
+                Text("Use your configured bind shortcuts while another app or window is focused. The popover is for reviewing, jumping, and clearing existing slots.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
-            } else if let shortcut = settings.shortcut(for: HotkeyAction(kind: .addDynamicHotkey, slot: nil)) {
-                Text("Press \(shortcut.displayString) while the target is focused, then press the shortcut you want to assign.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("Set an add-hotkey shortcut in Settings before assigning dynamic bindings.")
+            case .dynamicWindows:
+                if let shortcut = settings.shortcut(for: HotkeyAction(kind: .addDynamicHotkey, slot: nil)) {
+                    Text("Press \(shortcut.displayString) while the target is focused, then press the shortcut you want to assign.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Set an add-hotkey shortcut in Settings before assigning dynamic bindings.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+            case .theo:
+                Text("Theo keeps project layers and tool columns stable. Move layers with Option + [ / ], focus tools with Option + T/I/B, and bind the focused target with Option + A.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -106,17 +118,20 @@ struct MenuBarView: View {
     private var assignmentsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                sectionLabel(settings.hotkeyScheme == .staticSlots ? "Current Slots" : "Current Hotkeys")
+                sectionLabel(assignmentsTitle)
                 Spacer()
                 Text("\(assignmentCount)")
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
 
-            if settings.hotkeyScheme == .staticSlots {
+            switch settings.hotkeyScheme {
+            case .staticSlots:
                 staticAssignments
-            } else {
+            case .dynamicWindows:
                 dynamicAssignments
+            case .theo:
+                theoAssignments
             }
         }
     }
@@ -192,9 +207,113 @@ struct MenuBarView: View {
         }
     }
 
+    @ViewBuilder
+    private var theoAssignments: some View {
+        if theoStore.layers.isEmpty {
+            emptyState("No Theo layers configured yet.")
+        } else {
+            VStack(alignment: .leading, spacing: 14) {
+                if let layer = currentTheoLayer {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(layer.color.swiftUIColor)
+                                .frame(width: 10, height: 10)
+
+                            Text(layer.name)
+                                .font(.system(size: 13, weight: .semibold))
+
+                            Spacer()
+
+                            Text(theoSession.currentTool.title)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        HStack(spacing: 8) {
+                            ForEach(TheoToolColumn.allCases) { tool in
+                                Button(tool.title) {
+                                    dismissPopover()
+                                    commands.focusTheoTool(tool)
+                                }
+                                .controlSize(.small)
+                                .theoToolButtonStyle(tool == theoSession.currentTool)
+                            }
+                        }
+
+                        HStack(spacing: 8) {
+                            Button("Cycle Terminal") {
+                                dismissPopover()
+                                commands.cycleTheoTool(.terminal)
+                            }
+                            .controlSize(.small)
+                            .buttonStyle(.bordered)
+
+                            Button("Cycle Browser") {
+                                dismissPopover()
+                                commands.cycleTheoTool(.browser)
+                            }
+                            .controlSize(.small)
+                            .buttonStyle(.bordered)
+
+                            Button("Bind Current") {
+                                dismissPopover()
+                                commands.bindFocusedTargetToTheoCurrentContext()
+                            }
+                            .controlSize(.small)
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                }
+
+                VStack(spacing: 0) {
+                    ForEach(Array(theoStore.layers.enumerated()), id: \.element.id) { index, layer in
+                        Button {
+                            dismissPopover()
+                            commands.jumpToTheoLayer(index + 1)
+                        } label: {
+                            HStack(spacing: 10) {
+                                Text("\(index + 1)")
+                                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                                    .frame(width: 22, height: 22)
+                                    .background(Circle().fill(Color.secondary.opacity(0.14)))
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 6) {
+                                        Circle()
+                                            .fill(layer.color.swiftUIColor)
+                                            .frame(width: 8, height: 8)
+
+                                        Text(layer.name)
+                                            .font(.system(size: 12.5, weight: layer.id == theoSession.currentLayerID ? .semibold : .medium))
+                                    }
+
+                                    Text(theoSummary(for: layer))
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
+                            .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.plain)
+
+                        if index < theoStore.layers.count - 1 {
+                            Divider()
+                                .padding(.leading, 34)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private var footer: some View {
         HStack {
-            Text("Jump with a row click.")
+            Text(settings.hotkeyScheme == .theo ? "Theo reflects the current layer and tool." : "Jump with a row click.")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
@@ -210,7 +329,45 @@ struct MenuBarView: View {
     }
 
     private var assignmentCount: Int {
-        settings.hotkeyScheme == .staticSlots ? slotStore.assignments.count : dynamicHotkeys.assignments.count
+        switch settings.hotkeyScheme {
+        case .staticSlots:
+            return slotStore.assignments.count
+        case .dynamicWindows:
+            return dynamicHotkeys.assignments.count
+        case .theo:
+            return theoStore.layers.count
+        }
+    }
+
+    private var guidanceTitle: String {
+        switch settings.hotkeyScheme {
+        case .staticSlots:
+            return "Binding"
+        case .dynamicWindows:
+            return "Dynamic Hotkeys"
+        case .theo:
+            return "Theo"
+        }
+    }
+
+    private var assignmentsTitle: String {
+        switch settings.hotkeyScheme {
+        case .staticSlots:
+            return "Current Slots"
+        case .dynamicWindows:
+            return "Current Hotkeys"
+        case .theo:
+            return "Project Layers"
+        }
+    }
+
+    private var currentTheoLayer: TheoLayer? {
+        if let currentLayerID = theoSession.currentLayerID,
+           let layer = theoStore.layer(id: currentLayerID) {
+            return layer
+        }
+
+        return theoStore.layers.first
     }
 
     private func sectionLabel(_ title: String) -> some View {
@@ -270,6 +427,24 @@ struct MenuBarView: View {
             .help("Clear")
         }
     }
+
+    private func theoSummary(for layer: TheoLayer) -> String {
+        TheoToolColumn.allCases.map { tool in
+            let label = layer.group(for: tool).activeBinding?.label ?? "empty"
+            return "\(tool.title): \(label)"
+        }
+        .joined(separator: " • ")
+    }
+}
+
+private extension View {
+    func theoToolButtonStyle(_ isCurrent: Bool) -> some View {
+        if isCurrent {
+            return AnyView(self.buttonStyle(.borderedProminent))
+        }
+
+        return AnyView(self.buttonStyle(.bordered))
+    }
 }
 
 private extension SlotAssignment {
@@ -290,17 +465,6 @@ private extension DynamicHotkeyAssignment {
             return target.bundleId
         case .window(let target):
             return target.bundleId
-        }
-    }
-}
-
-private extension Target {
-    var kindDescription: String {
-        switch self {
-        case .app:
-            return "App target"
-        case .window:
-            return "Window target"
         }
     }
 }

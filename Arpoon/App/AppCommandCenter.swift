@@ -61,6 +61,8 @@ final class AppCommandCenter {
     private let accessibilityPermissions: any AccessibilityPermissionMonitoring
     private let slotStore: SlotStore
     private let dynamicHotkeyStore: DynamicHotkeyStore
+    private let theoStore: TheoStore
+    private let theoSession: TheoSession
     private let labelPolicy: TargetLabelPolicy
     private let captureService: any TargetCapturing
     private let resolutionService: any TargetResolving
@@ -70,6 +72,7 @@ final class AppCommandCenter {
     private let setHotkeyRecordingActive: (Bool) -> Void
     private var liveSlotWindows: [Int: LiveWindow] = [:]
     private var liveDynamicWindows: [String: LiveWindow] = [:]
+    private var liveTheoWindows: [String: LiveWindow] = [:]
     private weak var settingsWindow: NSWindow?
     private var dynamicHotkeyCaptureController: DynamicHotkeyCaptureController?
 
@@ -78,6 +81,8 @@ final class AppCommandCenter {
         accessibilityPermissions: any AccessibilityPermissionMonitoring,
         slotStore: SlotStore,
         dynamicHotkeyStore: DynamicHotkeyStore,
+        theoStore: TheoStore,
+        theoSession: TheoSession,
         labelPolicy: TargetLabelPolicy,
         captureService: any TargetCapturing,
         resolutionService: any TargetResolving,
@@ -90,6 +95,8 @@ final class AppCommandCenter {
         self.accessibilityPermissions = accessibilityPermissions
         self.slotStore = slotStore
         self.dynamicHotkeyStore = dynamicHotkeyStore
+        self.theoStore = theoStore
+        self.theoSession = theoSession
         self.labelPolicy = labelPolicy
         self.captureService = captureService
         self.resolutionService = resolutionService
@@ -217,6 +224,158 @@ final class AppCommandCenter {
 
     func hideHUD() {
         hudController.hide()
+    }
+
+    func showTheoHUD() {
+        hudController.show(
+            model: theoMinimapModel(movement: .neutral, hint: nil),
+            timeout: settings.hudTimeout
+        )
+    }
+
+    func moveToNextTheoLayer() {
+        jumpBetweenTheoLayers(step: 1)
+    }
+
+    func moveToPreviousTheoLayer() {
+        jumpBetweenTheoLayers(step: -1)
+    }
+
+    func jumpToTheoLayer(_ position: Int) {
+        syncTheoSession()
+        guard let movement = theoSession.selectLayer(at: position, in: theoStore.layers) else {
+            showTheoHint(
+                title: "Project \(position) isn’t set up yet",
+                detail: "Add or reorder layers in Theo settings.",
+                tone: .warning,
+                movement: .neutral
+            )
+            return
+        }
+
+        focusCurrentTheoSelection(after: movement)
+    }
+
+    func focusTheoTool(_ tool: TheoToolColumn) {
+        syncTheoSession()
+        let movement = theoSession.selectTool(tool)
+        focusCurrentTheoSelection(after: movement)
+    }
+
+    func cycleTheoTool(_ tool: TheoToolColumn) {
+        syncTheoSession()
+        _ = theoSession.selectTool(tool)
+
+        guard let layer = currentTheoLayer() else {
+            showTheoHint(
+                title: "Theo has no projects yet",
+                detail: "Open Theo settings to add a project layer.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        let group = layer.group(for: tool)
+        guard !group.bindings.isEmpty else {
+            showTheoHint(
+                title: "\(tool.title) is empty in \(layer.name)",
+                detail: "Capture a target into this column first.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard tool.supportsMultipleBindings else {
+            focusTheoTool(tool)
+            return
+        }
+
+        let currentIndex = group.activeBinding.flatMap { active in
+            group.bindings.firstIndex(where: { $0.id == active.id })
+        } ?? 0
+        let nextIndex = (currentIndex + 1) % group.bindings.count
+        let binding = group.bindings[nextIndex]
+        theoStore.setActiveBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
+        presentTheoJump(binding: binding, movement: .neutral)
+    }
+
+    func bindFocusedTargetToTheoCurrentContext() {
+        syncTheoSession()
+        guard let layer = currentTheoLayer() else {
+            showTheoHint(
+                title: "Theo has no projects yet",
+                detail: "Open Theo settings to add a project layer.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        let tool = theoSession.currentTool
+        captureTheoBinding(layerID: layer.id, tool: tool, bindingID: layer.group(for: tool).activeBinding?.id)
+    }
+
+    func captureTheoBinding(layerID: String, tool: TheoToolColumn, bindingID: String?) {
+        guard let outcome = captureService.captureFocusedTarget() else {
+            showTheoHint(
+                title: "Couldn’t capture the current target",
+                detail: "Focus an app or window and try again.",
+                tone: .warning,
+                movement: .neutral
+            )
+            return
+        }
+
+        syncTheoSession()
+        _ = theoSession.selectLayer(id: layerID)
+        _ = theoSession.selectTool(tool)
+
+        guard let binding = theoStore.replaceBinding(layerID: layerID, tool: tool, bindingID: bindingID, target: outcome.target) else {
+            return
+        }
+
+        updateTheoLiveWindowCache(for: binding.id, liveWindow: outcome.liveWindow)
+        showTheoHint(
+            title: "\(binding.label) saved to \(tool.title)",
+            detail: theoCaptureDetail(for: outcome, tool: tool),
+            tone: .success,
+            movement: .neutral
+        )
+    }
+
+    func appendTheoBinding(layerID: String, tool: TheoToolColumn) {
+        guard tool.supportsMultipleBindings else {
+            captureTheoBinding(layerID: layerID, tool: tool, bindingID: nil)
+            return
+        }
+
+        guard let outcome = captureService.captureFocusedTarget() else {
+            showTheoHint(
+                title: "Couldn’t capture the current target",
+                detail: "Focus an app or window and try again.",
+                tone: .warning,
+                movement: .neutral
+            )
+            return
+        }
+
+        syncTheoSession()
+        _ = theoSession.selectLayer(id: layerID)
+        _ = theoSession.selectTool(tool)
+
+        guard let binding = theoStore.appendBinding(layerID: layerID, tool: tool, target: outcome.target) else {
+            return
+        }
+
+        updateTheoLiveWindowCache(for: binding.id, liveWindow: outcome.liveWindow)
+        showTheoHint(
+            title: "\(binding.label) added to \(tool.title)",
+            detail: theoCaptureDetail(for: outcome, tool: tool),
+            tone: .success,
+            movement: .neutral
+        )
     }
 
     func jumpToVisibleApp(toward direction: SpatialNavigationDirection) {
@@ -374,6 +533,10 @@ final class AppCommandCenter {
         liveDynamicWindows[shortcut.storageKey] != nil
     }
 
+    func hasCachedTheoWindow(for bindingID: String) -> Bool {
+        liveTheoWindows[bindingID] != nil
+    }
+
     private func presentJump<Assignment>(
         assignment: Assignment,
         liveWindow: LiveWindow?,
@@ -429,6 +592,32 @@ final class AppCommandCenter {
         }
     }
 
+    private func presentTheoJump(binding: TheoBinding, movement: TheoSelectionChange) {
+        if let liveWindow = liveTheoWindows[binding.id] {
+            let liveOutcome = focusService.focus(liveWindow: liveWindow, strategy: .liveSessionWindow)
+            if case .focused = liveOutcome {
+                showTheoHintForOutcome(liveOutcome, fallbackLabel: binding.label, movement: movement)
+                return
+            }
+        }
+
+        if let resolvedWindow = resolveLiveWindow(for: binding.target) {
+            updateTheoLiveWindowCache(for: binding.id, liveWindow: resolvedWindow.window)
+            let resolvedOutcome = focusService.focus(
+                liveWindow: resolvedWindow.window,
+                strategy: resolvedWindow.strategy
+            )
+
+            if case .focused = resolvedOutcome {
+                showTheoHintForOutcome(resolvedOutcome, fallbackLabel: binding.label, movement: movement)
+                return
+            }
+        }
+
+        let outcome = focusService.focus(target: binding.target)
+        showTheoHintForOutcome(outcome, fallbackLabel: binding.label, movement: movement)
+    }
+
     private func showMessage(title: String, detail: String?, tone: HUDTone) {
         hudController.show(
             model: .message(title: title, detail: detail, tone: tone),
@@ -465,6 +654,49 @@ final class AppCommandCenter {
             model: .message(title: title, detail: detail, tone: .success),
             timeout: settings.hudTimeout
         )
+    }
+
+    private func showTheoHint(
+        title: String,
+        detail: String?,
+        tone: HUDTone,
+        movement: TheoSelectionChange
+    ) {
+        hudController.show(
+            model: theoMinimapModel(
+                movement: movement,
+                hint: TheoHUDHint(title: title, detail: detail, tone: tone)
+            ),
+            timeout: settings.hudTimeout
+        )
+    }
+
+    private func showTheoHintForOutcome(
+        _ outcome: FocusOutcome,
+        fallbackLabel: String,
+        movement: TheoSelectionChange
+    ) {
+        switch outcome {
+        case .focused:
+            hudController.show(
+                model: theoMinimapModel(movement: movement, hint: nil),
+                timeout: settings.hudTimeout
+            )
+        case .launched(let appName):
+            showTheoHint(
+                title: "Launching \(appName)",
+                detail: "Theo opened the app because it wasn’t running.",
+                tone: .success,
+                movement: movement
+            )
+        case .unavailable(let reason):
+            showTheoHint(
+                title: "\(fallbackLabel) is unavailable",
+                detail: reason,
+                tone: .warning,
+                movement: movement
+            )
+        }
     }
 
     private func completeDynamicHotkeyCapture(
@@ -546,6 +778,8 @@ final class AppCommandCenter {
                 },
                 accessibilityTrusted: accessibilityPermissions.isTrusted
             )
+        case .theo:
+            return theoMinimapModel(movement: .neutral, hint: nil)
         }
     }
 
@@ -565,6 +799,14 @@ final class AppCommandCenter {
         }
     }
 
+    private func updateTheoLiveWindowCache(for bindingID: String, liveWindow: LiveWindow?) {
+        if let liveWindow {
+            liveTheoWindows[bindingID] = liveWindow
+        } else {
+            liveTheoWindows.removeValue(forKey: bindingID)
+        }
+    }
+
     private func resolveLiveWindow(for target: Target) -> (window: LiveWindow, strategy: ResolutionStrategy)? {
         guard case .window = target else {
             return nil
@@ -577,6 +819,96 @@ final class AppCommandCenter {
             return nil
         }
     }
+
+    private func syncTheoSession() {
+        theoSession.sync(layers: theoStore.layers)
+    }
+
+    private func currentTheoLayer() -> TheoLayer? {
+        syncTheoSession()
+        guard let currentLayerID = theoSession.currentLayerID else {
+            return nil
+        }
+
+        return theoStore.layer(id: currentLayerID)
+    }
+
+    private func jumpBetweenTheoLayers(step: Int) {
+        syncTheoSession()
+        guard let movement = theoSession.selectAdjacentLayer(step: step, in: theoStore.layers) else {
+            showTheoHint(
+                title: "Theo has no projects yet",
+                detail: "Open Theo settings to add a project layer.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        focusCurrentTheoSelection(after: movement)
+    }
+
+    private func focusCurrentTheoSelection(after movement: TheoSelectionChange) {
+        guard let layer = currentTheoLayer() else {
+            showTheoHint(
+                title: "Theo has no projects yet",
+                detail: "Open Theo settings to add a project layer.",
+                tone: .neutral,
+                movement: movement
+            )
+            return
+        }
+
+        let tool = theoSession.currentTool
+        let group = layer.group(for: tool)
+
+        guard let binding = group.activeBinding else {
+            showTheoHint(
+                title: "\(tool.title) is empty in \(layer.name)",
+                detail: "Capture a target into this column first.",
+                tone: .neutral,
+                movement: movement
+            )
+            return
+        }
+
+        presentTheoJump(binding: binding, movement: movement)
+    }
+
+    private func theoCaptureDetail(for outcome: CaptureOutcome, tool: TheoToolColumn) -> String {
+        switch outcome.source {
+        case .window:
+            return "Theo saved the focused window to \(tool.title.lowercased())."
+        case .appFallback:
+            return "Window capture wasn’t available, so Theo saved the app instead."
+        }
+    }
+
+    private func theoMinimapModel(movement: TheoSelectionChange, hint: TheoHUDHint?) -> HUDModel {
+        HUDModel.theoMinimap(
+            TheoMinimapModel(
+                layers: theoStore.layers.map { layer in
+                    TheoMinimapLayer(
+                        id: layer.id,
+                        name: layer.name,
+                        color: layer.color,
+                        columns: TheoToolColumn.allCases.map { column in
+                            let group = layer.group(for: column)
+                            return TheoMinimapColumn(
+                                tool: column,
+                                isSelected: theoSession.currentLayerID == layer.id && theoSession.currentTool == column,
+                                isFilled: !group.bindings.isEmpty,
+                                activeLabel: group.activeBinding?.label
+                            )
+                        },
+                        isCurrent: theoSession.currentLayerID == layer.id
+                    )
+                },
+                movement: movement,
+                hint: hint
+            )
+        )
+    }
 }
 
 private protocol AssignmentPresenting {
@@ -586,6 +918,7 @@ private protocol AssignmentPresenting {
 
 extension SlotAssignment: AssignmentPresenting {}
 extension DynamicHotkeyAssignment: AssignmentPresenting {}
+extension TheoBinding: AssignmentPresenting {}
 
 private extension SlotAssignment {
     var bundleId: String {
@@ -609,13 +942,13 @@ private extension DynamicHotkeyAssignment {
     }
 }
 
-private extension Target {
-    var kindDescription: String {
-        switch self {
-        case .app:
-            return "App target"
-        case .window:
-            return "Window target"
+private extension TheoBinding {
+    var bundleId: String {
+        switch target {
+        case .app(let target):
+            return target.bundleId
+        case .window(let target):
+            return target.bundleId
         }
     }
 }

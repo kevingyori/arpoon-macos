@@ -5,6 +5,7 @@ import Foundation
 enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
     case staticSlots
     case dynamicWindows
+    case theo
 
     var id: Self { self }
 
@@ -14,6 +15,8 @@ enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
             return "Static Slots"
         case .dynamicWindows:
             return "Dynamic Windows"
+        case .theo:
+            return "Theo"
         }
     }
 }
@@ -27,6 +30,16 @@ enum HotkeyActionKind: String, Codable {
     case focusVisibleAppUp
     case focusVisibleAppDown
     case addDynamicHotkey
+    case theoNextLayer
+    case theoPreviousLayer
+    case theoJumpLayer
+    case theoFocusTerminal
+    case theoFocusIDE
+    case theoFocusBrowser
+    case theoCycleTerminal
+    case theoCycleBrowser
+    case theoBindCurrent
+    case theoShowHUD
 }
 
 struct HotkeyAction: Hashable, Codable, Identifiable {
@@ -56,6 +69,26 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "focus-visible-app-down"
         case .addDynamicHotkey:
             return "add-dynamic-hotkey"
+        case .theoNextLayer:
+            return "theo-next-layer"
+        case .theoPreviousLayer:
+            return "theo-previous-layer"
+        case .theoJumpLayer:
+            return "theo-jump-\(slot ?? 0)"
+        case .theoFocusTerminal:
+            return "theo-focus-terminal"
+        case .theoFocusIDE:
+            return "theo-focus-ide"
+        case .theoFocusBrowser:
+            return "theo-focus-browser"
+        case .theoCycleTerminal:
+            return "theo-cycle-terminal"
+        case .theoCycleBrowser:
+            return "theo-cycle-browser"
+        case .theoBindCurrent:
+            return "theo-bind-current"
+        case .theoShowHUD:
+            return "theo-show-hud"
         }
     }
 
@@ -77,6 +110,26 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "Jump to Visible App Down"
         case .addDynamicHotkey:
             return "Add Hotkey for Focused Target"
+        case .theoNextLayer:
+            return "Theo Next Project"
+        case .theoPreviousLayer:
+            return "Theo Previous Project"
+        case .theoJumpLayer:
+            return "Theo Jump to Project \(slot ?? 0)"
+        case .theoFocusTerminal:
+            return "Theo Focus Terminal"
+        case .theoFocusIDE:
+            return "Theo Focus IDE"
+        case .theoFocusBrowser:
+            return "Theo Focus Browser"
+        case .theoCycleTerminal:
+            return "Theo Cycle Terminal"
+        case .theoCycleBrowser:
+            return "Theo Cycle Browser"
+        case .theoBindCurrent:
+            return "Theo Bind Focused Target"
+        case .theoShowHUD:
+            return "Theo Show Minimap"
         }
     }
 
@@ -122,6 +175,56 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
                 keyCode: UInt32(kVK_ANSI_A),
                 modifiers: UInt32(optionKey)
             )
+        case .theoNextLayer:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_RightBracket),
+                modifiers: UInt32(optionKey)
+            )
+        case .theoPreviousLayer:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_LeftBracket),
+                modifiers: UInt32(optionKey)
+            )
+        case .theoJumpLayer:
+            return HotkeyShortcut(
+                keyCode: Self.slotKeyCode(for: slot ?? 1),
+                modifiers: UInt32(optionKey)
+            )
+        case .theoFocusTerminal:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_T),
+                modifiers: UInt32(optionKey)
+            )
+        case .theoFocusIDE:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_I),
+                modifiers: UInt32(optionKey)
+            )
+        case .theoFocusBrowser:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_B),
+                modifiers: UInt32(optionKey)
+            )
+        case .theoCycleTerminal:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_T),
+                modifiers: UInt32(optionKey | shiftKey)
+            )
+        case .theoCycleBrowser:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_B),
+                modifiers: UInt32(optionKey | shiftKey)
+            )
+        case .theoBindCurrent:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_A),
+                modifiers: UInt32(optionKey)
+            )
+        case .theoShowHUD:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_Space),
+                modifiers: UInt32(optionKey)
+            )
         }
     }
 
@@ -137,8 +240,22 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
     static let dynamicActions = [
         HotkeyAction(kind: .addDynamicHotkey, slot: nil)
     ]
+    static let theoNavigationActions = [
+        HotkeyAction(kind: .theoPreviousLayer, slot: nil),
+        HotkeyAction(kind: .theoNextLayer, slot: nil)
+    ] + (1 ... 9).map { HotkeyAction(kind: .theoJumpLayer, slot: $0) }
+    static let theoToolActions = [
+        HotkeyAction(kind: .theoFocusTerminal, slot: nil),
+        HotkeyAction(kind: .theoFocusIDE, slot: nil),
+        HotkeyAction(kind: .theoFocusBrowser, slot: nil),
+        HotkeyAction(kind: .theoCycleTerminal, slot: nil),
+        HotkeyAction(kind: .theoCycleBrowser, slot: nil),
+        HotkeyAction(kind: .theoBindCurrent, slot: nil),
+        HotkeyAction(kind: .theoShowHUD, slot: nil)
+    ]
+    static let theoActions = theoNavigationActions + theoToolActions
     static let generalActions = commonActions + dynamicActions
-    static let allCases = jumpActions + bindActions + commonActions + dynamicActions
+    static let allCases = jumpActions + bindActions + commonActions + dynamicActions + theoActions
 
     static func activeActions(for scheme: HotkeyScheme) -> [HotkeyAction] {
         switch scheme {
@@ -146,6 +263,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return jumpActions + bindActions + commonActions
         case .dynamicWindows:
             return dynamicActions + commonActions
+        case .theo:
+            return theoActions
         }
     }
 
@@ -163,7 +282,31 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             self = HotkeyAction(kind: .focusVisibleAppDown, slot: nil)
         case "add-dynamic-hotkey":
             self = HotkeyAction(kind: .addDynamicHotkey, slot: nil)
+        case "theo-next-layer":
+            self = HotkeyAction(kind: .theoNextLayer, slot: nil)
+        case "theo-previous-layer":
+            self = HotkeyAction(kind: .theoPreviousLayer, slot: nil)
+        case "theo-focus-terminal":
+            self = HotkeyAction(kind: .theoFocusTerminal, slot: nil)
+        case "theo-focus-ide":
+            self = HotkeyAction(kind: .theoFocusIDE, slot: nil)
+        case "theo-focus-browser":
+            self = HotkeyAction(kind: .theoFocusBrowser, slot: nil)
+        case "theo-cycle-terminal":
+            self = HotkeyAction(kind: .theoCycleTerminal, slot: nil)
+        case "theo-cycle-browser":
+            self = HotkeyAction(kind: .theoCycleBrowser, slot: nil)
+        case "theo-bind-current":
+            self = HotkeyAction(kind: .theoBindCurrent, slot: nil)
+        case "theo-show-hud":
+            self = HotkeyAction(kind: .theoShowHUD, slot: nil)
         default:
+            if id.hasPrefix("theo-jump-"),
+               let slot = Int(id.replacingOccurrences(of: "theo-jump-", with: "")) {
+                self = HotkeyAction(kind: .theoJumpLayer, slot: slot)
+                return
+            }
+
             let components = id.split(separator: "-", maxSplits: 1).map(String.init)
             guard components.count == 2,
                   let slot = Int(components[1]) else {

@@ -69,32 +69,43 @@ final class HUDWindowController {
     private func present(model: HUDModel) {
         let width = model.preferredWidth
         let height = model.preferredHeight
+        let targetFrame = panelFrame(width: width, height: height)
+        let animationOffset = model.animationOffset
         panel.setContentSize(NSSize(width: width, height: height))
         panel.contentViewController = NSHostingController(rootView: HUDView(model: model))
-        positionPanel(width: width, height: height)
 
         if !visible {
+            panel.setFrame(
+                targetFrame.offsetBy(dx: animationOffset.x, dy: animationOffset.y),
+                display: true
+            )
             panel.alphaValue = 0
             panel.orderFrontRegardless()
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = 0.16
                 context.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 panel.animator().alphaValue = 1
+                panel.animator().setFrame(targetFrame, display: true)
             }
             visible = true
         } else {
             panel.alphaValue = 1
             panel.orderFrontRegardless()
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.14
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                panel.animator().setFrame(targetFrame, display: true)
+            }
         }
     }
 
-    private func positionPanel(width: Double, height: Double) {
+    private func panelFrame(width: Double, height: Double) -> NSRect {
         guard let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main else {
-            return
+            return NSRect(x: 0, y: 0, width: width, height: height)
         }
 
         let x = screen.frame.midX - (width / 2.0)
         let y = screen.frame.maxY - height - 80.0
-        panel.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
+        return NSRect(x: x, y: y, width: width, height: height)
     }
 }

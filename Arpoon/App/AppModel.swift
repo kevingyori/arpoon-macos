@@ -9,6 +9,8 @@ final class AppModel: ObservableObject {
     let accessibilityPermissions: AccessibilityPermissionService
     let slotStore: SlotStore
     let dynamicHotkeyStore: DynamicHotkeyStore
+    let theoStore: TheoStore
+    let theoSession: TheoSession
     let commands: AppCommands
 
     private let commandCenter: AppCommandCenter
@@ -16,6 +18,8 @@ final class AppModel: ObservableObject {
     private lazy var settingsWindowController = SettingsWindowController(
         settings: settings,
         dynamicHotkeys: dynamicHotkeyStore,
+        theoStore: theoStore,
+        theoSession: theoSession,
         permissions: accessibilityPermissions,
         commands: commands
     )
@@ -34,6 +38,9 @@ final class AppModel: ObservableObject {
         slotStore = SlotStore(store: assignmentStore, labelPolicy: labelPolicy)
         let dynamicAssignmentStore = JSONDynamicHotkeyAssignmentStore()
         dynamicHotkeyStore = DynamicHotkeyStore(store: dynamicAssignmentStore, labelPolicy: labelPolicy)
+        let theoLayerStore = JSONTheoLayerStore()
+        theoStore = TheoStore(store: theoLayerStore, labelPolicy: labelPolicy)
+        theoSession = TheoSession()
 
         let captureService = TargetCaptureService(
             appProvider: appProvider,
@@ -67,6 +74,8 @@ final class AppModel: ObservableObject {
             accessibilityPermissions: accessibilityPermissions,
             slotStore: slotStore,
             dynamicHotkeyStore: dynamicHotkeyStore,
+            theoStore: theoStore,
+            theoSession: theoSession,
             labelPolicy: labelPolicy,
             captureService: captureService,
             resolutionService: resolutionService,
@@ -101,6 +110,24 @@ final class AppModel: ObservableObject {
             },
             clearDynamicHotkey: { shortcut in
                 commandCenter.clearDynamicHotkey(shortcut: shortcut)
+            },
+            jumpToTheoLayer: { position in
+                commandCenter.jumpToTheoLayer(position)
+            },
+            focusTheoTool: { tool in
+                commandCenter.focusTheoTool(tool)
+            },
+            cycleTheoTool: { tool in
+                commandCenter.cycleTheoTool(tool)
+            },
+            bindFocusedTargetToTheoCurrentContext: {
+                commandCenter.bindFocusedTargetToTheoCurrentContext()
+            },
+            captureTheoBinding: { layerID, tool, bindingID in
+                commandCenter.captureTheoBinding(layerID: layerID, tool: tool, bindingID: bindingID)
+            },
+            appendTheoBinding: { layerID, tool in
+                commandCenter.appendTheoBinding(layerID: layerID, tool: tool)
             },
             setHotkeyRecordingActive: { isActive in
                 runtimeCoordinator.setHotkeyRecordingActive(isActive)
@@ -143,6 +170,36 @@ final class AppModel: ObservableObject {
         runtimeCoordinator.onHideHUD = { [weak commandCenter] in
             commandCenter?.hideHUD()
         }
+        runtimeCoordinator.onTheoNextLayer = { [weak commandCenter] in
+            commandCenter?.moveToNextTheoLayer()
+        }
+        runtimeCoordinator.onTheoPreviousLayer = { [weak commandCenter] in
+            commandCenter?.moveToPreviousTheoLayer()
+        }
+        runtimeCoordinator.onTheoJumpLayer = { [weak commandCenter] slot in
+            commandCenter?.jumpToTheoLayer(slot)
+        }
+        runtimeCoordinator.onTheoFocusTerminal = { [weak commandCenter] in
+            commandCenter?.focusTheoTool(.terminal)
+        }
+        runtimeCoordinator.onTheoFocusIDE = { [weak commandCenter] in
+            commandCenter?.focusTheoTool(.ide)
+        }
+        runtimeCoordinator.onTheoFocusBrowser = { [weak commandCenter] in
+            commandCenter?.focusTheoTool(.browser)
+        }
+        runtimeCoordinator.onTheoCycleTerminal = { [weak commandCenter] in
+            commandCenter?.cycleTheoTool(.terminal)
+        }
+        runtimeCoordinator.onTheoCycleBrowser = { [weak commandCenter] in
+            commandCenter?.cycleTheoTool(.browser)
+        }
+        runtimeCoordinator.onTheoBindCurrent = { [weak commandCenter] in
+            commandCenter?.bindFocusedTargetToTheoCurrentContext()
+        }
+        runtimeCoordinator.onTheoShowHUD = { [weak commandCenter] in
+            commandCenter?.showTheoHUD()
+        }
 
         commandCenter.settingsWindowPresenterProvider = { [weak self] in
             self?.settingsWindowController
@@ -158,6 +215,8 @@ final class AppModel: ObservableObject {
         Task {
             await slotStore.load()
             await dynamicHotkeyStore.load()
+            await theoStore.load()
+            theoSession.sync(layers: theoStore.layers)
             runtimeCoordinator.start()
         }
     }

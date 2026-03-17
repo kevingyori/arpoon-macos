@@ -9,6 +9,8 @@ struct ArpoonApp: App {
             SettingsView(
                 settings: AppModel.shared.settings,
                 dynamicHotkeys: AppModel.shared.dynamicHotkeyStore,
+                theoStore: AppModel.shared.theoStore,
+                theoSession: AppModel.shared.theoSession,
                 permissions: AppModel.shared.accessibilityPermissions,
                 commands: AppModel.shared.commands
             )
