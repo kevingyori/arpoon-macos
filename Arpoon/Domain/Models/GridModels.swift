@@ -35,15 +35,6 @@ struct GridToolColumn: Codable, Identifiable, Hashable {
 
     var title: String { name }
 
-    var supportsMultipleBindings: Bool {
-        switch kind {
-        case .terminal, .browser:
-            return true
-        case .ide, .custom:
-            return false
-        }
-    }
-
     var suggestedLabels: [String] {
         switch kind {
         case .terminal:
@@ -288,24 +279,14 @@ struct GridLayer: Codable, Identifiable, Hashable {
 
 extension GridToolGroup {
     var activeBinding: GridBinding? {
-        if let activeBindingID,
-           let binding = bindings.first(where: { $0.id == activeBindingID }) {
-            return binding
-        }
-
         return bindings.first
     }
 
     func normalized() -> GridToolGroup {
-        let normalizedActiveID: String?
-
-        if let activeBindingID,
-           bindings.contains(where: { $0.id == activeBindingID }) {
-            normalizedActiveID = activeBindingID
-        } else {
-            normalizedActiveID = bindings.first?.id
-        }
-
-        return GridToolGroup(bindings: bindings, activeBindingID: normalizedActiveID)
+        let normalizedBindings = Array(bindings.prefix(1))
+        return GridToolGroup(
+            bindings: normalizedBindings,
+            activeBindingID: normalizedBindings.first?.id
+        )
     }
 }

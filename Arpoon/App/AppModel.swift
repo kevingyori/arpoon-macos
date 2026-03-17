@@ -118,17 +118,11 @@ final class AppModel: ObservableObject {
             focusGridTool: { tool in
                 commandCenter.focusGridTool(tool)
             },
-            cycleGridTool: { tool in
-                commandCenter.cycleGridTool(tool)
-            },
             bindFocusedTargetToGridCurrentContext: {
                 commandCenter.bindFocusedTargetToGridCurrentContext()
             },
             captureGridBinding: { layerID, tool, bindingID in
                 commandCenter.captureGridBinding(layerID: layerID, tool: tool, bindingID: bindingID)
-            },
-            appendGridBinding: { layerID, tool in
-                commandCenter.appendGridBinding(layerID: layerID, tool: tool)
             },
             jumpToGridStandaloneApp: { appID in
                 commandCenter.jumpToGridStandaloneApp(appID)
@@ -194,12 +188,6 @@ final class AppModel: ObservableObject {
         }
         runtimeCoordinator.onGridFocusBrowser = { [weak commandCenter] in
             commandCenter?.focusGridTool(.browser)
-        }
-        runtimeCoordinator.onGridCycleTerminal = { [weak commandCenter] in
-            commandCenter?.cycleGridTool(.terminal)
-        }
-        runtimeCoordinator.onGridCycleBrowser = { [weak commandCenter] in
-            commandCenter?.cycleGridTool(.browser)
         }
         runtimeCoordinator.onGridBindCurrent = { [weak commandCenter] in
             commandCenter?.bindFocusedTargetToGridCurrentContext()

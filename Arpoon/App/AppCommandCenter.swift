@@ -262,45 +262,6 @@ final class AppCommandCenter {
         focusCurrentGridSelection(after: movement)
     }
 
-    func cycleGridTool(_ tool: GridToolColumn) {
-        syncGridSession()
-        _ = gridSession.selectTool(tool, in: currentGridLayer())
-
-        guard let layer = currentGridLayer() else {
-            showGridHint(
-                title: "The Grid has no projects yet",
-                detail: "Open The Grid settings to add a project layer.",
-                tone: .neutral,
-                movement: .neutral
-            )
-            return
-        }
-
-        let group = layer.group(for: tool)
-        guard !group.bindings.isEmpty else {
-            showGridHint(
-                title: "\(tool.title) is empty in \(layer.name)",
-                detail: "Capture a target into this column first.",
-                tone: .neutral,
-                movement: .neutral
-            )
-            return
-        }
-
-        guard tool.supportsMultipleBindings else {
-            focusGridTool(tool)
-            return
-        }
-
-        let currentIndex = group.activeBinding.flatMap { active in
-            group.bindings.firstIndex(where: { $0.id == active.id })
-        } ?? 0
-        let nextIndex = (currentIndex + 1) % group.bindings.count
-        let binding = group.bindings[nextIndex]
-        gridStore.setActiveBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
-        presentGridJump(binding: binding, movement: .neutral)
-    }
-
     func bindFocusedTargetToGridCurrentContext() {
         syncGridSession()
         guard let layer = currentGridLayer() else {
@@ -347,39 +308,6 @@ final class AppCommandCenter {
         updateGridLiveWindowCache(for: binding.id, liveWindow: outcome.liveWindow)
         showGridHint(
             title: "\(binding.label) saved to \(tool.title)",
-            detail: gridCaptureDetail(for: outcome, tool: tool),
-            tone: .success,
-            movement: .neutral
-        )
-    }
-
-    func appendGridBinding(layerID: String, tool: GridToolColumn) {
-        guard tool.supportsMultipleBindings else {
-            captureGridBinding(layerID: layerID, tool: tool, bindingID: nil)
-            return
-        }
-
-        guard let outcome = captureService.captureFocusedTarget() else {
-            showGridHint(
-                title: "Couldn’t capture the current target",
-                detail: "Focus an app or window and try again.",
-                tone: .warning,
-                movement: .neutral
-            )
-            return
-        }
-
-        syncGridSession()
-        _ = gridSession.selectLayer(id: layerID)
-        _ = gridSession.selectTool(tool, in: gridStore.layer(id: layerID))
-
-        guard let binding = gridStore.appendBinding(layerID: layerID, tool: tool, target: outcome.target) else {
-            return
-        }
-
-        updateGridLiveWindowCache(for: binding.id, liveWindow: outcome.liveWindow)
-        showGridHint(
-            title: "\(binding.label) added to \(tool.title)",
             detail: gridCaptureDetail(for: outcome, tool: tool),
             tone: .success,
             movement: .neutral

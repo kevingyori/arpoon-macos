@@ -11,10 +11,8 @@ struct AppCommands {
     let clearDynamicHotkey: (HotkeyShortcut) -> Void
     let jumpToGridLayer: (Int) -> Void
     let focusGridTool: (GridToolColumn) -> Void
-    let cycleGridTool: (GridToolColumn) -> Void
     let bindFocusedTargetToGridCurrentContext: () -> Void
     let captureGridBinding: (String, GridToolColumn, String?) -> Void
-    let appendGridBinding: (String, GridToolColumn) -> Void
     let jumpToGridStandaloneApp: (String) -> Void
     let captureGridStandaloneApp: (String) -> Void
     let setHotkeyRecordingActive: (Bool) -> Void

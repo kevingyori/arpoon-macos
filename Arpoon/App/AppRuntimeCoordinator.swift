@@ -20,8 +20,6 @@ final class AppRuntimeCoordinator {
     var onGridFocusTerminal: (() -> Void)?
     var onGridFocusIDE: (() -> Void)?
     var onGridFocusBrowser: (() -> Void)?
-    var onGridCycleTerminal: (() -> Void)?
-    var onGridCycleBrowser: (() -> Void)?
     var onGridBindCurrent: (() -> Void)?
     var onGridShowHUD: (() -> Void)?
     var onGridStandaloneApp: ((String) -> Void)?
@@ -94,12 +92,6 @@ final class AppRuntimeCoordinator {
         }
         hotkeyController.onGridFocusBrowser = { [weak self] in
             self?.onGridFocusBrowser?()
-        }
-        hotkeyController.onGridCycleTerminal = { [weak self] in
-            self?.onGridCycleTerminal?()
-        }
-        hotkeyController.onGridCycleBrowser = { [weak self] in
-            self?.onGridCycleBrowser?()
         }
         hotkeyController.onGridBindCurrent = { [weak self] in
             self?.onGridBindCurrent?()

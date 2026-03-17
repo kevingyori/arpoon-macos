@@ -248,7 +248,7 @@ struct GridSettingsPane: View {
                         Label(tool.title, systemImage: tool.iconSymbol)
                             .font(.system(size: 13, weight: .semibold))
 
-                        Text(tool.supportsMultipleBindings ? "Ordered subtargets with one active binding." : "Single target for this layer.")
+                        Text("Single target for this layer.")
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
@@ -267,13 +267,6 @@ struct GridSettingsPane: View {
                         commands.captureGridBinding(layer.id, tool, group.activeBinding?.id)
                     }
                     .buttonStyle(.borderedProminent)
-
-                    if tool.supportsMultipleBindings {
-                        Button("Append Subtarget") {
-                            commands.appendGridBinding(layer.id, tool)
-                        }
-                        .buttonStyle(.bordered)
-                    }
 
                     if tool.kind == .custom {
                         Button("Remove") {
@@ -322,75 +315,39 @@ struct GridSettingsPane: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 10)
-                } else {
-                    ForEach(Array(group.bindings.enumerated()), id: \.element.id) { index, binding in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(spacing: 10) {
-                                Button {
-                                    gridStore.setActiveBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
-                                } label: {
-                                    Image(systemName: group.activeBinding?.id == binding.id ? "largecircle.fill.circle" : "circle")
-                                }
-                                .buttonStyle(.plain)
-
-                                TextField(
-                                    "Label",
-                                    text: Binding(
-                                        get: { binding.label },
-                                        set: { gridStore.renameBinding(layerID: layer.id, tool: tool, bindingID: binding.id, label: $0) }
-                                    )
+                } else if let binding = group.activeBinding {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 10) {
+                            TextField(
+                                "Label",
+                                text: Binding(
+                                    get: { binding.label },
+                                    set: { gridStore.renameBinding(layerID: layer.id, tool: tool, bindingID: binding.id, label: $0) }
                                 )
-                                .textFieldStyle(.roundedBorder)
+                            )
+                            .textFieldStyle(.roundedBorder)
 
-                                Button("Replace") {
-                                    commands.captureGridBinding(layer.id, tool, binding.id)
-                                }
-                                .buttonStyle(.bordered)
-
-                                Button("Clear") {
-                                    gridStore.clearBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
-                                }
-                                .buttonStyle(.borderless)
+                            Button("Replace") {
+                                commands.captureGridBinding(layer.id, tool, binding.id)
                             }
+                            .buttonStyle(.bordered)
 
-                            HStack(spacing: 8) {
-                                Text(binding.target.kindDescription)
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.secondary)
-
-                                if tool.supportsMultipleBindings {
-                                    Spacer()
-
-                                    Button {
-                                        gridStore.moveBindings(
-                                            layerID: layer.id,
-                                            tool: tool,
-                                            fromOffsets: IndexSet(integer: index),
-                                            toOffset: max(index - 1, 0)
-                                        )
-                                    } label: {
-                                        Image(systemName: "arrow.up")
-                                    }
-                                    .buttonStyle(.borderless)
-                                    .disabled(index == 0)
-
-                                    Button {
-                                        gridStore.moveBindings(
-                                            layerID: layer.id,
-                                            tool: tool,
-                                            fromOffsets: IndexSet(integer: index),
-                                            toOffset: min(index + 2, group.bindings.count)
-                                        )
-                                    } label: {
-                                        Image(systemName: "arrow.down")
-                                    }
-                                    .buttonStyle(.borderless)
-                                    .disabled(index == group.bindings.count - 1)
-                                }
+                            Button("Clear") {
+                                gridStore.clearBinding(layerID: layer.id, tool: tool, bindingID: binding.id)
                             }
+                            .buttonStyle(.borderless)
                         }
-                        .padding(.vertical, 4)
+
+                        Text(binding.target.kindDescription)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
                     }
+                    .padding(.vertical, 4)
+                } else {
+                    Text("No active target available.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .padding(.vertical, 4)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

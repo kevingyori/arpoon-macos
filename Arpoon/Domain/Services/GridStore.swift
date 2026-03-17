@@ -192,12 +192,6 @@ final class GridStore: ObservableObject {
         return updatedApp
     }
 
-    func setActiveBinding(layerID: String, tool: GridToolColumn, bindingID: String?) {
-        updateToolGroup(layerID: layerID, tool: tool) { group in
-            GridToolGroup(bindings: group.bindings, activeBindingID: bindingID).normalized()
-        }
-    }
-
     func renameBinding(layerID: String, tool: GridToolColumn, bindingID: String, label: String) {
         updateToolGroup(layerID: layerID, tool: tool) { group in
             let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -208,7 +202,7 @@ final class GridStore: ObservableObject {
 
                 return GridBinding(
                     id: binding.id,
-                    label: trimmed.isEmpty ? defaultLabel(for: tool, group: group) : trimmed,
+                    label: trimmed.isEmpty ? defaultLabel(for: tool) : trimmed,
                     target: binding.target,
                     archetypeHint: binding.archetypeHint,
                     createdAt: binding.createdAt,
@@ -216,114 +210,35 @@ final class GridStore: ObservableObject {
                 )
             }
 
-            return GridToolGroup(bindings: bindings, activeBindingID: group.activeBindingID).normalized()
-        }
-    }
-
-    func moveBindings(layerID: String, tool: GridToolColumn, fromOffsets: IndexSet, toOffset: Int) {
-        guard tool.supportsMultipleBindings else {
-            return
-        }
-
-        updateToolGroup(layerID: layerID, tool: tool) { group in
-            var bindings = group.bindings
-            bindings.move(fromOffsets: fromOffsets, toOffset: toOffset)
-            return GridToolGroup(bindings: bindings, activeBindingID: group.activeBindingID).normalized()
+            return GridToolGroup(bindings: bindings).normalized()
         }
     }
 
     func clearBinding(layerID: String, tool: GridToolColumn, bindingID: String) {
         updateToolGroup(layerID: layerID, tool: tool) { group in
             let bindings = group.bindings.filter { $0.id != bindingID }
-            let activeBindingID = group.activeBindingID == bindingID ? nil : group.activeBindingID
-            return GridToolGroup(bindings: bindings, activeBindingID: activeBindingID).normalized()
+            return GridToolGroup(bindings: bindings).normalized()
         }
-    }
-
-    func appendBinding(layerID: String, tool: GridToolColumn, target: Target) -> GridBinding? {
-        guard tool.supportsMultipleBindings else {
-            return replaceBinding(layerID: layerID, tool: tool, bindingID: nil, target: target)
-        }
-
-        var createdBinding: GridBinding?
-        updateToolGroup(layerID: layerID, tool: tool) { group in
-            let label = defaultLabel(for: tool, group: group)
-            let binding = GridBinding(
-                id: UUID().uuidString,
-                label: labelPolicy.label(for: target),
-                target: target,
-                archetypeHint: label,
-                createdAt: .now,
-                updatedAt: .now
-            )
-            createdBinding = binding
-            return GridToolGroup(bindings: group.bindings + [binding], activeBindingID: binding.id).normalized()
-        }
-        return createdBinding
     }
 
     @discardableResult
     func replaceBinding(layerID: String, tool: GridToolColumn, bindingID: String?, target: Target) -> GridBinding? {
         var updatedBinding: GridBinding?
         updateToolGroup(layerID: layerID, tool: tool) { group in
-            if !tool.supportsMultipleBindings {
-                let existing = group.bindings.first
-                let label = existing?.archetypeHint ?? tool.suggestedLabels.first ?? labelPolicy.label(for: target)
-                let binding = GridBinding(
-                    id: existing?.id ?? UUID().uuidString,
-                    label: labelPolicy.label(for: target),
-                    target: target,
-                    archetypeHint: label,
-                    createdAt: existing?.createdAt ?? .now,
-                    updatedAt: .now
-                )
-                updatedBinding = binding
-                return GridToolGroup(bindings: [binding], activeBindingID: binding.id).normalized()
-            }
-
-            if let resolvedBinding = resolveBinding(bindingID: bindingID, in: group) {
-                let bindings = group.bindings.map { binding in
-                    guard binding.id == resolvedBinding.id else {
-                        return binding
-                    }
-
-                    let updated = GridBinding(
-                        id: binding.id,
-                        label: labelPolicy.label(for: target),
-                        target: target,
-                        archetypeHint: binding.archetypeHint,
-                        createdAt: binding.createdAt,
-                        updatedAt: .now
-                    )
-                    updatedBinding = updated
-                    return updated
-                }
-
-                return GridToolGroup(bindings: bindings, activeBindingID: resolvedBinding.id).normalized()
-            }
-
-            let label = defaultLabel(for: tool, group: group)
+            let existing = group.bindings.first
+            let label = existing?.archetypeHint ?? defaultLabel(for: tool)
             let binding = GridBinding(
-                id: UUID().uuidString,
+                id: existing?.id ?? bindingID ?? UUID().uuidString,
                 label: labelPolicy.label(for: target),
                 target: target,
                 archetypeHint: label,
-                createdAt: .now,
+                createdAt: existing?.createdAt ?? .now,
                 updatedAt: .now
             )
             updatedBinding = binding
-            return GridToolGroup(bindings: group.bindings + [binding], activeBindingID: binding.id).normalized()
+            return GridToolGroup(bindings: [binding]).normalized()
         }
         return updatedBinding
-    }
-
-    private func resolveBinding(bindingID: String?, in group: GridToolGroup) -> GridBinding? {
-        if let bindingID,
-           let binding = group.bindings.first(where: { $0.id == bindingID }) {
-            return binding
-        }
-
-        return group.activeBinding
     }
 
     private func updateLayer(id: String, transform: (GridLayer) -> GridLayer) {
@@ -369,13 +284,8 @@ final class GridStore: ObservableObject {
         persist()
     }
 
-    private func defaultLabel(for tool: GridToolColumn, group: GridToolGroup) -> String {
-        let taken = Set(group.bindings.compactMap(\.archetypeHint))
-        if let label = tool.suggestedLabels.first(where: { !taken.contains($0) }) {
-            return label
-        }
-
-        return "\(tool.title.lowercased()) \(group.bindings.count + 1)"
+    private func defaultLabel(for tool: GridToolColumn) -> String {
+        tool.suggestedLabels.first ?? tool.title.lowercased()
     }
 
     private static func seedLayers() -> [GridLayer] {
@@ -410,16 +320,7 @@ final class GridStore: ObservableObject {
 
             for column in columns {
                 let existing = layer.groups[column.id] ?? GridToolGroup()
-                let normalizedGroup: GridToolGroup
-                if column.supportsMultipleBindings {
-                    normalizedGroup = existing.normalized()
-                } else {
-                    normalizedGroup = GridToolGroup(
-                        bindings: Array(existing.bindings.prefix(1)),
-                        activeBindingID: existing.activeBindingID
-                    ).normalized()
-                }
-                groups[column.id] = normalizedGroup
+                groups[column.id] = existing.normalized()
             }
 
             return GridLayer(

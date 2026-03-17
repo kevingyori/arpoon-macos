@@ -381,8 +381,6 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onGridFocusTerminal: (() -> Void)?
     var onGridFocusIDE: (() -> Void)?
     var onGridFocusBrowser: (() -> Void)?
-    var onGridCycleTerminal: (() -> Void)?
-    var onGridCycleBrowser: (() -> Void)?
     var onGridBindCurrent: (() -> Void)?
     var onGridShowHUD: (() -> Void)?
     var onGridStandaloneApp: ((String) -> Void)?

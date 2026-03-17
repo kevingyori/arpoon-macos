@@ -249,15 +249,6 @@ struct MenuBarView: View {
                         }
 
                         HStack(spacing: 8) {
-                            if let currentTool = currentGridColumn(in: layer), currentTool.supportsMultipleBindings {
-                                Button("Cycle \(currentTool.title)") {
-                                    dismissPopover()
-                                    commands.cycleGridTool(currentTool)
-                                }
-                                .controlSize(.small)
-                                .buttonStyle(.bordered)
-                            }
-
                             Button("Bind Current") {
                                 dismissPopover()
                                 commands.bindFocusedTargetToGridCurrentContext()
