@@ -140,13 +140,20 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
     static let generalActions = commonActions + dynamicActions
     static let allCases = jumpActions + bindActions + commonActions + dynamicActions
 
+    private static let staticSlotsActiveActions = jumpActions + bindActions + commonActions
+    private static let dynamicWindowsActiveActions = dynamicActions + commonActions
+
     static func activeActions(for scheme: HotkeyScheme) -> [HotkeyAction] {
         switch scheme {
         case .staticSlots:
-            return jumpActions + bindActions + commonActions
+            return staticSlotsActiveActions
         case .dynamicWindows:
-            return dynamicActions + commonActions
+            return dynamicWindowsActiveActions
         }
+    }
+
+    func isActive(in scheme: HotkeyScheme) -> Bool {
+        Self.activeActions(for: scheme).contains(self)
     }
 
     init?(id: String) {
