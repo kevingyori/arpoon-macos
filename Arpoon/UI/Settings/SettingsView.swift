@@ -23,6 +23,7 @@ struct SettingsView: View {
     @ObservedObject var gridStore: GridStore
     @ObservedObject var gridSession: GridSession
     @ObservedObject var permissions: AccessibilityPermissionService
+    let availableWindowsProvider: @MainActor () -> [LiveWindow]
     let commands: AppCommands
 
     @State private var activeRecorderID: String?
@@ -58,7 +59,7 @@ struct SettingsView: View {
                             settings: settings,
                             gridStore: gridStore,
                             gridSession: gridSession,
-                            commands: commands,
+                            availableWindowsProvider: availableWindowsProvider,
                             activeRecorderID: $activeRecorderID
                         )
                     }

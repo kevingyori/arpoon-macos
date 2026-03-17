@@ -11,6 +11,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         gridStore: GridStore,
         gridSession: GridSession,
         permissions: AccessibilityPermissionService,
+        availableWindowsProvider: @escaping @MainActor () -> [LiveWindow],
         commands: AppCommands
     ) {
         let hostingController = NSHostingController(
@@ -20,6 +21,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
                 gridStore: gridStore,
                 gridSession: gridSession,
                 permissions: permissions,
+                availableWindowsProvider: availableWindowsProvider,
                 commands: commands
             )
         )

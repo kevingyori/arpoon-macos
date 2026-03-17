@@ -11,6 +11,7 @@ final class AppModel: ObservableObject {
     let dynamicHotkeyStore: DynamicHotkeyStore
     let gridStore: GridStore
     let gridSession: GridSession
+    let availableWindowsProvider: @MainActor () -> [LiveWindow]
     let commands: AppCommands
 
     private let commandCenter: AppCommandCenter
@@ -21,6 +22,7 @@ final class AppModel: ObservableObject {
         gridStore: gridStore,
         gridSession: gridSession,
         permissions: accessibilityPermissions,
+        availableWindowsProvider: availableWindowsProvider,
         commands: commands
     )
     private var started = false
@@ -32,6 +34,9 @@ final class AppModel: ObservableObject {
         let labelPolicy = TargetLabelPolicy()
         let appProvider = RunningAppProvider()
         let windowProvider = AccessibilityWindowProvider(permissionService: accessibilityPermissions)
+        availableWindowsProvider = {
+            windowProvider.allWindows()
+        }
         let focusController = MacOSFocusController(permissionService: accessibilityPermissions)
 
         let assignmentStore = JSONAssignmentStore()

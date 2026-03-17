@@ -12,13 +12,14 @@ struct GridSettingsPane: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var gridStore: GridStore
     @ObservedObject var gridSession: GridSession
-    let commands: AppCommands
+    let availableWindowsProvider: @MainActor () -> [LiveWindow]
     @Binding var activeRecorderID: String?
 
     @State private var selectedLayerID: String?
     @State private var inspectorSelection: GridInspectorSelection?
     @State private var draggedLayerID: String?
     @State private var draggedColumnID: String?
+    @State private var availableWindows: [LiveWindow] = []
 
     private let rowLabelWidth: CGFloat = 190
     private let cellWidth: CGFloat = 176
@@ -33,6 +34,7 @@ struct GridSettingsPane: View {
             }
         }
         .onAppear {
+            refreshAvailableWindows()
             syncLayerSelection(with: gridStore.layers)
             syncInspectorSelection()
         }
@@ -43,6 +45,9 @@ struct GridSettingsPane: View {
         }
         .onReceive(gridStore.$standaloneApps) { _ in
             syncInspectorSelection()
+        }
+        .onChange(of: inspectorSelection) { _, _ in
+            refreshAvailableWindows()
         }
     }
 
@@ -458,7 +463,8 @@ struct GridSettingsPane: View {
                         app: app,
                         settings: settings,
                         gridStore: gridStore,
-                        commands: commands,
+                        availableWindows: availableWindows,
+                        refreshAvailableWindows: refreshAvailableWindows,
                         activeRecorderID: $activeRecorderID
                     )
                 } else {
@@ -604,18 +610,29 @@ struct GridSettingsPane: View {
                         .foregroundStyle(.secondary)
                 }
 
-                HStack(spacing: 8) {
-                    Button("Use Current Target") {
-                        commands.captureGridBinding(layer.id, column, binding?.id)
+                GridAvailableWindowPicker(
+                    windows: availableWindows,
+                    selectedWindowID: selectedWindowID(for: binding?.target),
+                    currentTargetDescription: nil,
+                    usageTags: { window in
+                        usageTags(for: window, excludingSlot: (layer.id, column.id))
+                    },
+                    onRefresh: refreshAvailableWindows,
+                    onSelect: { window in
+                        _ = gridStore.replaceBinding(
+                            layerID: layer.id,
+                            tool: column,
+                            bindingID: binding?.id,
+                            target: target(for: window)
+                        )
                     }
-                    .buttonStyle(.borderedProminent)
+                )
 
-                    if let binding {
-                        Button("Clear") {
-                            gridStore.clearBinding(layerID: layer.id, tool: column, bindingID: binding.id)
-                        }
-                        .buttonStyle(.bordered)
+                if let binding {
+                    Button("Clear") {
+                        gridStore.clearBinding(layerID: layer.id, tool: column, bindingID: binding.id)
                     }
+                    .buttonStyle(.bordered)
                 }
             }
         }
@@ -669,6 +686,10 @@ struct GridSettingsPane: View {
                 return
             }
         }
+    }
+
+    private func refreshAvailableWindows() {
+        availableWindows = availableWindowsProvider()
     }
 
     private func layerIndex(_ layer: GridLayer) -> Int? {
@@ -750,6 +771,75 @@ struct GridSettingsPane: View {
     private func defaultBindingLabel(for binding: GridBinding) -> String {
         TargetLabelPolicy().label(for: binding.target)
     }
+
+    private func selectedWindowID(for target: Target?) -> String? {
+        guard let target else {
+            return nil
+        }
+
+        return availableWindows.first(where: { matchesWindow($0, target: target, matchAppTargets: false) })?.id
+    }
+
+    private func usageTags(for window: LiveWindow, excludingSlot: (layerID: String, columnID: String)? = nil) -> [String] {
+        var tags: [String] = []
+
+        for layer in gridStore.layers {
+            for column in layer.columns {
+                guard let binding = layer.group(for: column).activeBinding,
+                      matchesWindow(window, target: binding.target, matchAppTargets: false) else {
+                    continue
+                }
+
+                if let excludingSlot,
+                   excludingSlot.layerID == layer.id,
+                   excludingSlot.columnID == column.id {
+                    continue
+                }
+
+                tags.append("\(layer.name) · \(column.title)")
+            }
+        }
+
+        for app in gridStore.standaloneApps {
+            guard let binding = app.binding,
+                  matchesWindow(window, target: binding.target, matchAppTargets: true) else {
+                continue
+            }
+
+            tags.append("Standalone · \(app.name)")
+        }
+
+        return tags
+    }
+
+    private func matchesWindow(_ window: LiveWindow, target: Target, matchAppTargets: Bool) -> Bool {
+        switch target {
+        case .app(let appTarget):
+            return matchAppTargets && appTarget.bundleId == window.bundleId
+        case .window(let windowTarget):
+            if let liveID = window.windowID, let targetID = windowTarget.windowID {
+                return liveID == targetID && window.bundleId == windowTarget.bundleId
+            }
+
+            return window.bundleId == windowTarget.bundleId &&
+                window.title == windowTarget.windowTitle &&
+                window.frame == windowTarget.frame
+        }
+    }
+
+    private func target(for window: LiveWindow) -> Target {
+        .window(
+            WindowTarget(
+                bundleId: window.bundleId,
+                appName: window.appName,
+                pid: window.pid,
+                windowTitle: window.title,
+                windowID: window.windowID,
+                frame: window.frame,
+                capturedAt: .now
+            )
+        )
+    }
 }
 
 private struct GridStandaloneAppInspector: View {
@@ -757,7 +847,8 @@ private struct GridStandaloneAppInspector: View {
 
     @ObservedObject var settings: SettingsStore
     @ObservedObject var gridStore: GridStore
-    let commands: AppCommands
+    let availableWindows: [LiveWindow]
+    let refreshAvailableWindows: @MainActor () -> Void
     @Binding var activeRecorderID: String?
 
     @State private var eventMonitor: Any?
@@ -782,6 +873,48 @@ private struct GridStandaloneAppInspector: View {
     private var defaultAppName: String {
         let index = gridStore.standaloneApps.firstIndex(where: { $0.id == app.id }) ?? 0
         return "Standalone App \(index + 1)"
+    }
+
+    private func usageTags(for window: LiveWindow, excludingStandaloneAppID: String) -> [String] {
+        var tags: [String] = []
+
+        for layer in gridStore.layers {
+            for column in layer.columns {
+                guard let binding = layer.group(for: column).activeBinding,
+                      matchesWindow(window, target: binding.target, matchAppTargets: false) else {
+                    continue
+                }
+
+                tags.append("\(layer.name) · \(column.title)")
+            }
+        }
+
+        for standaloneApp in gridStore.standaloneApps {
+            guard standaloneApp.id != excludingStandaloneAppID,
+                  let binding = standaloneApp.binding,
+                  matchesWindow(window, target: binding.target, matchAppTargets: true) else {
+                continue
+            }
+
+            tags.append("Standalone · \(standaloneApp.name)")
+        }
+
+        return tags
+    }
+
+    private func matchesWindow(_ window: LiveWindow, target: Target, matchAppTargets: Bool) -> Bool {
+        switch target {
+        case .app(let appTarget):
+            return matchAppTargets && appTarget.bundleId == window.bundleId
+        case .window(let windowTarget):
+            if let liveID = window.windowID, let targetID = windowTarget.windowID {
+                return liveID == targetID && window.bundleId == windowTarget.bundleId
+            }
+
+            return window.bundleId == windowTarget.bundleId &&
+                window.title == windowTarget.windowTitle &&
+                window.frame == windowTarget.frame
+        }
     }
 
     var body: some View {
@@ -875,18 +1008,32 @@ private struct GridStandaloneAppInspector: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
 
-                HStack(spacing: 8) {
-                    Button("Use Current App") {
-                        commands.captureGridStandaloneApp(app.id)
+                GridAvailableWindowPicker(
+                    windows: availableWindows,
+                    selectedWindowID: nil,
+                    currentTargetDescription: nil,
+                    usageTags: { window in
+                        usageTags(for: window, excludingStandaloneAppID: app.id)
+                    },
+                    onRefresh: refreshAvailableWindows,
+                    onSelect: { window in
+                        _ = gridStore.replaceStandaloneAppBinding(
+                            id: app.id,
+                            target: .app(
+                                AppTarget(
+                                    bundleId: window.bundleId,
+                                    appName: window.appName
+                                )
+                            )
+                        )
                     }
-                    .buttonStyle(.borderedProminent)
+                )
 
-                    Button("Clear Target") {
-                        gridStore.clearStandaloneAppBinding(id: app.id)
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(app.binding == nil)
+                Button("Clear Target") {
+                    gridStore.clearStandaloneAppBinding(id: app.id)
                 }
+                .buttonStyle(.bordered)
+                .disabled(app.binding == nil)
             }
 
             Button("Remove Standalone App") {
@@ -968,6 +1115,99 @@ private struct GridStandaloneAppInspector: View {
         gridStore.setStandaloneAppShortcut(id: app.id, shortcut: shortcut)
         errorMessage = nil
         activeRecorderID = nil
+    }
+}
+
+private struct GridAvailableWindowPicker: View {
+    let windows: [LiveWindow]
+    let selectedWindowID: String?
+    let currentTargetDescription: String?
+    let usageTags: (LiveWindow) -> [String]
+    let onRefresh: @MainActor () -> Void
+    let onSelect: (LiveWindow) -> Void
+
+    private let labelPolicy = TargetLabelPolicy()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Available Windows")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Button {
+                    onRefresh()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .buttonStyle(.borderless)
+                .help("Refresh available windows")
+            }
+
+            if windows.isEmpty {
+                Text("No live windows are available right now.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            } else {
+                Picker(
+                    "Available Windows",
+                    selection: Binding(
+                        get: { selectedWindowID ?? "" },
+                        set: { newValue in
+                            guard let window = windows.first(where: { $0.id == newValue }) else {
+                                return
+                            }
+
+                            onSelect(window)
+                        }
+                    )
+                ) {
+                    Text("Select a window")
+                        .tag("")
+
+                    ForEach(windows) { window in
+                        windowOption(window)
+                            .tag(window.id)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+
+            if let currentTargetDescription, !currentTargetDescription.isEmpty {
+                Text(currentTargetDescription)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func windowOption(_ window: LiveWindow) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(labelPolicy.label(for: window))
+                .font(.system(size: 12, weight: .medium))
+                .lineLimit(1)
+
+            if !usageTags(window).isEmpty {
+                HStack(spacing: 4) {
+                    ForEach(Array(usageTags(window).prefix(2)), id: \.self) { tag in
+                        Text(tag)
+                            .font(.system(size: 9.5, weight: .medium))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Capsule().fill(Color.secondary.opacity(0.12)))
+                    }
+
+                    if usageTags(window).count > 2 {
+                        Text("+\(usageTags(window).count - 2)")
+                            .font(.system(size: 9.5, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
     }
 }
 
