@@ -230,7 +230,7 @@ final class AppCommandCenter {
     func showGridHUD() {
         hudController.show(
             model: gridMinimapModel(movement: .neutral, hint: nil),
-            timeout: settings.hudTimeout
+            timeout: gridHUDTimeout
         )
     }
 
@@ -781,7 +781,7 @@ final class AppCommandCenter {
                 movement: movement,
                 hint: GridHUDHint(title: title, detail: detail, tone: tone)
             ),
-            timeout: settings.hudTimeout
+            timeout: gridHUDTimeout
         )
     }
 
@@ -794,7 +794,7 @@ final class AppCommandCenter {
         case .focused:
             hudController.show(
                 model: gridMinimapModel(movement: movement, hint: nil),
-                timeout: settings.hudTimeout
+                timeout: gridHUDTimeout
             )
         case .launched(let appName):
             showGridHint(
@@ -811,6 +811,10 @@ final class AppCommandCenter {
                 movement: movement
             )
         }
+    }
+
+    private var gridHUDTimeout: Double {
+        min(1.1, max(0.6, settings.hudTimeout * 0.45))
     }
 
     private func completeDynamicHotkeyCapture(

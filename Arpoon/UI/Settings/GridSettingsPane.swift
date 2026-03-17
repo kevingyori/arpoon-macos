@@ -133,8 +133,10 @@ struct GridSettingsPane: View {
         }
     }
 
+    @ViewBuilder
     private func columnHeaderCell(_ column: GridToolColumn) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let selectedLayerHasColumn = selectedLayer?.column(id: column.id) != nil
+        let baseCell = VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: column.iconSymbol)
                     .font(.system(size: 12, weight: .semibold))
@@ -156,20 +158,26 @@ struct GridSettingsPane: View {
             stroke: headerColumnStroke(for: column),
             cornerRadius: 14
         )
-        .onDrag {
-            draggedColumnID = column.id
-            return NSItemProvider(object: NSString(string: column.id))
+        
+        if selectedLayerHasColumn {
+            baseCell
+                .onDrag {
+                    draggedColumnID = column.id
+                    return NSItemProvider(object: NSString(string: column.id))
+                }
+                .onDrop(
+                    of: [UTType.text],
+                    delegate: GridColumnDropDelegate(
+                        targetColumnID: column.id,
+                        layerID: selectedLayer?.id ?? "",
+                        columns: selectedLayer?.columns ?? visibleColumns,
+                        draggedColumnID: $draggedColumnID,
+                        gridStore: gridStore
+                    )
+                )
+        } else {
+            baseCell
         }
-        .onDrop(
-            of: [UTType.text],
-            delegate: GridColumnDropDelegate(
-                targetColumnID: column.id,
-                layerID: selectedLayer?.id ?? "",
-                columns: visibleColumns,
-                draggedColumnID: $draggedColumnID,
-                gridStore: gridStore
-            )
-        )
     }
 
     private func layerRow(_ layer: GridLayer) -> some View {
@@ -648,7 +656,23 @@ struct GridSettingsPane: View {
     }
 
     private var visibleColumns: [GridToolColumn] {
-        selectedLayer?.columns ?? GridToolColumn.defaults
+        let allLayers = gridStore.layers
+        guard !allLayers.isEmpty else {
+            return GridToolColumn.defaults
+        }
+
+        let anchorColumns = selectedLayer?.columns ?? allLayers.first?.columns ?? GridToolColumn.defaults
+        var ordered = anchorColumns
+        var seenIDs = Set(anchorColumns.map(\.id))
+
+        for layer in allLayers {
+            for column in layer.columns where !seenIDs.contains(column.id) {
+                ordered.append(column)
+                seenIDs.insert(column.id)
+            }
+        }
+
+        return ordered
     }
 
     private func matchingDefaultColumn(for template: GridToolColumn, in layer: GridLayer) -> GridToolColumn? {
