@@ -70,31 +70,31 @@ final class HUDWindowController {
         let width = model.preferredWidth
         let height = model.preferredHeight
         let targetFrame = panelFrame(width: width, height: height)
-        let animationOffset = model.animationOffset
         panel.setContentSize(NSSize(width: width, height: height))
         panel.contentViewController = NSHostingController(rootView: HUDView(model: model))
 
         if !visible {
-            panel.setFrame(
-                targetFrame.offsetBy(dx: animationOffset.x, dy: animationOffset.y),
-                display: true
-            )
+            panel.setFrame(targetFrame, display: true)
             panel.alphaValue = 0
             panel.orderFrontRegardless()
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.16
                 context.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 panel.animator().alphaValue = 1
-                panel.animator().setFrame(targetFrame, display: true)
             }
             visible = true
         } else {
             panel.alphaValue = 1
             panel.orderFrontRegardless()
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.14
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                panel.animator().setFrame(targetFrame, display: true)
+            switch model {
+            case .gridMinimap:
+                panel.setFrame(targetFrame, display: true)
+            default:
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.14
+                    context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                    panel.animator().setFrame(targetFrame, display: true)
+                }
             }
         }
     }

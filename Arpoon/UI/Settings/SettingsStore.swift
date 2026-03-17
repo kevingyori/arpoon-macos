@@ -54,6 +54,10 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(optionHoldDuration, forKey: Keys.optionHoldDuration) }
     }
 
+    @Published var animateGridMinimapSelection: Bool {
+        didSet { defaults.set(animateGridMinimapSelection, forKey: Keys.animateGridMinimapSelection) }
+    }
+
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -82,6 +86,8 @@ final class SettingsStore: ObservableObject {
         } else {
             optionHoldDuration = defaults.double(forKey: Keys.optionHoldDuration)
         }
+
+        animateGridMinimapSelection = defaults.object(forKey: Keys.animateGridMinimapSelection) as? Bool ?? true
     }
 
     func shortcut(for action: HotkeyAction) -> HotkeyShortcut? {
@@ -154,6 +160,7 @@ private enum Keys {
     static let addPopupStyle = "addPopupStyle"
     static let showHUDOnOptionHold = "showHUDOnOptionHold"
     static let optionHoldDuration = "optionHoldDuration"
+    static let animateGridMinimapSelection = "animateGridMinimapSelection"
     static let showNotificationPopups = "showNotificationPopups"
 }
 

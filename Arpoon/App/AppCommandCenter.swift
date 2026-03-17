@@ -924,7 +924,8 @@ final class AppCommandCenter {
                     )
                 },
                 movement: movement,
-                hint: hint
+                hint: hint,
+                animateSelectionMotion: settings.animateGridMinimapSelection
             )
         )
     }

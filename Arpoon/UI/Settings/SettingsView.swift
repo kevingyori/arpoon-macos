@@ -183,6 +183,7 @@ private struct GeneralSettingsPane: View {
                     }
 
                     Toggle("Show HUD when holding Option", isOn: $settings.showHUDOnOptionHold)
+                    Toggle("Animate The Grid minimap selection", isOn: $settings.animateGridMinimapSelection)
 
                     HStack {
                         Text("Option hold delay")
@@ -193,7 +194,7 @@ private struct GeneralSettingsPane: View {
                     }
                     .disabled(!settings.showHUDOnOptionHold)
 
-                    Text("Press and hold Option by itself to show the current HUD. Minimal add popups show a tiny glass plus badge instead of the target name.")
+                    Text("Press and hold Option by itself to show the current HUD. Minimal add popups show a tiny glass plus badge instead of the target name. The Grid animation moves the selected layer or column inside the minimap instead of shifting the HUD window.")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }

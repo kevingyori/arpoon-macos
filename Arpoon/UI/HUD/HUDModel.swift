@@ -34,6 +34,7 @@ struct GridMinimapModel: Hashable {
     let layers: [GridMinimapLayer]
     let movement: GridSelectionChange
     let hint: GridHUDHint?
+    let animateSelectionMotion: Bool
 }
 
 struct HUDOverviewEntry: Identifiable {
@@ -91,19 +92,4 @@ enum HUDModel {
         }
     }
 
-    var animationOffset: (x: Double, y: Double) {
-        switch self {
-        case .gridMinimap(let minimap):
-            switch minimap.movement {
-            case .layer(let step):
-                return (0, step >= 0 ? -18 : 18)
-            case .tool(let fromIndex, let toIndex):
-                return (toIndex >= fromIndex ? -18 : 18, 0)
-            case .neutral:
-                return (0, 0)
-            }
-        default:
-            return (0, 0)
-        }
-    }
 }
