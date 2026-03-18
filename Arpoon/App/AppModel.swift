@@ -253,4 +253,10 @@ final class AppModel: ObservableObject {
             }
         }
     }
+
+    func flushPersistence() async {
+        await slotStore.flushPersistence()
+        await dynamicHotkeyStore.flushPersistence()
+        await gridStore.flushPersistence()
+    }
 }

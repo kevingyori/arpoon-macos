@@ -10,6 +10,7 @@ final class GridStore: ObservableObject {
     private let store: GridLayerStore
     private let labelPolicy: TargetLabelPolicy
     private var persistenceTask: Task<Void, Never>?
+    private var pendingState: GridWorkspaceState?
 
     init(store: GridLayerStore, labelPolicy: TargetLabelPolicy) {
         self.store = store
@@ -296,23 +297,37 @@ final class GridStore: ObservableObject {
     }
 
     private func persist() {
-        let columns = self.columns
-        let layers = self.layers
-        let standaloneApps = self.standaloneApps
-        persistenceTask?.cancel()
-        persistenceTask = Task {
+        pendingState = GridWorkspaceState(
+            columns: columns,
+            layers: layers,
+            standaloneApps: standaloneApps
+        )
+
+        guard persistenceTask == nil else {
+            return
+        }
+
+        persistenceTask = Task { [weak self] in
+            await self?.drainPersistenceQueue()
+        }
+    }
+
+    func flushPersistence() async {
+        await persistenceTask?.value
+    }
+
+    private func drainPersistenceQueue() async {
+        while let state = pendingState {
+            pendingState = nil
+
             do {
-                try await store.saveState(
-                    GridWorkspaceState(
-                        columns: columns,
-                        layers: layers,
-                        standaloneApps: standaloneApps
-                    )
-                )
+                try await store.saveState(state)
             } catch {
                 // Keep the in-memory model authoritative for the current session.
             }
         }
+
+        persistenceTask = nil
     }
 
     private func updateStandaloneApp(id: String, transform: (GridStandaloneApp) -> GridStandaloneApp) {

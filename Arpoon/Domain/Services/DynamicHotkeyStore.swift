@@ -8,6 +8,7 @@ final class DynamicHotkeyStore: ObservableObject {
     private let store: DynamicHotkeyAssignmentStore
     private let labelPolicy: TargetLabelPolicy
     private var persistenceTask: Task<Void, Never>?
+    private var pendingAssignments: [DynamicHotkeyAssignment]?
 
     init(store: DynamicHotkeyAssignmentStore, labelPolicy: TargetLabelPolicy) {
         self.store = store
@@ -54,16 +55,34 @@ final class DynamicHotkeyStore: ObservableObject {
         assignments.first { $0.shortcut == shortcut }
     }
 
+    func flushPersistence() async {
+        await persistenceTask?.value
+    }
+
     private func persist() {
-        let assignments = self.assignments
-        persistenceTask?.cancel()
-        persistenceTask = Task {
+        pendingAssignments = assignments
+
+        guard persistenceTask == nil else {
+            return
+        }
+
+        persistenceTask = Task { [weak self] in
+            await self?.drainPersistenceQueue()
+        }
+    }
+
+    private func drainPersistenceQueue() async {
+        while let assignments = pendingAssignments {
+            pendingAssignments = nil
+
             do {
                 try await store.saveAssignments(assignments)
             } catch {
                 // Keep the in-memory model authoritative for the current session.
             }
         }
+
+        persistenceTask = nil
     }
 
     private static func sort(lhs: DynamicHotkeyAssignment, rhs: DynamicHotkeyAssignment) -> Bool {
