@@ -22,11 +22,7 @@ The important difference is that Arpoon does not move windows around. It only ch
 
 So instead of a flat list of bindings, it becomes more like a project map.
 
-<a href="images/arpoon-demo.mp4">
-  <img src="images/arpoon-demo.gif" alt="Arpoon demo" width="900">
-</a>
-
-_click to see video_
+<video src="https://github.com/user-attachments/assets/c840ea9b-57aa-442c-a0e1-cb16463b61e1"></video>
 
 ## What it is
 
