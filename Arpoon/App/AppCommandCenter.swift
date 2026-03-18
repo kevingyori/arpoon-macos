@@ -678,7 +678,11 @@ final class AppCommandCenter {
     }
 
     func validationErrorForGridStandaloneShortcut(_ shortcut: HotkeyShortcut) -> String? {
-        for action in HotkeyAction.activeActions(for: .grid) {
+        for action in settings.activeHotkeyActions(
+            for: .grid,
+            columns: gridStore.columns,
+            layerCount: gridStore.layers.count
+        ) {
             guard let configuredShortcut = settings.shortcut(for: action) else {
                 continue
             }

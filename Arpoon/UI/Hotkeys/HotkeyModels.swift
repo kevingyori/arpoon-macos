@@ -39,39 +39,95 @@ enum GridShortcutPreset: String, CaseIterable, Identifiable {
     var summary: String {
         switch self {
         case .vim:
-            return "H/L move across apps, J/K switch projects, I focuses IDE, O focuses Browser."
+            return "H/L move across apps, J/K switch projects, and direct column shortcuts follow your current Grid columns."
         case .gamer:
-            return "A/D move across apps, W/S switch projects, Q focuses Terminal, E focuses Browser."
+            return "A/D move across apps, W/S switch projects, and direct column shortcuts follow your current Grid columns."
         }
     }
 
-    var shortcuts: [HotkeyAction: HotkeyShortcut] {
-        var shortcuts = Dictionary(uniqueKeysWithValues: HotkeyAction.gridActions.map { ($0, $0.defaultShortcut) })
+    func shortcuts(columns: [GridToolColumn], layerCount: Int) -> [HotkeyAction: HotkeyShortcut] {
+        var shortcuts = Dictionary(
+            uniqueKeysWithValues: HotkeyAction.gridActions(columns: columns, layerCount: layerCount).compactMap { action in
+                action.defaultShortcut.map { (action, $0) }
+            }
+        )
+        var usedKeyCodes = Set<UInt32>()
 
-        switch self {
-        case .vim:
-            shortcuts[HotkeyAction(kind: .gridPreviousLayer, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_K))
-            shortcuts[HotkeyAction(kind: .gridNextLayer, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_J))
-            shortcuts[HotkeyAction(kind: .gridFocusLeft, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_H))
-            shortcuts[HotkeyAction(kind: .gridFocusRight, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_L))
-            shortcuts[HotkeyAction(kind: .gridFocusTerminal, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_T))
-            shortcuts[HotkeyAction(kind: .gridFocusIDE, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_I))
-            shortcuts[HotkeyAction(kind: .gridFocusBrowser, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_O))
-            shortcuts[HotkeyAction(kind: .gridBindCurrent, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_F))
-            shortcuts[HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_A))
-        case .gamer:
-            shortcuts[HotkeyAction(kind: .gridPreviousLayer, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_W))
-            shortcuts[HotkeyAction(kind: .gridNextLayer, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_S))
-            shortcuts[HotkeyAction(kind: .gridFocusLeft, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_A))
-            shortcuts[HotkeyAction(kind: .gridFocusRight, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_D))
-            shortcuts[HotkeyAction(kind: .gridFocusTerminal, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_Q))
-            shortcuts[HotkeyAction(kind: .gridFocusIDE, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_I))
-            shortcuts[HotkeyAction(kind: .gridFocusBrowser, slot: nil)] = optionShortcut(UInt32(kVK_ANSI_E))
-            shortcuts[HotkeyAction(kind: .gridBindCurrent, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_F))
-            shortcuts[HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)] = optionShiftShortcut(UInt32(kVK_ANSI_A))
+        for action in HotkeyAction.gridControlActions {
+            if let shortcut = shortcuts[action] {
+                usedKeyCodes.insert(shortcut.keyCode)
+            }
+        }
+
+        for column in columns {
+            let action = HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: column.id)
+
+            let preferredKeyCode: UInt32?
+            switch column.kind {
+            case .terminal:
+                preferredKeyCode = terminalKeyCode
+            case .ide:
+                preferredKeyCode = ideKeyCode
+            case .browser:
+                preferredKeyCode = browserKeyCode
+            case .custom:
+                preferredKeyCode = fallbackColumnKeyCodes.first(where: { !usedKeyCodes.contains($0) })
+            }
+
+            guard let keyCode = preferredKeyCode, !usedKeyCodes.contains(keyCode) else {
+                continue
+            }
+
+            let shortcut = optionShortcut(keyCode)
+            shortcuts[action] = shortcut
+            usedKeyCodes.insert(keyCode)
         }
 
         return shortcuts
+    }
+
+    private var fallbackColumnKeyCodes: [UInt32] {
+        switch self {
+        case .vim:
+            return [
+                UInt32(kVK_ANSI_Y),
+                UInt32(kVK_ANSI_U),
+                UInt32(kVK_ANSI_P),
+                UInt32(kVK_ANSI_N),
+                UInt32(kVK_ANSI_M)
+            ]
+        case .gamer:
+            return [
+                UInt32(kVK_ANSI_R),
+                UInt32(kVK_ANSI_T),
+                UInt32(kVK_ANSI_Y),
+                UInt32(kVK_ANSI_U),
+                UInt32(kVK_ANSI_O),
+                UInt32(kVK_ANSI_P)
+            ]
+        }
+    }
+
+    private var terminalKeyCode: UInt32 {
+        switch self {
+        case .vim:
+            return UInt32(kVK_ANSI_T)
+        case .gamer:
+            return UInt32(kVK_ANSI_Q)
+        }
+    }
+
+    private var ideKeyCode: UInt32 {
+        UInt32(kVK_ANSI_I)
+    }
+
+    private var browserKeyCode: UInt32 {
+        switch self {
+        case .vim:
+            return UInt32(kVK_ANSI_O)
+        case .gamer:
+            return UInt32(kVK_ANSI_E)
+        }
     }
 
     private func optionShortcut(_ keyCode: UInt32) -> HotkeyShortcut {
@@ -97,9 +153,7 @@ enum HotkeyActionKind: String, Codable {
     case gridJumpLayer
     case gridFocusLeft
     case gridFocusRight
-    case gridFocusTerminal
-    case gridFocusIDE
-    case gridFocusBrowser
+    case gridFocusColumn
     case gridAddStandaloneHotkey
     case gridRenameProject
     case gridBindCurrent
@@ -109,10 +163,12 @@ enum HotkeyActionKind: String, Codable {
 struct HotkeyAction: Hashable, Codable, Identifiable {
     let kind: HotkeyActionKind
     let slot: Int?
+    let referenceID: String?
 
-    init(kind: HotkeyActionKind, slot: Int?) {
+    init(kind: HotkeyActionKind, slot: Int?, referenceID: String? = nil) {
         self.kind = kind
         self.slot = slot
+        self.referenceID = referenceID
     }
 
     var id: String {
@@ -143,12 +199,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "grid-focus-left"
         case .gridFocusRight:
             return "grid-focus-right"
-        case .gridFocusTerminal:
-            return "grid-focus-terminal"
-        case .gridFocusIDE:
-            return "grid-focus-ide"
-        case .gridFocusBrowser:
-            return "grid-focus-browser"
+        case .gridFocusColumn:
+            return "grid-focus-column-\(referenceID ?? "")"
         case .gridAddStandaloneHotkey:
             return "grid-add-standalone-hotkey"
         case .gridRenameProject:
@@ -188,12 +240,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "The Grid Focus Left"
         case .gridFocusRight:
             return "The Grid Focus Right"
-        case .gridFocusTerminal:
-            return "The Grid Focus Terminal"
-        case .gridFocusIDE:
-            return "The Grid Focus IDE"
-        case .gridFocusBrowser:
-            return "The Grid Focus Browser"
+        case .gridFocusColumn:
+            return "The Grid Focus Column"
         case .gridAddStandaloneHotkey:
             return "The Grid Add Standalone App Hotkey"
         case .gridRenameProject:
@@ -205,7 +253,7 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
         }
     }
 
-    var defaultShortcut: HotkeyShortcut {
+    var defaultShortcut: HotkeyShortcut? {
         switch kind {
         case .jumpSlot:
             return HotkeyShortcut(
@@ -272,21 +320,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
                 keyCode: UInt32(kVK_ANSI_L),
                 modifiers: UInt32(optionKey)
             )
-        case .gridFocusTerminal:
-            return HotkeyShortcut(
-                keyCode: UInt32(kVK_ANSI_T),
-                modifiers: UInt32(optionKey)
-            )
-        case .gridFocusIDE:
-            return HotkeyShortcut(
-                keyCode: UInt32(kVK_ANSI_I),
-                modifiers: UInt32(optionKey)
-            )
-        case .gridFocusBrowser:
-            return HotkeyShortcut(
-                keyCode: UInt32(kVK_ANSI_B),
-                modifiers: UInt32(optionKey)
-            )
+        case .gridFocusColumn:
+            return nil
         case .gridAddStandaloneHotkey:
             return HotkeyShortcut(
                 keyCode: UInt32(kVK_ANSI_A),
@@ -322,33 +357,57 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
     static let dynamicActions = [
         HotkeyAction(kind: .addDynamicHotkey, slot: nil)
     ]
-    static let gridNavigationActions = [
-        HotkeyAction(kind: .gridPreviousLayer, slot: nil),
-        HotkeyAction(kind: .gridNextLayer, slot: nil)
-    ] + (1 ... 9).map { HotkeyAction(kind: .gridJumpLayer, slot: $0) }
-    static let gridToolActions = [
+    static let gridControlActions = [
         HotkeyAction(kind: .gridFocusLeft, slot: nil),
         HotkeyAction(kind: .gridFocusRight, slot: nil),
-        HotkeyAction(kind: .gridFocusTerminal, slot: nil),
-        HotkeyAction(kind: .gridFocusIDE, slot: nil),
-        HotkeyAction(kind: .gridFocusBrowser, slot: nil),
         HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil),
         HotkeyAction(kind: .gridRenameProject, slot: nil),
         HotkeyAction(kind: .gridBindCurrent, slot: nil),
         HotkeyAction(kind: .gridShowHUD, slot: nil)
     ]
-    static let gridActions = gridNavigationActions + gridToolActions
-    static let generalActions = commonActions + dynamicActions
-    static let allCases = jumpActions + bindActions + commonActions + dynamicActions + gridActions
+    static let gridDefaultColumnActions = GridToolColumn.defaults.map {
+        HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: $0.id)
+    }
+    static let gridDefaultActions = gridNavigationActions(layerCount: 9) + gridToolActions(columns: GridToolColumn.defaults)
+    static let allCases = jumpActions + bindActions + commonActions + dynamicActions + gridDefaultActions
 
-    static func activeActions(for scheme: HotkeyScheme) -> [HotkeyAction] {
+    static func gridNavigationActions(layerCount: Int) -> [HotkeyAction] {
+        let baseActions = [
+        HotkeyAction(kind: .gridPreviousLayer, slot: nil),
+        HotkeyAction(kind: .gridNextLayer, slot: nil)
+        ]
+
+        guard layerCount > 0 else {
+            return baseActions
+        }
+
+        return baseActions + (1 ... min(layerCount, 9)).map { HotkeyAction(kind: .gridJumpLayer, slot: $0) }
+    }
+
+    static func gridColumnActions(columns: [GridToolColumn]) -> [HotkeyAction] {
+        columns.map { column in
+            HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: column.id)
+        }
+    }
+
+    static func gridToolActions(columns: [GridToolColumn]) -> [HotkeyAction] {
+        Array(gridControlActions.prefix(2)) + gridColumnActions(columns: columns) + Array(gridControlActions.suffix(4))
+    }
+
+    static func gridActions(columns: [GridToolColumn], layerCount: Int) -> [HotkeyAction] {
+        gridNavigationActions(layerCount: layerCount) + gridToolActions(columns: columns)
+    }
+
+    static let generalActions = commonActions + dynamicActions
+
+    static func activeActions(for scheme: HotkeyScheme, columns: [GridToolColumn] = GridToolColumn.defaults, layerCount: Int = 9) -> [HotkeyAction] {
         switch scheme {
         case .staticSlots:
             return jumpActions + bindActions + commonActions
         case .dynamicWindows:
             return dynamicActions + commonActions
         case .grid:
-            return gridActions
+            return gridActions(columns: columns, layerCount: layerCount)
         }
     }
 
@@ -375,11 +434,11 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
         case "grid-focus-right":
             self = HotkeyAction(kind: .gridFocusRight, slot: nil)
         case "grid-focus-terminal":
-            self = HotkeyAction(kind: .gridFocusTerminal, slot: nil)
+            self = HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.terminal.id)
         case "grid-focus-ide":
-            self = HotkeyAction(kind: .gridFocusIDE, slot: nil)
+            self = HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.ide.id)
         case "grid-focus-browser":
-            self = HotkeyAction(kind: .gridFocusBrowser, slot: nil)
+            self = HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.browser.id)
         case "grid-add-standalone-hotkey":
             self = HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)
         case "grid-rename-project":
@@ -392,6 +451,16 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             if id.hasPrefix("grid-jump-"),
                let slot = Int(id.replacingOccurrences(of: "grid-jump-", with: "")) {
                 self = HotkeyAction(kind: .gridJumpLayer, slot: slot)
+                return
+            }
+
+            if id.hasPrefix("grid-focus-column-") {
+                let referenceID = String(id.dropFirst("grid-focus-column-".count))
+                guard !referenceID.isEmpty else {
+                    return nil
+                }
+
+                self = HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: referenceID)
                 return
             }
 
@@ -432,6 +501,28 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return UInt32(kVK_ANSI_8)
         default:
             return UInt32(kVK_ANSI_9)
+        }
+    }
+}
+
+extension HotkeyAction {
+    func title(columns: [GridToolColumn], layerNames: [String]) -> String {
+        switch kind {
+        case .gridJumpLayer:
+            guard let slot, slot >= 1, slot <= layerNames.count else {
+                return title
+            }
+
+            return "The Grid Jump to \(layerNames[slot - 1])"
+        case .gridFocusColumn:
+            guard let referenceID,
+                  let column = columns.first(where: { $0.id == referenceID }) else {
+                return title
+            }
+
+            return "The Grid Focus \(column.title)"
+        default:
+            return title
         }
     }
 }

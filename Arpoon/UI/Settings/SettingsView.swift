@@ -83,6 +83,7 @@ struct SettingsView: View {
                         GeneralSettingsPane(
                             settings: settings,
                             dynamicHotkeys: dynamicHotkeys,
+                            gridStore: gridStore,
                             permissions: permissions,
                             commands: commands,
                             activeRecorderID: $activeRecorderID
@@ -126,6 +127,7 @@ struct SettingsView: View {
 private struct GeneralSettingsPane: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
+    @ObservedObject var gridStore: GridStore
     @ObservedObject var permissions: AccessibilityPermissionService
     let commands: AppCommands
     @Binding var activeRecorderID: String?
@@ -170,9 +172,22 @@ private struct GeneralSettingsPane: View {
                     shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
                     dynamicHotkeyGroup
                 case .grid:
-                    helperText("The Grid turns window switching into project navigation: rows are projects, columns are terminal, IDE, and browser, hotkeys move you through the grid, and a minimap HUD keeps the movement spatial and legible.")
-                    shortcutGroup(title: "The Grid Projects", actions: HotkeyAction.gridNavigationActions, gridPreset: selectedGridPreset)
-                    shortcutGroup(title: "The Grid Tools", actions: HotkeyAction.gridToolActions, gridPreset: selectedGridPreset)
+                    helperText("The Grid shortcuts follow your current projects and columns, so renaming or removing columns updates the available direct-focus shortcuts automatically.")
+                    shortcutGroup(
+                        title: "The Grid Projects",
+                        actions: HotkeyAction.gridNavigationActions(layerCount: gridStore.layers.count),
+                        gridPreset: selectedGridPreset
+                    )
+                    shortcutGroup(
+                        title: "The Grid Columns",
+                        actions: HotkeyAction.gridColumnActions(columns: gridStore.columns),
+                        gridPreset: selectedGridPreset
+                    )
+                    shortcutGroup(
+                        title: "The Grid Controls",
+                        actions: HotkeyAction.gridControlActions,
+                        gridPreset: selectedGridPreset
+                    )
                 }
 
                 controlRow(
@@ -400,6 +415,8 @@ private struct GeneralSettingsPane: View {
                 ForEach(Array(actions.enumerated()), id: \.element.id) { index, action in
                     ShortcutRecorderRow(
                         action: action,
+                        title: nil,
+                        description: nil,
                         settings: settings,
                         resetShortcut: resetShortcut(for: action, gridPreset: gridPreset),
                         activeRecorderID: $activeRecorderID
@@ -419,9 +436,9 @@ private struct GeneralSettingsPane: View {
         }
     }
 
-    private func resetShortcut(for action: HotkeyAction, gridPreset: GridShortcutPreset?) -> HotkeyShortcut {
-        if let gridPreset, HotkeyAction.gridActions.contains(action) {
-            return gridPreset.shortcuts[action] ?? action.defaultShortcut
+    private func resetShortcut(for action: HotkeyAction, gridPreset: GridShortcutPreset?) -> HotkeyShortcut? {
+        if let gridPreset, settings.activeHotkeyActions(for: .grid).contains(action) {
+            return gridPreset.shortcuts(columns: gridStore.columns, layerCount: gridStore.layers.count)[action] ?? action.defaultShortcut
         }
 
         return action.defaultShortcut

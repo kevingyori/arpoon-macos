@@ -4,9 +4,11 @@ import SwiftUI
 
 struct ShortcutRecorderRow: View {
     let action: HotkeyAction
+    let title: String?
+    let description: String?
 
     @ObservedObject var settings: SettingsStore
-    let resetShortcut: HotkeyShortcut
+    let resetShortcut: HotkeyShortcut?
     @Binding var activeRecorderID: String?
 
     @State private var eventMonitor: Any?
@@ -34,10 +36,9 @@ struct ShortcutRecorderRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(action.title)
+                    Text(rowTitle)
                         .font(.system(size: 13, weight: .medium))
-
-                    Text(settings.shortcut(for: action) == nil ? "No shortcut assigned." : "Global shortcut is active.")
+                    Text(descriptionText)
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -46,14 +47,16 @@ struct ShortcutRecorderRow: View {
 
                 shortcutButton
 
-                Button {
-                    errorMessage = nil
-                    applyShortcut(resetShortcut)
-                } label: {
-                    Image(systemName: "arrow.counterclockwise")
+                if let resetShortcut {
+                    Button {
+                        errorMessage = nil
+                        applyShortcut(resetShortcut)
+                    } label: {
+                        Image(systemName: "arrow.counterclockwise")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Reset to \(resetShortcut.displayString)")
                 }
-                .buttonStyle(.borderless)
-                .help("Reset to \(resetShortcut.displayString)")
             }
 
             if let errorMessage {
@@ -72,6 +75,14 @@ struct ShortcutRecorderRow: View {
         .onDisappear {
             stopRecording()
         }
+    }
+
+    private var rowTitle: String {
+        title ?? settings.title(for: action)
+    }
+
+    private var descriptionText: String {
+        description ?? (settings.shortcut(for: action) == nil ? "No shortcut assigned." : "Global shortcut is active.")
     }
 
     @ViewBuilder
@@ -164,7 +175,7 @@ struct ShortcutRecorderRow: View {
             errorMessage = nil
             activeRecorderID = nil
         case .duplicate(let duplicate):
-            errorMessage = "Already assigned to \(duplicate.title)."
+            errorMessage = "Already assigned to \(settings.title(for: duplicate))."
         case .requiresModifier:
             errorMessage = "Use at least one modifier key."
         }

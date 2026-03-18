@@ -537,7 +537,9 @@ struct GridSettingsPane: View {
     }
 
     private func projectEditor(_ layer: GridLayer) -> some View {
-        VStack(alignment: .leading, spacing: 18) {
+        let action = projectShortcutAction(for: layer)
+
+        return VStack(alignment: .leading, spacing: 18) {
             drawerTitle(layer.name, subtitle: "Project")
 
             GridSettingsFieldSection(title: "Project") {
@@ -570,6 +572,16 @@ struct GridSettingsPane: View {
                 }
             }
 
+            if let action {
+                GridSettingsFieldSection(title: "Shortcut") {
+                    shortcutEditorRow(
+                        action: action,
+                        title: "Jump to \(layer.name)",
+                        description: "Triggers this project row directly from anywhere."
+                    )
+                }
+            }
+
             Button("Remove Project", role: .destructive) {
                 guard gridStore.layers.count > 1 else {
                     return
@@ -585,7 +597,9 @@ struct GridSettingsPane: View {
     }
 
     private func columnEditor(_ column: GridToolColumn) -> some View {
-        VStack(alignment: .leading, spacing: 18) {
+        let action = HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: column.id)
+
+        return VStack(alignment: .leading, spacing: 18) {
             drawerTitle(column.title, subtitle: column.kind == .custom ? "Shared Custom Column" : "Shared Default Column")
 
             GridSettingsFieldSection(title: "Column") {
@@ -618,9 +632,17 @@ struct GridSettingsPane: View {
                 }
             }
 
-            if column.kind == .custom {
+            GridSettingsFieldSection(title: "Shortcut") {
+                shortcutEditorRow(
+                    action: action,
+                    title: "Focus \(column.title)",
+                    description: "Jumps straight to this column inside the current project."
+                )
+            }
+
+            if gridStore.columns.count > 1 {
                 Button("Remove Column", role: .destructive) {
-                    gridStore.removeCustomColumn(columnID: column.id)
+                    gridStore.removeColumn(columnID: column.id)
                     inspectorSelection = nil
                 }
                 .buttonStyle(.borderless)
@@ -822,6 +844,14 @@ struct GridSettingsPane: View {
         "Project \((gridStore.layers.firstIndex(where: { $0.id == layer.id }) ?? 0) + 1)"
     }
 
+    private func projectShortcutAction(for layer: GridLayer) -> HotkeyAction? {
+        guard let index = gridStore.layers.firstIndex(where: { $0.id == layer.id }) else {
+            return nil
+        }
+
+        return HotkeyAction(kind: .gridJumpLayer, slot: index + 1)
+    }
+
     private func defaultLayerColor(for layer: GridLayer) -> GridLayerColor {
         GridLayerColor.allCases[(gridStore.layers.firstIndex(where: { $0.id == layer.id }) ?? 0) % GridLayerColor.allCases.count]
     }
@@ -856,6 +886,21 @@ struct GridSettingsPane: View {
 
     private func defaultBindingLabel(for binding: GridBinding) -> String {
         TargetLabelPolicy().label(for: binding.target)
+    }
+
+    private func shortcutEditorRow(
+        action: HotkeyAction,
+        title: String,
+        description: String
+    ) -> some View {
+        ShortcutRecorderRow(
+            action: action,
+            title: title,
+            description: description,
+            settings: settings,
+            resetShortcut: action.defaultShortcut,
+            activeRecorderID: $activeRecorderID
+        )
     }
 
     private func selectedWindowID(for target: Target?) -> String? {
@@ -1229,10 +1274,10 @@ private struct GridStandaloneAppInspector: View {
             return
         }
 
-        if let duplicateAction = HotkeyAction.activeActions(for: .grid).first(where: { action in
+        if let duplicateAction = settings.activeHotkeyActions(for: .grid).first(where: { action in
             settings.shortcut(for: action) == shortcut
         }) {
-            errorMessage = "Already assigned to \(duplicateAction.title)."
+            errorMessage = "Already assigned to \(settings.title(for: duplicateAction))."
             return
         }
 

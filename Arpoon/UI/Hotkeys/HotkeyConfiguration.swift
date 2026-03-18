@@ -18,12 +18,13 @@ struct HotkeyConfiguration: Equatable {
 
     init(
         scheme: HotkeyScheme,
+        activeActions: [HotkeyAction],
         hotkeys: [HotkeyAction: HotkeyShortcut],
         dynamicShortcuts: [HotkeyShortcut],
         gridStandaloneBindings: [GridStandaloneBinding]
     ) {
         self.scheme = scheme
-        actionBindings = HotkeyAction.activeActions(for: scheme)
+        actionBindings = activeActions
             .compactMap { action in
                 hotkeys[action].map { ActionBinding(action: action, shortcut: $0) }
             }

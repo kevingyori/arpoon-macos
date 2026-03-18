@@ -19,9 +19,7 @@ final class AppRuntimeCoordinator {
     var onGridJumpLayer: ((Int) -> Void)?
     var onGridFocusLeft: (() -> Void)?
     var onGridFocusRight: (() -> Void)?
-    var onGridFocusTerminal: (() -> Void)?
-    var onGridFocusIDE: (() -> Void)?
-    var onGridFocusBrowser: (() -> Void)?
+    var onGridFocusColumn: ((String) -> Void)?
     var onGridAddStandaloneHotkey: (() -> Void)?
     var onGridRenameProject: (() -> Void)?
     var onGridBindCurrent: (() -> Void)?
@@ -94,14 +92,8 @@ final class AppRuntimeCoordinator {
         hotkeyController.onGridFocusRight = { [weak self] in
             self?.onGridFocusRight?()
         }
-        hotkeyController.onGridFocusTerminal = { [weak self] in
-            self?.onGridFocusTerminal?()
-        }
-        hotkeyController.onGridFocusIDE = { [weak self] in
-            self?.onGridFocusIDE?()
-        }
-        hotkeyController.onGridFocusBrowser = { [weak self] in
-            self?.onGridFocusBrowser?()
+        hotkeyController.onGridFocusColumn = { [weak self] columnID in
+            self?.onGridFocusColumn?(columnID)
         }
         hotkeyController.onGridAddStandaloneHotkey = { [weak self] in
             self?.onGridAddStandaloneHotkey?()
@@ -136,21 +128,31 @@ final class AppRuntimeCoordinator {
         accessibilityPermissions.startMonitoring()
         optionHoldHUDController.start()
 
-        settings.$hotkeyScheme
+        Publishers.CombineLatest4(
+            settings.$hotkeyScheme,
+            settings.$hotkeys,
+            dynamicHotkeyStore.$assignments.map { assignments in
+                assignments.map(\.shortcut)
+            },
+            gridStore.$columns.combineLatest(gridStore.$layers)
+        )
             .combineLatest(
-                settings.$hotkeys,
-                dynamicHotkeyStore.$assignments.map { assignments in
-                    assignments.map(\.shortcut)
-                },
                 gridStore.$standaloneApps.map { apps in
                     apps.compactMap { app in
                         app.shortcut.map { HotkeyConfiguration.GridStandaloneBinding(appID: app.id, shortcut: $0) }
                     }
                 }
             )
-            .map { scheme, hotkeys, dynamicShortcuts, gridStandaloneBindings in
-                HotkeyConfiguration(
+            .map { state, gridStandaloneBindings in
+                let (scheme, hotkeys, dynamicShortcuts, gridState) = state
+                let (columns, layers) = gridState
+                return HotkeyConfiguration(
                     scheme: scheme,
+                    activeActions: self.settings.activeHotkeyActions(
+                        for: scheme,
+                        columns: columns,
+                        layerCount: layers.count
+                    ),
                     hotkeys: hotkeys,
                     dynamicShortcuts: dynamicShortcuts,
                     gridStandaloneBindings: gridStandaloneBindings
@@ -159,6 +161,13 @@ final class AppRuntimeCoordinator {
             .removeDuplicates()
             .sink { [weak self] configuration in
                 self?.hotkeyController.apply(configuration: configuration)
+            }
+            .store(in: &cancellables)
+
+        gridStore.$columns
+            .combineLatest(gridStore.$layers)
+            .sink { [weak self] columns, layers in
+                self?.settings.syncGridHotkeys(columns: columns, layers: layers)
             }
             .store(in: &cancellables)
     }

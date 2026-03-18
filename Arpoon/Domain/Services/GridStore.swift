@@ -70,7 +70,8 @@ final class GridStore: ObservableObject {
 
         let layer = GridLayer(
             name: "Project \(layers.count + 1)",
-            color: Self.defaultColor(for: layers.count)
+            color: Self.defaultColor(for: layers.count),
+            groups: Self.emptyGroups(for: columns)
         )
         layers.append(layer)
         persist()
@@ -130,8 +131,9 @@ final class GridStore: ObservableObject {
         persist()
     }
 
-    func removeCustomColumn(columnID: String) {
-        guard let column = column(id: columnID), column.kind == .custom else {
+    func removeColumn(columnID: String) {
+        guard columns.count > 1,
+              column(id: columnID) != nil else {
             return
         }
 
@@ -330,8 +332,15 @@ final class GridStore: ObservableObject {
         (0 ..< 3).map { index in
             GridLayer(
                 name: "Project \(index + 1)",
-                color: defaultColor(for: index)
+                color: defaultColor(for: index),
+                groups: emptyGroups(for: GridToolColumn.defaults)
             )
+        }
+    }
+
+    private static func emptyGroups(for columns: [GridToolColumn]) -> [String: GridToolGroup] {
+        columns.reduce(into: [:]) { groups, column in
+            groups[column.id] = GridToolGroup()
         }
     }
 
@@ -378,11 +387,6 @@ final class GridStore: ObservableObject {
         for column in columns where !seenIDs.contains(column.id) {
             ordered.append(column)
             seenIDs.insert(column.id)
-        }
-
-        for defaultColumn in GridToolColumn.defaults where !seenIDs.contains(defaultColumn.id) {
-            ordered.append(defaultColumn)
-            seenIDs.insert(defaultColumn.id)
         }
 
         return ordered

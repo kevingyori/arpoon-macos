@@ -193,14 +193,12 @@ final class AppModel: ObservableObject {
         runtimeCoordinator.onGridFocusRight = { [weak commandCenter] in
             commandCenter?.moveToNextBoundGridApp()
         }
-        runtimeCoordinator.onGridFocusTerminal = { [weak commandCenter] in
-            commandCenter?.focusGridTool(.terminal)
-        }
-        runtimeCoordinator.onGridFocusIDE = { [weak commandCenter] in
-            commandCenter?.focusGridTool(.ide)
-        }
-        runtimeCoordinator.onGridFocusBrowser = { [weak commandCenter] in
-            commandCenter?.focusGridTool(.browser)
+        runtimeCoordinator.onGridFocusColumn = { [weak commandCenter, weak gridStore] columnID in
+            guard let column = gridStore?.column(id: columnID) else {
+                return
+            }
+
+            commandCenter?.focusGridTool(column)
         }
         runtimeCoordinator.onGridAddStandaloneHotkey = { [weak commandCenter] in
             commandCenter?.beginGridStandaloneHotkeyCapture()

@@ -17,9 +17,7 @@ protocol HotkeyControlling: AnyObject {
     var onGridJumpLayer: ((Int) -> Void)? { get set }
     var onGridFocusLeft: (() -> Void)? { get set }
     var onGridFocusRight: (() -> Void)? { get set }
-    var onGridFocusTerminal: (() -> Void)? { get set }
-    var onGridFocusIDE: (() -> Void)? { get set }
-    var onGridFocusBrowser: (() -> Void)? { get set }
+    var onGridFocusColumn: ((String) -> Void)? { get set }
     var onGridAddStandaloneHotkey: (() -> Void)? { get set }
     var onGridRenameProject: (() -> Void)? { get set }
     var onGridBindCurrent: (() -> Void)? { get set }
@@ -47,9 +45,7 @@ final class HotkeyController: HotkeyControlling {
     var onGridJumpLayer: ((Int) -> Void)?
     var onGridFocusLeft: (() -> Void)?
     var onGridFocusRight: (() -> Void)?
-    var onGridFocusTerminal: (() -> Void)?
-    var onGridFocusIDE: (() -> Void)?
-    var onGridFocusBrowser: (() -> Void)?
+    var onGridFocusColumn: ((String) -> Void)?
     var onGridAddStandaloneHotkey: (() -> Void)?
     var onGridRenameProject: (() -> Void)?
     var onGridBindCurrent: (() -> Void)?
@@ -178,12 +174,10 @@ final class HotkeyController: HotkeyControlling {
             onGridFocusLeft?()
         case .gridFocusRight:
             onGridFocusRight?()
-        case .gridFocusTerminal:
-            onGridFocusTerminal?()
-        case .gridFocusIDE:
-            onGridFocusIDE?()
-        case .gridFocusBrowser:
-            onGridFocusBrowser?()
+        case .gridFocusColumn:
+            if let referenceID = action.referenceID {
+                onGridFocusColumn?(referenceID)
+            }
         case .gridAddStandaloneHotkey:
             onGridAddStandaloneHotkey?()
         case .gridRenameProject:

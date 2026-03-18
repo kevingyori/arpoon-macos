@@ -63,6 +63,8 @@ final class SettingsStore: ObservableObject {
     }
 
     private let defaults: UserDefaults
+    private var gridColumns: [GridToolColumn] = GridToolColumn.defaults
+    private var gridLayerNames: [String] = (1 ... 3).map { "Project \($0)" }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -99,6 +101,22 @@ final class SettingsStore: ObservableObject {
         hotkeys[action]
     }
 
+    func title(for action: HotkeyAction) -> String {
+        action.title(columns: gridColumns, layerNames: gridLayerNames)
+    }
+
+    func activeHotkeyActions(
+        for scheme: HotkeyScheme? = nil,
+        columns: [GridToolColumn]? = nil,
+        layerCount: Int? = nil
+    ) -> [HotkeyAction] {
+        HotkeyAction.activeActions(
+            for: scheme ?? hotkeyScheme,
+            columns: columns ?? gridColumns,
+            layerCount: layerCount ?? gridLayerNames.count
+        )
+    }
+
     @discardableResult
     func setShortcut(_ shortcut: HotkeyShortcut, for action: HotkeyAction) -> HotkeyUpdateResult {
         guard shortcut.modifiers != 0 else {
@@ -118,17 +136,65 @@ final class SettingsStore: ObservableObject {
     }
 
     func resetHotkeysToDefaults() {
-        hotkeys = Self.defaultHotkeys()
+        hotkeys = normalizedHotkeysForCurrentGrid(Self.defaultHotkeys())
     }
 
     func applyGridShortcutPreset(_ preset: GridShortcutPreset) {
-        for action in HotkeyAction.gridActions {
-            hotkeys[action] = action.defaultShortcut
+        for action in activeHotkeyActions(for: .grid) {
+            hotkeys.removeValue(forKey: action)
         }
 
-        for (action, shortcut) in preset.shortcuts {
+        for (action, shortcut) in preset.shortcuts(columns: gridColumns, layerCount: gridLayerNames.count) {
             hotkeys[action] = shortcut
         }
+    }
+
+    func syncGridHotkeys(columns: [GridToolColumn], layers: [GridLayer]) {
+        gridColumns = columns.isEmpty ? GridToolColumn.defaults : columns
+        gridLayerNames = layers.isEmpty ? ["Project 1"] : layers.map(\.name)
+
+        let activeGridActions = Set(
+            HotkeyAction.activeActions(
+                for: .grid,
+                columns: gridColumns,
+                layerCount: gridLayerNames.count
+            )
+        )
+
+        let normalizedHotkeys = normalizedHotkeysForCurrentGrid(hotkeys, activeGridActions: activeGridActions)
+        if hotkeys != normalizedHotkeys {
+            hotkeys = normalizedHotkeys
+        }
+    }
+
+    private func normalizedHotkeysForCurrentGrid(
+        _ source: [HotkeyAction: HotkeyShortcut],
+        activeGridActions: Set<HotkeyAction>? = nil
+    ) -> [HotkeyAction: HotkeyShortcut] {
+        let activeGridActions = activeGridActions ?? Set(
+            HotkeyAction.activeActions(
+                for: .grid,
+                columns: gridColumns,
+                layerCount: gridLayerNames.count
+            )
+        )
+
+        var normalizedHotkeys: [HotkeyAction: HotkeyShortcut] = [:]
+        for (action, shortcut) in source {
+            if action.kind == .gridFocusColumn && !activeGridActions.contains(action) {
+                continue
+            }
+
+            if action.kind == .gridJumpLayer,
+               let slot = action.slot,
+               slot > gridLayerNames.count {
+                continue
+            }
+
+            normalizedHotkeys[action] = shortcut
+        }
+
+        return normalizedHotkeys
     }
 
     private func persistHotkeys() {
@@ -159,9 +225,11 @@ final class SettingsStore: ObservableObject {
     }
 
     private static func defaultHotkeys() -> [HotkeyAction: HotkeyShortcut] {
-        var hotkeys = Dictionary(uniqueKeysWithValues: HotkeyAction.allCases.map { ($0, $0.defaultShortcut) })
+        var hotkeys = Dictionary(uniqueKeysWithValues: HotkeyAction.allCases.compactMap { action in
+            action.defaultShortcut.map { (action, $0) }
+        })
 
-        for (action, shortcut) in GridShortcutPreset.gamer.shortcuts {
+        for (action, shortcut) in GridShortcutPreset.gamer.shortcuts(columns: GridToolColumn.defaults, layerCount: 9) {
             hotkeys[action] = shortcut
         }
 
