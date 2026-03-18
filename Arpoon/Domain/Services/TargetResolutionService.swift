@@ -45,7 +45,7 @@ struct TargetResolutionService {
     let windowProvider: AccessibilityWindowProvider
     let settings: SettingsStore
 
-    private let titlePolicy = TitleMatchPolicy()
+    private let windowMatchPolicy = WindowTargetMatchPolicy()
 
     func resolve(target: Target) -> ResolutionResult {
         switch target {
@@ -71,22 +71,16 @@ struct TargetResolutionService {
     private func resolve(windowTarget: WindowTarget) -> ResolutionResult {
         let windows = windowProvider.windows(for: windowTarget.bundleId)
 
-        if let windowID = windowTarget.windowID,
-           let window = windows.first(where: { $0.windowID == windowID }) {
-            return .window(window, strategy: .exactWindowID)
-        }
-
-        if let frame = windowTarget.frame,
-           let window = windows.first(where: { roughlyMatches($0.frame, frame) }) {
-            return .window(window, strategy: .exactFrame)
-        }
-
-        if let window = windows.first(where: { titlePolicy.exactMatch($0.title, windowTarget.windowTitle) }) {
-            return .window(window, strategy: .exactTitle)
-        }
-
-        if let window = windows.first(where: { titlePolicy.fuzzyMatch($0.title, windowTarget.windowTitle) }) {
-            return .window(window, strategy: .fuzzyTitle)
+        for matchKind in [
+            WindowTargetMatchKind.exactWindowID,
+            .exactTitleAndFrame,
+            .exactTitle,
+            .exactFrame,
+            .fuzzyTitle
+        ] {
+            if let window = windows.first(where: { windowMatchPolicy.match($0, to: windowTarget) == matchKind }) {
+                return .window(window, strategy: resolutionStrategy(for: matchKind))
+            }
         }
 
         if let window = windows.first(where: { $0.isFocused || $0.isMain }) ?? windows.first {
@@ -104,16 +98,20 @@ struct TargetResolutionService {
         return .unavailable(reason: "No matching live window was found for \(windowTarget.appName).")
     }
 
-    private func roughlyMatches(_ lhs: WindowFrame?, _ rhs: WindowFrame) -> Bool {
-        guard let lhs else {
-            return false
+    private func resolutionStrategy(for matchKind: WindowTargetMatchKind) -> ResolutionStrategy {
+        switch matchKind {
+        case .exactWindowID:
+            return .exactWindowID
+        case .exactTitleAndFrame:
+            return .exactFrame
+        case .exactTitle:
+            return .exactTitle
+        case .exactFrame:
+            return .exactFrame
+        case .fuzzyTitle:
+            return .fuzzyTitle
+        case .none:
+            return .mainWindowFallback
         }
-
-        let tolerance = 8.0
-
-        return abs(lhs.x - rhs.x) <= tolerance &&
-            abs(lhs.y - rhs.y) <= tolerance &&
-            abs(lhs.width - rhs.width) <= tolerance &&
-            abs(lhs.height - rhs.height) <= tolerance
     }
 }

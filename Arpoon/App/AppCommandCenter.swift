@@ -79,6 +79,7 @@ final class AppCommandCenter {
     private let windowProvider: any WindowProviding
     private let hudController: any HUDPresenting
     private let setHotkeyRecordingActive: (Bool) -> Void
+    private let windowMatchPolicy = WindowTargetMatchPolicy()
     private var liveSlotWindows: [Int: LiveWindow] = [:]
     private var liveDynamicWindows: [String: LiveWindow] = [:]
     private var liveGridWindows: [String: LiveWindow] = [:]
@@ -1395,28 +1396,7 @@ final class AppCommandCenter {
             return false
         }
 
-        if let windowID = windowTarget.windowID, let liveWindowID = liveWindow.windowID {
-            return windowID == liveWindowID
-        }
-
-        if let targetTitle = normalizedWindowText(windowTarget.windowTitle),
-           let liveTitle = normalizedWindowText(liveWindow.title),
-           let targetFrame = windowTarget.frame,
-           let liveFrame = liveWindow.frame {
-            return targetTitle == liveTitle && targetFrame == liveFrame
-        }
-
-        if let targetTitle = normalizedWindowText(windowTarget.windowTitle),
-           let liveTitle = normalizedWindowText(liveWindow.title) {
-            return targetTitle == liveTitle
-        }
-
-        if let targetFrame = windowTarget.frame,
-           let liveFrame = liveWindow.frame {
-            return targetFrame == liveFrame
-        }
-
-        return false
+        return windowMatchPolicy.match(liveWindow, to: windowTarget).isMatch
     }
 
     private func normalizedWindowText(_ text: String?) -> String? {

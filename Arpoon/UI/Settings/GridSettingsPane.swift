@@ -23,6 +23,7 @@ struct GridSettingsPane: View {
     @State private var draggedColumnID: String?
     @State private var availableWindows: [LiveWindow] = []
     @State private var drawerKeyMonitor: Any?
+    private let windowMatchPolicy = WindowTargetMatchPolicy()
 
     private let rowLabelWidth: CGFloat = 196
     private let cellWidth: CGFloat = 188
@@ -937,7 +938,7 @@ struct GridSettingsPane: View {
             return nil
         }
 
-        return availableWindows.first(where: { matchesWindow($0, target: target, matchAppTargets: false) })?.id
+        return bestMatchingWindow(for: target, matchAppTargets: false, windows: availableWindows)?.id
     }
 
     private func usageTags(for window: LiveWindow, excludingSlot: (layerID: String, columnID: String)? = nil) -> [String] {
@@ -977,13 +978,36 @@ struct GridSettingsPane: View {
         case .app(let appTarget):
             return matchAppTargets && appTarget.bundleId == window.bundleId
         case .window(let windowTarget):
-            if let liveID = window.windowID, let targetID = windowTarget.windowID {
-                return liveID == targetID && window.bundleId == windowTarget.bundleId
+            return windowMatchPolicy.match(window, to: windowTarget).isMatch
+        }
+    }
+
+    private func bestMatchingWindow(
+        for target: Target,
+        matchAppTargets: Bool,
+        windows: [LiveWindow]
+    ) -> LiveWindow? {
+        switch target {
+        case .app(let appTarget):
+            guard matchAppTargets else {
+                return nil
             }
 
-            return window.bundleId == windowTarget.bundleId &&
-                window.title == windowTarget.windowTitle &&
-                window.frame == windowTarget.frame
+            return windows.first(where: { $0.bundleId == appTarget.bundleId })
+        case .window(let windowTarget):
+            for matchKind in [
+                WindowTargetMatchKind.exactWindowID,
+                .exactTitleAndFrame,
+                .exactTitle,
+                .exactFrame,
+                .fuzzyTitle
+            ] {
+                if let window = windows.first(where: { windowMatchPolicy.match($0, to: windowTarget) == matchKind }) {
+                    return window
+                }
+            }
+
+            return nil
         }
     }
 
@@ -1080,6 +1104,7 @@ private struct GridStandaloneAppInspector: View {
     let availableWindows: [LiveWindow]
     let refreshAvailableWindows: @MainActor () -> Void
     @Binding var activeRecorderID: String?
+    private let windowMatchPolicy = WindowTargetMatchPolicy()
 
     private var recorderID: String {
         "grid-standalone-\(app.id)"
@@ -1117,13 +1142,7 @@ private struct GridStandaloneAppInspector: View {
         case .app(let appTarget):
             return matchAppTargets && appTarget.bundleId == window.bundleId
         case .window(let windowTarget):
-            if let liveID = window.windowID, let targetID = windowTarget.windowID {
-                return liveID == targetID && window.bundleId == windowTarget.bundleId
-            }
-
-            return window.bundleId == windowTarget.bundleId &&
-                window.title == windowTarget.windowTitle &&
-                window.frame == windowTarget.frame
+            return windowMatchPolicy.match(window, to: windowTarget).isMatch
         }
     }
 
