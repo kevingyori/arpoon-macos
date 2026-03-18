@@ -2,17 +2,19 @@
 
 I built this after Theo’s streams and [writeup](https://x.com/theo/status/2018091358251372601) on the multi-project, parallel-work problem.
 
-He described something I had already been feeling: the problem is not really layout anymore. It is recall. One project lives across a terminal, editor, and browser. Do that for a few projects at once and you spend too much time just getting back to the right thing.
+He described something I had already been feeling: the problem is not really layout anymore. It is focus. One project lives across a terminal, editor, and browser. Do that for a few projects at once and you spend too much time just getting back to the right thing.
+
+Arpoon obviously does not solve that whole problem. It is just my quick take on one part of it: focusing the right app or window fast.
 
 I had already tried Amethyst, yabai, AeroSpace, and on Linux, i3 and Hyprland. Great tools. Just not really my problem. I did not want tiling. I wanted faster recall.
 
-The first versions of Arpoon were basically my macOS take on Prime's [Harpoon](https://github.com/Primeagen/harpoon): static slots and dynamic bindings for keeping a small working set close and jumping back to it quickly.
+The first versions of Arpoon were basically my macOS take on Prime's [Harpoon](https://github.com/ThePrimeagen/harpoon): static slots and dynamic bindings for keeping a small working set close and jumping back to it quickly.
 
 Those modes are still in the app, and I still like them. But they were earlier attempts at the same problem.
 
-The grid came next. It is basically me borrowing the spatial idea from niri and applying it to project recall on macOS.
+The grid came next. It borrows the spatial idea from niri and applies it to project focus management on macOS.
 
-The important difference is that Arpoon does not move windows around. It only changes focus. Most of my windows are maximized anyway, so I do not really want a layout engine. I just want to get back to the right thing quickly.
+It does not move windows around. It only changes focus. Most of my windows are maximized anyway, so I do not really want a layout engine. I just want to get back to the right thing quickly.
 
 - rows are projects
 - columns are tools
@@ -21,6 +23,8 @@ The important difference is that Arpoon does not move windows around. It only ch
 - a small HUD shows where I am
 
 So instead of a flat list of bindings, it becomes more like a project map.
+
+Arpoon obviously does not solve this whole problem. It is just my quick take on one part of it: focusing the right app or window fast.
 
 <video src="https://github.com/user-attachments/assets/c840ea9b-57aa-442c-a0e1-cb16463b61e1"></video>
 
