@@ -74,6 +74,7 @@ struct GridSettingsPane: View {
     private var boardPanel: some View {
         ScrollView([.horizontal, .vertical]) {
             VStack(alignment: .leading, spacing: boardSpacing) {
+                reorderHint
                 gridHeaderRow
 
                 ForEach(gridStore.layers) { layer in
@@ -90,10 +91,8 @@ struct GridSettingsPane: View {
 
     private var gridHeaderRow: some View {
         HStack(alignment: .top, spacing: boardSpacing) {
-            dragHintCard(
-                title: "Reorder",
-                detail: "Drag projects and columns to rearrange the Grid."
-            )
+            Color.clear
+                .frame(width: rowLabelWidth + (cardHorizontalInset * 2), height: headerHeight)
 
             ForEach(gridStore.columns) { column in
                 columnHeaderCell(column)
@@ -109,8 +108,6 @@ struct GridSettingsPane: View {
         } label: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    dragHandleIcon
-
                     Image(systemName: column.iconSymbol)
                         .font(.system(size: 13, weight: .semibold))
 
@@ -119,7 +116,7 @@ struct GridSettingsPane: View {
                         .lineLimit(1)
                 }
 
-                Text(column.kind == .custom ? "Custom column · Drag to reorder" : "Default column · Drag to reorder")
+                Text(column.kind == .custom ? "Custom column" : "Default column")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -136,11 +133,7 @@ struct GridSettingsPane: View {
             draggedColumnID = column.id
             return NSItemProvider(object: NSString(string: column.id))
         } preview: {
-            dragPreview(
-                title: column.title,
-                subtitle: "Move Column",
-                icon: column.iconSymbol
-            )
+            reorderPreview
         }
         .onDrop(
             of: [UTType.text],
@@ -202,8 +195,6 @@ struct GridSettingsPane: View {
         } label: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
-                    dragHandleIcon
-
                     Circle()
                         .fill(layer.color.swiftUIColor)
                         .frame(width: 10, height: 10)
@@ -213,7 +204,7 @@ struct GridSettingsPane: View {
                         .lineLimit(1)
                 }
 
-                Text("\(filledSlotCount(in: layer))/\(gridStore.columns.count) assigned · Drag to reorder")
+                Text("\(filledSlotCount(in: layer))/\(gridStore.columns.count) assigned")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -230,11 +221,7 @@ struct GridSettingsPane: View {
             draggedLayerID = layer.id
             return NSItemProvider(object: NSString(string: layer.id))
         } preview: {
-            dragPreview(
-                title: layer.name,
-                subtitle: "Move Project",
-                color: layer.color.swiftUIColor
-            )
+            reorderPreview
         }
         .onDrop(
             of: [UTType.text],
@@ -753,80 +740,20 @@ struct GridSettingsPane: View {
         }
     }
 
-    private var dragHandleIcon: some View {
-        Image(systemName: "line.3.horizontal")
+    private var reorderHint: some View {
+        Label("Drag project rows and column headers to reorder.", systemImage: "line.3.horizontal")
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 2)
+    }
+
+    private var reorderPreview: some View {
+        Label("Reordering", systemImage: "arrow.up.arrow.down")
             .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(.secondary.opacity(0.8))
-    }
-
-    private func dragHintCard(title: String, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.secondary)
-
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-            }
-
-            Text(detail)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(width: rowLabelWidth, height: headerHeight, alignment: .leading)
-        .padding(.horizontal, cardHorizontalInset)
-        .cardBackground(
-            fill: Color.secondary.opacity(0.04),
-            stroke: Color.secondary.opacity(0.14),
-            dash: [6, 6],
-            cornerRadius: 16
-        )
-    }
-
-    private func dragPreview(
-        title: String,
-        subtitle: String,
-        icon: String? = nil,
-        color: Color? = nil
-    ) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "line.3.horizontal")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(.secondary)
-
-            if let color {
-                Circle()
-                    .fill(color)
-                    .frame(width: 8, height: 8)
-            } else if let icon {
-                Image(systemName: icon)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .lineLimit(1)
-
-                Text(subtitle)
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.regularMaterial)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.secondary.opacity(0.16), lineWidth: 1)
-        )
-        .frame(width: 180, alignment: .leading)
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(.regularMaterial, in: Capsule())
     }
 
     private func filledSlotCount(in layer: GridLayer) -> Int {
