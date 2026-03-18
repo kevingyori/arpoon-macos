@@ -54,12 +54,13 @@ struct MacOSFocusController {
     }
 
     private func focusWindowElement(_ element: AXUIElement) -> Bool {
+        // Match AltTab's lighter-touch behavior here: let WindowServer front the
+        // specific window, then only ask AX to raise it. Forcing AX main/focused
+        // status is more invasive and can perturb app-level recency ordering.
         let unminimizeResult = AXUIElementSetAttributeValue(element, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
         let raiseResult = AXUIElementPerformAction(element, kAXRaiseAction as CFString)
-        let mainResult = AXUIElementSetAttributeValue(element, kAXMainAttribute as CFString, kCFBooleanTrue)
-        let focusedResult = AXUIElementSetAttributeValue(element, kAXFocusedAttribute as CFString, kCFBooleanTrue)
 
-        return [unminimizeResult, raiseResult, mainResult, focusedResult].contains(.success)
+        return [unminimizeResult, raiseResult].contains(.success)
     }
 
     // Mirrors the event sequence AltTab uses to ask WindowServer to make a specific

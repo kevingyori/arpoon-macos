@@ -22,7 +22,8 @@ struct AccessibilityWindowProvider {
         let infos = cgWindowInfos(for: app.processIdentifier)
         let title = windowTitle(for: axWindow)
         let frame = windowFrame(for: axWindow)
-        let windowID = matchingWindowID(title: title, frame: frame, infos: infos, excluding: [])
+        let windowID = validatedDirectWindowID(for: axWindow, infos: infos, excluding: []) ??
+            matchingWindowID(title: title, frame: frame, infos: infos, excluding: [])
 
         return LiveWindow(
             bundleId: bundleId,
@@ -140,7 +141,8 @@ struct AccessibilityWindowProvider {
         return axWindows.compactMap { axWindow in
             let title = windowTitle(for: axWindow)
             let frame = windowFrame(for: axWindow)
-            let windowID = matchingWindowID(title: title, frame: frame, infos: infos, excluding: consumedIDs)
+            let windowID = validatedDirectWindowID(for: axWindow, infos: infos, excluding: consumedIDs) ??
+                matchingWindowID(title: title, frame: frame, infos: infos, excluding: consumedIDs)
 
             if let windowID {
                 consumedIDs.insert(windowID)
@@ -228,6 +230,26 @@ struct AccessibilityWindowProvider {
         }
 
         return size
+    }
+
+    private func validatedDirectWindowID(
+        for element: AXUIElement,
+        infos: [CGWindowInfo],
+        excluding consumedIDs: Set<Int>
+    ) -> Int? {
+        var windowID = CGWindowID(0)
+        let result = _AXUIElementGetWindow(element, &windowID)
+        guard result == .success, windowID != 0 else {
+            return nil
+        }
+
+        let intID = Int(windowID)
+        guard !consumedIDs.contains(intID),
+              infos.contains(where: { $0.windowID == intID }) else {
+            return nil
+        }
+
+        return intID
     }
 
     private func windowTitle(for element: AXUIElement) -> String? {
@@ -524,3 +546,6 @@ enum SpatialNavigationDirection {
         }
     }
 }
+
+@_silgen_name("_AXUIElementGetWindow") @discardableResult
+private func _AXUIElementGetWindow(_ element: AXUIElement, _ identifier: UnsafeMutablePointer<CGWindowID>) -> AXError
