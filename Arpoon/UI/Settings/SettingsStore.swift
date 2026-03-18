@@ -58,8 +58,8 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(animateGridMinimapSelection, forKey: Keys.animateGridMinimapSelection) }
     }
 
-    @Published var showGridProjectNamesInHUD: Bool {
-        didSet { defaults.set(showGridProjectNamesInHUD, forKey: Keys.showGridProjectNamesInHUD) }
+    @Published var showGridProjectsInHUD: Bool {
+        didSet { defaults.set(showGridProjectsInHUD, forKey: Keys.showGridProjectsInHUD) }
     }
 
     @Published var enableExperimentalGridExternalSync: Bool {
@@ -98,7 +98,11 @@ final class SettingsStore: ObservableObject {
         }
 
         animateGridMinimapSelection = defaults.object(forKey: Keys.animateGridMinimapSelection) as? Bool ?? true
-        showGridProjectNamesInHUD = defaults.object(forKey: Keys.showGridProjectNamesInHUD) as? Bool ?? true
+        if defaults.object(forKey: Keys.showGridProjectsInHUD) != nil {
+            showGridProjectsInHUD = defaults.bool(forKey: Keys.showGridProjectsInHUD)
+        } else {
+            showGridProjectsInHUD = defaults.object(forKey: Keys.showGridProjectNamesInHUD) as? Bool ?? true
+        }
         enableExperimentalGridExternalSync = defaults.object(forKey: Keys.enableExperimentalGridExternalSync) as? Bool ?? true
     }
 
@@ -255,6 +259,7 @@ private enum Keys {
     static let showHUDOnOptionHold = "showHUDOnOptionHold"
     static let optionHoldDuration = "optionHoldDuration"
     static let animateGridMinimapSelection = "animateGridMinimapSelection"
+    static let showGridProjectsInHUD = "showGridProjectsInHUD"
     static let showGridProjectNamesInHUD = "showGridProjectNamesInHUD"
     static let enableExperimentalGridExternalSync = "enableExperimentalGridExternalSync"
     static let showNotificationPopups = "showNotificationPopups"

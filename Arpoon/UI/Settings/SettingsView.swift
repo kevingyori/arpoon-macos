@@ -317,9 +317,9 @@ private struct GeneralSettingsPane: View {
                         Divider()
 
                         settingsToggle(
-                            "Show project names in The Grid HUD",
-                            description: "Display the project labels down the left side of the Grid minimap HUD.",
-                            isOn: $settings.showGridProjectNamesInHUD
+                            "Show projects in The Grid HUD",
+                            description: "Display the full project lane down the left side of the Grid minimap HUD.",
+                            isOn: $settings.showGridProjectsInHUD
                         )
 
                         Divider()

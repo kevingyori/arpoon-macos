@@ -1315,7 +1315,7 @@ final class AppCommandCenter {
                 movement: movement,
                 hint: hint,
                 animateSelectionMotion: settings.animateGridMinimapSelection,
-                showsLayerNames: settings.showGridProjectNamesInHUD,
+                showsLayerPills: settings.showGridProjectsInHUD,
                 detailMode: detailMode,
                 selectedLayerIndex: selectedLayerIndex,
                 selectedColumnIndex: selectedColumnIndex

@@ -270,11 +270,15 @@ private struct GridMinimapAnimatedView: View {
     }
 
     private var rowLabelWidth: CGFloat {
-        minimap.showsLayerNames ? (minimap.detailMode == .compact ? 120 : 140) : 0
+        minimap.showsLayerPills ? (minimap.detailMode == .compact ? 120 : 140) : 0
     }
 
     private var rowLabelTotalWidth: CGFloat {
-        minimap.showsLayerNames ? rowLabelWidth + 20 : 20
+        minimap.showsLayerPills ? rowLabelWidth + 20 : 0
+    }
+
+    private var leadingGridSpacing: CGFloat {
+        minimap.showsLayerPills ? columnSpacing : 0
     }
 
     private var cellWidth: CGFloat {
@@ -298,7 +302,7 @@ private struct GridMinimapAnimatedView: View {
     }
 
     private var gridBodyWidth: CGFloat {
-        rowLabelTotalWidth + columnSpacing + CGFloat(max(0, minimap.maxColumnCount)) * cellTotalWidth + CGFloat(max(0, minimap.maxColumnCount - 1)) * columnSpacing
+        rowLabelTotalWidth + leadingGridSpacing + CGFloat(max(0, minimap.maxColumnCount)) * cellTotalWidth + CGFloat(max(0, minimap.maxColumnCount - 1)) * columnSpacing
     }
 
     private var gridBodyHeight: CGFloat {
@@ -316,23 +320,23 @@ private struct GridMinimapAnimatedView: View {
     @ViewBuilder
     private func rowView(_ layer: GridMinimapLayer, rowIndex: Int) -> some View {
         HStack(spacing: columnSpacing) {
-            HStack(spacing: 8) {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(layer.color.swiftUIColor)
-                    .frame(width: 4, height: minimap.detailMode == .compact ? 18 : 24)
+            if minimap.showsLayerPills {
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(layer.color.swiftUIColor)
+                        .frame(width: 4, height: minimap.detailMode == .compact ? 18 : 24)
 
-                if minimap.showsLayerNames {
                     Text(layer.name)
                         .font(.system(size: minimap.detailMode == .compact ? 11.5 : 12.5, weight: .medium))
                         .lineLimit(1)
                 }
+                .frame(width: rowLabelWidth, height: rowHeight, alignment: .leading)
+                .padding(.horizontal, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.secondary.opacity(0.05))
+                )
             }
-            .frame(width: rowLabelWidth, height: rowHeight, alignment: .leading)
-            .padding(.horizontal, minimap.showsLayerNames ? 10 : 8)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.secondary.opacity(0.05))
-            )
 
             ForEach(Array(layer.columns.enumerated()), id: \.element.id) { columnIndex, column in
                 gridColumnView(
@@ -410,7 +414,7 @@ private struct GridMinimapAnimatedView: View {
     }
 
     private var selectorX: CGFloat {
-        rowLabelTotalWidth + columnSpacing + CGFloat(displayedColumnIndex) * (cellTotalWidth + columnSpacing)
+        rowLabelTotalWidth + leadingGridSpacing + CGFloat(displayedColumnIndex) * (cellTotalWidth + columnSpacing)
     }
 
     private var selectorY: CGFloat {
