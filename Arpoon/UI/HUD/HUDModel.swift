@@ -40,6 +40,7 @@ struct GridMinimapModel: Hashable {
     let movement: GridSelectionChange
     let hint: GridHUDHint?
     let animateSelectionMotion: Bool
+    let showsLayerNames: Bool
     let detailMode: DetailMode
     let selectedLayerIndex: Int
     let selectedColumnIndex: Int
@@ -87,8 +88,8 @@ enum HUDModel {
             let columns = max(1, minimap.maxColumnCount)
             let cellWidth = minimap.detailMode == .compact ? 64.0 : 88.0
             let spacing = minimap.detailMode == .compact ? 8.0 : 10.0
-            let rowLabelWidth = minimap.detailMode == .compact ? 120.0 : 140.0
-            let rowLabelTotalWidth = rowLabelWidth + 20.0
+            let rowLabelWidth = minimap.showsLayerNames ? (minimap.detailMode == .compact ? 120.0 : 140.0) : 0.0
+            let rowLabelTotalWidth = minimap.showsLayerNames ? rowLabelWidth + 20.0 : 20.0
             let cellTotalWidth = cellWidth + 16.0
             return 36.0 + rowLabelTotalWidth + (Double(columns) * cellTotalWidth) + (Double(max(0, columns - 1)) * spacing)
         }

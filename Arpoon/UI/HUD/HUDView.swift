@@ -270,11 +270,11 @@ private struct GridMinimapAnimatedView: View {
     }
 
     private var rowLabelWidth: CGFloat {
-        minimap.detailMode == .compact ? 120 : 140
+        minimap.showsLayerNames ? (minimap.detailMode == .compact ? 120 : 140) : 0
     }
 
     private var rowLabelTotalWidth: CGFloat {
-        rowLabelWidth + 20
+        minimap.showsLayerNames ? rowLabelWidth + 20 : 20
     }
 
     private var cellWidth: CGFloat {
@@ -321,12 +321,14 @@ private struct GridMinimapAnimatedView: View {
                     .fill(layer.color.swiftUIColor)
                     .frame(width: 4, height: minimap.detailMode == .compact ? 18 : 24)
 
-                Text(layer.name)
-                    .font(.system(size: minimap.detailMode == .compact ? 11.5 : 12.5, weight: .medium))
-                    .lineLimit(1)
+                if minimap.showsLayerNames {
+                    Text(layer.name)
+                        .font(.system(size: minimap.detailMode == .compact ? 11.5 : 12.5, weight: .medium))
+                        .lineLimit(1)
+                }
             }
             .frame(width: rowLabelWidth, height: rowHeight, alignment: .leading)
-            .padding(.horizontal, 10)
+            .padding(.horizontal, minimap.showsLayerNames ? 10 : 8)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.secondary.opacity(0.05))

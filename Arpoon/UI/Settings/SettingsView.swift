@@ -317,6 +317,14 @@ private struct GeneralSettingsPane: View {
                         Divider()
 
                         settingsToggle(
+                            "Show project names in The Grid HUD",
+                            description: "Display the project labels down the left side of the Grid minimap HUD.",
+                            isOn: $settings.showGridProjectNamesInHUD
+                        )
+
+                        Divider()
+
+                        settingsToggle(
                             "Experimental external Grid sync",
                             description: "Update the active Grid cell when you switch windows outside Arpoon. Disabled by default because it still has edge-case weirdness.",
                             isOn: $settings.enableExperimentalGridExternalSync
