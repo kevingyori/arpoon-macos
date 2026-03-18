@@ -90,8 +90,10 @@ struct GridSettingsPane: View {
 
     private var gridHeaderRow: some View {
         HStack(alignment: .top, spacing: boardSpacing) {
-            Color.clear
-                .frame(width: rowLabelWidth + (cardHorizontalInset * 2), height: headerHeight)
+            dragHintCard(
+                title: "Reorder",
+                detail: "Drag projects and columns to rearrange the Grid."
+            )
 
             ForEach(gridStore.columns) { column in
                 columnHeaderCell(column)
@@ -107,6 +109,8 @@ struct GridSettingsPane: View {
         } label: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
+                    dragHandleIcon
+
                     Image(systemName: column.iconSymbol)
                         .font(.system(size: 13, weight: .semibold))
 
@@ -115,7 +119,7 @@ struct GridSettingsPane: View {
                         .lineLimit(1)
                 }
 
-                Text(column.kind == .custom ? "Custom column" : "Default column")
+                Text(column.kind == .custom ? "Custom column · Drag to reorder" : "Default column · Drag to reorder")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -131,6 +135,12 @@ struct GridSettingsPane: View {
         .onDrag {
             draggedColumnID = column.id
             return NSItemProvider(object: NSString(string: column.id))
+        } preview: {
+            dragPreview(
+                title: column.title,
+                subtitle: "Move Column",
+                icon: column.iconSymbol
+            )
         }
         .onDrop(
             of: [UTType.text],
@@ -192,6 +202,8 @@ struct GridSettingsPane: View {
         } label: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
+                    dragHandleIcon
+
                     Circle()
                         .fill(layer.color.swiftUIColor)
                         .frame(width: 10, height: 10)
@@ -201,7 +213,7 @@ struct GridSettingsPane: View {
                         .lineLimit(1)
                 }
 
-                Text("\(filledSlotCount(in: layer))/\(gridStore.columns.count) assigned")
+                Text("\(filledSlotCount(in: layer))/\(gridStore.columns.count) assigned · Drag to reorder")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -217,6 +229,12 @@ struct GridSettingsPane: View {
         .onDrag {
             draggedLayerID = layer.id
             return NSItemProvider(object: NSString(string: layer.id))
+        } preview: {
+            dragPreview(
+                title: layer.name,
+                subtitle: "Move Project",
+                color: layer.color.swiftUIColor
+            )
         }
         .onDrop(
             of: [UTType.text],
@@ -733,6 +751,82 @@ struct GridSettingsPane: View {
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var dragHandleIcon: some View {
+        Image(systemName: "line.3.horizontal")
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(.secondary.opacity(0.8))
+    }
+
+    private func dragHintCard(title: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.secondary)
+
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+            }
+
+            Text(detail)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(width: rowLabelWidth, height: headerHeight, alignment: .leading)
+        .padding(.horizontal, cardHorizontalInset)
+        .cardBackground(
+            fill: Color.secondary.opacity(0.04),
+            stroke: Color.secondary.opacity(0.14),
+            dash: [6, 6],
+            cornerRadius: 16
+        )
+    }
+
+    private func dragPreview(
+        title: String,
+        subtitle: String,
+        icon: String? = nil,
+        color: Color? = nil
+    ) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "line.3.horizontal")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(.secondary)
+
+            if let color {
+                Circle()
+                    .fill(color)
+                    .frame(width: 8, height: 8)
+            } else if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+
+                Text(subtitle)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.regularMaterial)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.secondary.opacity(0.16), lineWidth: 1)
+        )
+        .frame(width: 180, alignment: .leading)
     }
 
     private func filledSlotCount(in layer: GridLayer) -> Int {
@@ -1336,6 +1430,10 @@ private struct GridLayerDropDelegate: DropDelegate {
         }
     }
 
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
     func performDrop(info: DropInfo) -> Bool {
         draggedLayerID = nil
         return true
@@ -1362,6 +1460,10 @@ private struct GridColumnDropDelegate: DropDelegate {
                 toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex
             )
         }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
     }
 
     func performDrop(info: DropInfo) -> Bool {
