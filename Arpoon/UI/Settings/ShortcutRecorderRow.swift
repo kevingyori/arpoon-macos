@@ -3,12 +3,13 @@ import Carbon
 import SwiftUI
 
 struct ShortcutRecorderRow: View {
-    let action: HotkeyAction
-    let title: String?
-    let description: String?
-
-    @ObservedObject var settings: SettingsStore
+    let recorderID: String
+    let title: String
+    let description: String
+    let currentShortcut: HotkeyShortcut?
     let resetShortcut: HotkeyShortcut?
+    let applyShortcutHandler: (HotkeyShortcut) -> String?
+    let clearShortcutHandler: () -> Void
     @Binding var activeRecorderID: String?
 
     @State private var eventMonitor: Any?
@@ -16,12 +17,61 @@ struct ShortcutRecorderRow: View {
 
     private let shortcutFieldWidth: CGFloat = 156
 
+    init(
+        action: HotkeyAction,
+        title: String? = nil,
+        description: String? = nil,
+        settings: SettingsStore,
+        resetShortcut: HotkeyShortcut?,
+        activeRecorderID: Binding<String?>
+    ) {
+        recorderID = action.id
+        self.title = title ?? settings.title(for: action)
+        self.description = description ?? (settings.shortcut(for: action) == nil ? "No shortcut assigned." : "Global shortcut is active.")
+        currentShortcut = settings.shortcut(for: action)
+        self.resetShortcut = resetShortcut
+        applyShortcutHandler = { shortcut in
+            switch settings.setShortcut(shortcut, for: action) {
+            case .updated:
+                return nil
+            case .duplicate(let duplicate):
+                return "Already assigned to \(settings.title(for: duplicate))."
+            case .requiresModifier:
+                return "Use at least one modifier key."
+            }
+        }
+        clearShortcutHandler = {
+            settings.clearShortcut(for: action)
+        }
+        _activeRecorderID = activeRecorderID
+    }
+
+    init(
+        recorderID: String,
+        title: String,
+        description: String,
+        currentShortcut: HotkeyShortcut?,
+        resetShortcut: HotkeyShortcut? = nil,
+        activeRecorderID: Binding<String?>,
+        applyShortcut: @escaping (HotkeyShortcut) -> String?,
+        clearShortcut: @escaping () -> Void
+    ) {
+        self.recorderID = recorderID
+        self.title = title
+        self.description = description
+        self.currentShortcut = currentShortcut
+        self.resetShortcut = resetShortcut
+        applyShortcutHandler = applyShortcut
+        clearShortcutHandler = clearShortcut
+        _activeRecorderID = activeRecorderID
+    }
+
     private var isRecording: Bool {
-        activeRecorderID == action.id
+        activeRecorderID == recorderID
     }
 
     private var hasShortcut: Bool {
-        settings.shortcut(for: action) != nil
+        currentShortcut != nil
     }
 
     private var shortcutLabel: String {
@@ -29,16 +79,16 @@ struct ShortcutRecorderRow: View {
             return "Type Shortcut"
         }
 
-        return settings.shortcut(for: action)?.displayString ?? "Disabled"
+        return currentShortcut?.displayString ?? "Disabled"
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(rowTitle)
+                    Text(title)
                         .font(.system(size: 13, weight: .medium))
-                    Text(descriptionText)
+                    Text(description)
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -77,20 +127,12 @@ struct ShortcutRecorderRow: View {
         }
     }
 
-    private var rowTitle: String {
-        title ?? settings.title(for: action)
-    }
-
-    private var descriptionText: String {
-        description ?? (settings.shortcut(for: action) == nil ? "No shortcut assigned." : "Global shortcut is active.")
-    }
-
     @ViewBuilder
     private var shortcutButton: some View {
         ZStack(alignment: .trailing) {
             Button {
                 errorMessage = nil
-                activeRecorderID = isRecording ? nil : action.id
+                activeRecorderID = isRecording ? nil : recorderID
             } label: {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -155,9 +197,7 @@ struct ShortcutRecorderRow: View {
         }
 
         if keyCode == UInt32(kVK_Delete) || keyCode == UInt32(kVK_ForwardDelete) {
-            settings.clearShortcut(for: action)
-            errorMessage = nil
-            activeRecorderID = nil
+            clearShortcut()
             return
         }
 
@@ -170,20 +210,17 @@ struct ShortcutRecorderRow: View {
     }
 
     private func applyShortcut(_ shortcut: HotkeyShortcut) {
-        switch settings.setShortcut(shortcut, for: action) {
-        case .updated:
+        if let error = applyShortcutHandler(shortcut) {
+            errorMessage = error
+        } else {
             errorMessage = nil
             activeRecorderID = nil
-        case .duplicate(let duplicate):
-            errorMessage = "Already assigned to \(settings.title(for: duplicate))."
-        case .requiresModifier:
-            errorMessage = "Use at least one modifier key."
         }
     }
 
     private func clearShortcut() {
         errorMessage = nil
-        settings.clearShortcut(for: action)
+        clearShortcutHandler()
         activeRecorderID = nil
     }
 }

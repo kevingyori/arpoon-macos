@@ -1052,23 +1052,8 @@ private struct GridStandaloneAppInspector: View {
     let refreshAvailableWindows: @MainActor () -> Void
     @Binding var activeRecorderID: String?
 
-    @State private var eventMonitor: Any?
-    @State private var errorMessage: String?
-
     private var recorderID: String {
         "grid-standalone-\(app.id)"
-    }
-
-    private var isRecording: Bool {
-        activeRecorderID == recorderID
-    }
-
-    private var shortcutLabel: String {
-        if isRecording {
-            return "Type Shortcut"
-        }
-
-        return app.shortcut?.displayString ?? "Disabled"
     }
 
     private func usageTags(for window: LiveWindow, excludingStandaloneAppID: String) -> [String] {
@@ -1143,36 +1128,32 @@ private struct GridStandaloneAppInspector: View {
             }
 
             GridSettingsFieldSection(title: "Shortcut") {
-                HStack(spacing: 8) {
-                    let shortcutButton = Button {
-                        errorMessage = nil
-                        activeRecorderID = isRecording ? nil : recorderID
-                    } label: {
-                        Text(shortcutLabel)
-                            .font(.system(size: 12, weight: .medium, design: .monospaced))
-                            .frame(minWidth: 138)
-                    }
+                ShortcutRecorderRow(
+                    recorderID: recorderID,
+                    title: "Launch \(app.binding?.label ?? app.name)",
+                    description: "Triggers this standalone app shortcut from anywhere.",
+                    currentShortcut: app.shortcut,
+                    activeRecorderID: $activeRecorderID,
+                    applyShortcut: { shortcut in
+                        if let duplicateAction = settings.activeHotkeyActions(for: .grid).first(where: { action in
+                            settings.shortcut(for: action) == shortcut
+                        }) {
+                            return "Already assigned to \(settings.title(for: duplicateAction))."
+                        }
 
-                    if isRecording {
-                        shortcutButton.buttonStyle(.borderedProminent)
-                    } else {
-                        shortcutButton.buttonStyle(.bordered)
-                    }
+                        if let duplicateApp = gridStore.standaloneApps.first(where: {
+                            $0.id != app.id && $0.shortcut == shortcut
+                        }) {
+                            return "Already assigned to \(duplicateApp.name)."
+                        }
 
-                    Button("Clear Shortcut") {
-                        errorMessage = nil
+                        gridStore.setStandaloneAppShortcut(id: app.id, shortcut: shortcut)
+                        return nil
+                    },
+                    clearShortcut: {
                         gridStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
-                        activeRecorderID = nil
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(app.shortcut == nil)
-
-                    resetFieldButton {
-                        errorMessage = nil
-                        gridStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
-                        activeRecorderID = nil
-                    }
-                }
+                )
             }
 
             GridSettingsFieldSection(title: "Target") {
@@ -1214,83 +1195,9 @@ private struct GridStandaloneAppInspector: View {
                 }
                 .buttonStyle(.borderless)
             }
-
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.orange)
-            }
-
             Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .onChange(of: isRecording) { _, newValue in
-            if newValue {
-                startRecording()
-            } else {
-                stopRecording()
-            }
-        }
-        .onDisappear {
-            stopRecording()
-        }
-    }
-
-    private func startRecording() {
-        stopRecording()
-
-        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
-            handle(event)
-            return nil
-        }
-    }
-
-    private func stopRecording() {
-        guard let eventMonitor else {
-            return
-        }
-
-        NSEvent.removeMonitor(eventMonitor)
-        self.eventMonitor = nil
-    }
-
-    private func handle(_ event: NSEvent) {
-        let keyCode = UInt32(event.keyCode)
-
-        if keyCode == UInt32(kVK_Escape) {
-            activeRecorderID = nil
-            return
-        }
-
-        if keyCode == UInt32(kVK_Delete) || keyCode == UInt32(kVK_ForwardDelete) {
-            gridStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
-            errorMessage = nil
-            activeRecorderID = nil
-            return
-        }
-
-        guard let shortcut = HotkeyShortcut(event: event) else {
-            errorMessage = "Use at least one modifier key."
-            return
-        }
-
-        if let duplicateAction = settings.activeHotkeyActions(for: .grid).first(where: { action in
-            settings.shortcut(for: action) == shortcut
-        }) {
-            errorMessage = "Already assigned to \(settings.title(for: duplicateAction))."
-            return
-        }
-
-        if let duplicateApp = gridStore.standaloneApps.first(where: {
-            $0.id != app.id && $0.shortcut == shortcut
-        }) {
-            errorMessage = "Already assigned to \(duplicateApp.name)."
-            return
-        }
-
-        gridStore.setStandaloneAppShortcut(id: app.id, shortcut: shortcut)
-        errorMessage = nil
-        activeRecorderID = nil
     }
 }
 
