@@ -574,7 +574,7 @@ struct GridSettingsPane: View {
 
             if let action {
                 GridSettingsFieldSection(title: "Shortcut") {
-                    shortcutEditorRow(
+                    shortcutEditorSection(
                         action: action,
                         title: "Jump to \(layer.name)",
                         description: "Triggers this project row directly from anywhere."
@@ -633,7 +633,7 @@ struct GridSettingsPane: View {
             }
 
             GridSettingsFieldSection(title: "Shortcut") {
-                shortcutEditorRow(
+                shortcutEditorSection(
                     action: action,
                     title: "Focus \(column.title)",
                     description: "Jumps straight to this column inside the current project."
@@ -888,18 +888,26 @@ struct GridSettingsPane: View {
         TargetLabelPolicy().label(for: binding.target)
     }
 
-    private func shortcutEditorRow(
+    private func shortcutEditorSection(
         action: HotkeyAction,
         title: String,
         description: String
     ) -> some View {
-        ShortcutRecorderRow(
-            action: action,
-            title: title,
-            description: description,
-            settings: settings,
-            resetShortcut: action.defaultShortcut,
-            activeRecorderID: $activeRecorderID
+        VStack(alignment: .leading, spacing: 0) {
+            ShortcutRecorderRow(
+                action: action,
+                title: title,
+                description: description,
+                settings: settings,
+                resetShortcut: action.defaultShortcut,
+                activeRecorderID: $activeRecorderID
+            )
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
         )
     }
 
@@ -1128,31 +1136,43 @@ private struct GridStandaloneAppInspector: View {
             }
 
             GridSettingsFieldSection(title: "Shortcut") {
-                ShortcutRecorderRow(
-                    recorderID: recorderID,
-                    title: "Launch \(app.binding?.label ?? app.name)",
-                    description: "Triggers this standalone app shortcut from anywhere.",
-                    currentShortcut: app.shortcut,
-                    activeRecorderID: $activeRecorderID,
-                    applyShortcut: { shortcut in
-                        if let duplicateAction = settings.activeHotkeyActions(for: .grid).first(where: { action in
-                            settings.shortcut(for: action) == shortcut
-                        }) {
-                            return "Already assigned to \(settings.title(for: duplicateAction))."
-                        }
+                VStack(alignment: .leading, spacing: 0) {
+                    ShortcutRecorderRow(
+                        recorderID: recorderID,
+                        title: "Launch \(app.binding?.label ?? app.name)",
+                        description: "Triggers this standalone app shortcut from anywhere.",
+                        currentShortcut: app.shortcut,
+                        resetButtonHelp: "Reset shortcut",
+                        activeRecorderID: $activeRecorderID,
+                        applyShortcut: { shortcut in
+                            if let duplicateAction = settings.activeHotkeyActions(for: .grid).first(where: { action in
+                                settings.shortcut(for: action) == shortcut
+                            }) {
+                                return "Already assigned to \(settings.title(for: duplicateAction))."
+                            }
 
-                        if let duplicateApp = gridStore.standaloneApps.first(where: {
-                            $0.id != app.id && $0.shortcut == shortcut
-                        }) {
-                            return "Already assigned to \(duplicateApp.name)."
-                        }
+                            if let duplicateApp = gridStore.standaloneApps.first(where: {
+                                $0.id != app.id && $0.shortcut == shortcut
+                            }) {
+                                return "Already assigned to \(duplicateApp.name)."
+                            }
 
-                        gridStore.setStandaloneAppShortcut(id: app.id, shortcut: shortcut)
-                        return nil
-                    },
-                    clearShortcut: {
-                        gridStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
-                    }
+                            gridStore.setStandaloneAppShortcut(id: app.id, shortcut: shortcut)
+                            return nil
+                        },
+                        clearShortcut: {
+                            gridStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
+                        },
+                        resetShortcut: {
+                            gridStore.setStandaloneAppShortcut(id: app.id, shortcut: nil)
+                        }
+                    )
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(nsColor: .controlBackgroundColor))
                 )
             }
 

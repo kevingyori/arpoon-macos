@@ -7,9 +7,10 @@ struct ShortcutRecorderRow: View {
     let title: String
     let description: String
     let currentShortcut: HotkeyShortcut?
-    let resetShortcut: HotkeyShortcut?
+    let resetButtonHelp: String?
     let applyShortcutHandler: (HotkeyShortcut) -> String?
     let clearShortcutHandler: () -> Void
+    let resetShortcutHandler: (() -> Void)?
     @Binding var activeRecorderID: String?
 
     @State private var eventMonitor: Any?
@@ -29,7 +30,7 @@ struct ShortcutRecorderRow: View {
         self.title = title ?? settings.title(for: action)
         self.description = description ?? (settings.shortcut(for: action) == nil ? "No shortcut assigned." : "Global shortcut is active.")
         currentShortcut = settings.shortcut(for: action)
-        self.resetShortcut = resetShortcut
+        resetButtonHelp = resetShortcut.map { "Reset to \($0.displayString)" }
         applyShortcutHandler = { shortcut in
             switch settings.setShortcut(shortcut, for: action) {
             case .updated:
@@ -43,6 +44,14 @@ struct ShortcutRecorderRow: View {
         clearShortcutHandler = {
             settings.clearShortcut(for: action)
         }
+        resetShortcutHandler = resetShortcut.map { shortcut in
+            {
+                switch settings.setShortcut(shortcut, for: action) {
+                case .updated, .duplicate, .requiresModifier:
+                    break
+                }
+            }
+        }
         _activeRecorderID = activeRecorderID
     }
 
@@ -51,18 +60,20 @@ struct ShortcutRecorderRow: View {
         title: String,
         description: String,
         currentShortcut: HotkeyShortcut?,
-        resetShortcut: HotkeyShortcut? = nil,
+        resetButtonHelp: String? = nil,
         activeRecorderID: Binding<String?>,
         applyShortcut: @escaping (HotkeyShortcut) -> String?,
-        clearShortcut: @escaping () -> Void
+        clearShortcut: @escaping () -> Void,
+        resetShortcut: (() -> Void)? = nil
     ) {
         self.recorderID = recorderID
         self.title = title
         self.description = description
         self.currentShortcut = currentShortcut
-        self.resetShortcut = resetShortcut
+        self.resetButtonHelp = resetButtonHelp
         applyShortcutHandler = applyShortcut
         clearShortcutHandler = clearShortcut
+        resetShortcutHandler = resetShortcut
         _activeRecorderID = activeRecorderID
     }
 
@@ -97,15 +108,16 @@ struct ShortcutRecorderRow: View {
 
                 shortcutButton
 
-                if let resetShortcut {
+                if let resetButtonHelp, let resetShortcutHandler {
                     Button {
                         errorMessage = nil
-                        applyShortcut(resetShortcut)
+                        resetShortcutHandler()
+                        activeRecorderID = nil
                     } label: {
                         Image(systemName: "arrow.counterclockwise")
                     }
                     .buttonStyle(.borderless)
-                    .help("Reset to \(resetShortcut.displayString)")
+                    .help(resetButtonHelp)
                 }
             }
 
