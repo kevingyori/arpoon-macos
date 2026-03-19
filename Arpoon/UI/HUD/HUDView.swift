@@ -214,6 +214,11 @@ private struct GridMinimapAnimatedView: View {
     @State private var displayedLayerIndex: Int = 0
     @State private var displayedColumnIndex: Int = 0
     @State private var hasAppeared = false
+    @State private var selectionPulse: CGFloat = 0
+    @State private var selectorLeadX: CGFloat = 0
+    @State private var selectorLeadY: CGFloat = 0
+    @State private var selectorStretchX: CGFloat = 1
+    @State private var selectorStretchY: CGFloat = 1
 
     init(minimap: GridMinimapModel) {
         self.minimap = minimap
@@ -321,6 +326,7 @@ private struct GridMinimapAnimatedView: View {
     @ViewBuilder
     private func rowView(_ layer: GridMinimapLayer, rowIndex: Int) -> some View {
         let isSelectedLayer = minimap.selectedLayerIndex == rowIndex
+        let layerPulse = isSelectedLayer ? selectedLayerPulse : 0
 
         HStack(spacing: columnSpacing) {
             if minimap.showsLayerPills {
@@ -338,21 +344,23 @@ private struct GridMinimapAnimatedView: View {
                 .background(
                     ZStack {
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.black.opacity(isSelectedLayer ? 0.44 : 0.26))
+                            .fill(Color.black.opacity(isSelectedLayer ? 0.44 + 0.12 * layerPulse : 0.26))
 
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(isSelectedLayer ? layer.color.swiftUIColor.opacity(0.22) : Color.white.opacity(0.03))
+                            .fill(isSelectedLayer ? layer.color.swiftUIColor.opacity(0.22 + 0.16 * layerPulse) : Color.white.opacity(0.03))
                     }
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
-                            isSelectedLayer ? layer.color.swiftUIColor.opacity(0.52) : Color.white.opacity(0.08),
+                            isSelectedLayer ? layer.color.swiftUIColor.opacity(0.52 + 0.20 * layerPulse) : Color.white.opacity(0.08),
                             lineWidth: 1
                         )
                 )
+                .scaleEffect(x: isSelectedLayer ? 1 + 0.035 * layerPulse : 1, y: isSelectedLayer ? 1 + 0.02 * layerPulse : 1)
                 .shadow(color: Color.black.opacity(0.28), radius: 10, x: 0, y: 4)
-                .shadow(color: isSelectedLayer ? layer.color.swiftUIColor.opacity(0.42) : .clear, radius: 16, x: 0, y: 0)
+                .shadow(color: isSelectedLayer ? layer.color.swiftUIColor.opacity(0.42 + 0.18 * layerPulse) : .clear, radius: 16 + 10 * layerPulse, x: 0, y: 0)
+                .zIndex(isSelectedLayer ? 1 : 0)
             }
 
             ForEach(Array(layer.columns.enumerated()), id: \.element.id) { columnIndex, column in
@@ -376,6 +384,7 @@ private struct GridMinimapAnimatedView: View {
         let isTargetSelected = minimap.selectedLayerIndex == rowIndex && minimap.selectedColumnIndex == columnIndex
         let showLabel = minimap.detailMode == .expanded && isTargetSelected && (column.activeLabel?.isEmpty == false)
         let hasAppIcon = column.bundleId?.isEmpty == false
+        let cellPulse = isTargetSelected ? selectedCellPulse : 0
 
         VStack(spacing: 4) {
             HStack(spacing: 6) {
@@ -409,36 +418,38 @@ private struct GridMinimapAnimatedView: View {
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.black.opacity(isTargetSelected ? 0.38 : 0.24))
+                    .fill(Color.black.opacity(isTargetSelected ? 0.38 + 0.10 * cellPulse : 0.24))
 
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isTargetSelected ? layerColor.swiftUIColor.opacity(0.26) : Color.white.opacity(0.03))
+                    .fill(isTargetSelected ? layerColor.swiftUIColor.opacity(0.26 + 0.20 * cellPulse) : Color.white.opacity(0.03))
             }
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(
-                    isTargetSelected ? layerColor.swiftUIColor.opacity(0.48) : Color.white.opacity(0.08),
+                    isTargetSelected ? layerColor.swiftUIColor.opacity(0.48 + 0.20 * cellPulse) : Color.white.opacity(0.08),
                     lineWidth: 1
                 )
         )
+        .scaleEffect(isTargetSelected ? 1 + 0.05 * cellPulse : 1)
         .shadow(color: Color.black.opacity(0.24), radius: 8, x: 0, y: 4)
-        .shadow(color: isTargetSelected ? layerColor.swiftUIColor.opacity(0.28) : .clear, radius: 10, x: 0, y: 0)
+        .shadow(color: isTargetSelected ? layerColor.swiftUIColor.opacity(0.28 + 0.18 * cellPulse) : .clear, radius: 10 + 8 * cellPulse, x: 0, y: 0)
+        .zIndex(isTargetSelected ? 1 : 0)
     }
 
     @ViewBuilder
     private var selectorView: some View {
         RoundedRectangle(cornerRadius: 12)
-            .stroke(selectorColor, lineWidth: 1.5)
+            .stroke(selectorColor, lineWidth: 1.5 + 0.55 * selectionPulse)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(selectorGlowColor.opacity(0.12))
+                    .fill(selectorGlowColor.opacity(0.12 + 0.12 * selectionPulse))
             )
-            .shadow(color: selectorGlowColor, radius: 18, x: 0, y: 0)
+            .shadow(color: selectorGlowColor.opacity(0.9), radius: 18 + 12 * selectionPulse, x: 0, y: 0)
+            .scaleEffect(x: selectorStretchX, y: selectorStretchY)
             .frame(width: selectorWidth, height: selectorHeight)
-            .offset(x: selectorX, y: selectorY)
-            .animation(selectorAnimation, value: displayedLayerIndex)
-            .animation(selectorAnimation, value: displayedColumnIndex)
+            .offset(x: selectorX + selectorLeadX, y: selectorY + selectorLeadY)
+            .zIndex(3)
     }
 
     private var selectorColor: Color {
@@ -457,6 +468,28 @@ private struct GridMinimapAnimatedView: View {
         return minimap.layers[displayedLayerIndex].color.swiftUIColor.opacity(0.62)
     }
 
+    private var selectedLayerPulse: CGFloat {
+        switch minimap.movement {
+        case .layer:
+            return selectionPulse
+        case .tool:
+            return selectionPulse * 0.22
+        case .neutral:
+            return 0
+        }
+    }
+
+    private var selectedCellPulse: CGFloat {
+        switch minimap.movement {
+        case .layer:
+            return selectionPulse * 0.45
+        case .tool:
+            return selectionPulse
+        case .neutral:
+            return 0
+        }
+    }
+
     private var selectorX: CGFloat {
         rowLabelTotalWidth + leadingGridSpacing + CGFloat(displayedColumnIndex) * (cellTotalWidth + columnSpacing)
     }
@@ -465,8 +498,12 @@ private struct GridMinimapAnimatedView: View {
         CGFloat(displayedLayerIndex) * (rowHeight + rowSpacing)
     }
 
-    private var selectorAnimation: Animation? {
-        minimap.animateSelectionMotion ? .easeOut(duration: 0.14) : nil
+    private var selectorAnimation: Animation {
+        .interactiveSpring(response: 0.28, dampingFraction: 0.82, blendDuration: 0.12)
+    }
+
+    private var emphasisAnimation: Animation {
+        .easeOut(duration: 0.26)
     }
 
     private func animateSelectorToTarget() {
@@ -474,12 +511,14 @@ private struct GridMinimapAnimatedView: View {
         let targetColumnIndex = minimap.selectedColumnIndex
 
         guard minimap.animateSelectionMotion else {
+            resetSelectionMotion()
             displayedLayerIndex = targetLayerIndex
             displayedColumnIndex = targetColumnIndex
             return
         }
 
         guard hasAppeared else {
+            resetSelectionMotion()
             displayedLayerIndex = targetLayerIndex
             displayedColumnIndex = targetColumnIndex
             return
@@ -489,10 +528,51 @@ private struct GridMinimapAnimatedView: View {
             return
         }
 
-        DispatchQueue.main.async {
+        let motion = motionProfile(for: minimap.movement)
+        selectorLeadX = motion.leadX
+        selectorLeadY = motion.leadY
+        selectorStretchX = motion.stretchX
+        selectorStretchY = motion.stretchY
+        selectionPulse = 1
+
+        withAnimation(selectorAnimation) {
             displayedLayerIndex = targetLayerIndex
             displayedColumnIndex = targetColumnIndex
+            selectorLeadX = 0
+            selectorLeadY = 0
+            selectorStretchX = 1
+            selectorStretchY = 1
         }
+
+        withAnimation(emphasisAnimation) {
+            selectionPulse = 0
+        }
+    }
+
+    private func motionProfile(for movement: GridSelectionChange) -> (leadX: CGFloat, leadY: CGFloat, stretchX: CGFloat, stretchY: CGFloat) {
+        switch movement {
+        case .layer(let step):
+            let direction = step == 0 ? -1 : CGFloat(step.signum())
+            return (0, -direction * 8, 1.03, 1.18)
+        case .tool(let fromIndex, let toIndex):
+            let direction: CGFloat
+            if toIndex == fromIndex {
+                direction = 0
+            } else {
+                direction = toIndex > fromIndex ? 1 : -1
+            }
+            return (-direction * 10, 0, 1.22, 1.04)
+        case .neutral:
+            return (0, 0, 1, 1)
+        }
+    }
+
+    private func resetSelectionMotion() {
+        selectionPulse = 0
+        selectorLeadX = 0
+        selectorLeadY = 0
+        selectorStretchX = 1
+        selectorStretchY = 1
     }
 
     private static func initialSelectorPosition(for minimap: GridMinimapModel) -> (layerIndex: Int, columnIndex: Int) {
