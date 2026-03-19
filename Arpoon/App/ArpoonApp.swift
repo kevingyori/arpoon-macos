@@ -15,6 +15,7 @@ struct ArpoonApp: App {
                 availableWindowsProvider: AppModel.shared.availableWindowsProvider,
                 commands: AppModel.shared.commands
             )
+            .preferredColorScheme(.dark)
         }
     }
 }

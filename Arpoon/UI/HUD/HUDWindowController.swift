@@ -8,6 +8,8 @@ final class HUDWindowController {
     private let viewModel: HUDViewModel
     private let hostingController: NSHostingController<HUDView>
     private var dismissTask: DispatchWorkItem?
+    private var fadeTask: Task<Void, Never>?
+    private var fadeSequence: Int = 0
     private var visible = false
 
     init() {
@@ -27,6 +29,7 @@ final class HUDWindowController {
         panel.animationBehavior = .utilityWindow
         panel.backgroundColor = .clear
         panel.isOpaque = false
+        panel.appearance = NSAppearance(named: .darkAqua)
         panel.hidesOnDeactivate = false
         panel.ignoresMouseEvents = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
@@ -34,42 +37,85 @@ final class HUDWindowController {
     }
 
     func show(model: HUDModel, timeout: Double) {
-        dismissTask?.cancel()
-        dismissTask = nil
+        cancelDismissal()
+        cancelFadeOutIfNeeded()
         present(model: model)
 
         let task = DispatchWorkItem { [weak self] in
-            self?.hide()
+            self?.beginFadeOut()
         }
         dismissTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: task)
     }
 
     func showPersistent(model: HUDModel) {
-        dismissTask?.cancel()
-        dismissTask = nil
+        cancelDismissal()
+        cancelFadeOutIfNeeded()
         present(model: model)
     }
 
     func hide() {
+        cancelDismissal()
+        beginFadeOut()
+    }
+
+    private func cancelDismissal() {
         dismissTask?.cancel()
         dismissTask = nil
-        
+    }
+
+    private func cancelFadeOutIfNeeded() {
+        fadeSequence += 1
+        fadeTask?.cancel()
+        fadeTask = nil
+
+        guard visible else {
+            return
+        }
+
+        panel.alphaValue = 1
+        panel.orderFrontRegardless()
+    }
+
+    private func beginFadeOut() {
+        cancelDismissal()
+
         guard visible else {
             panel.orderOut(nil)
             return
         }
 
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.08
-            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
-            panel.animator().alphaValue = 0
-        }, completionHandler: { [weak self] in
-            Task { @MainActor [weak self] in
-                self?.panel.orderOut(nil)
-                self?.visible = false
+        fadeSequence += 1
+        let sequence = fadeSequence
+        let startingAlpha = panel.alphaValue
+
+        fadeTask?.cancel()
+        fadeTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            let steps = 6
+            let stepDurationNs = 16_000_000 as UInt64
+
+            for step in 1...steps {
+                try? await Task.sleep(nanoseconds: stepDurationNs)
+
+                guard !Task.isCancelled, sequence == self.fadeSequence else {
+                    return
+                }
+
+                let progress = Double(step) / Double(steps)
+                self.panel.alphaValue = max(0, startingAlpha * (1 - progress))
             }
-        })
+
+            guard !Task.isCancelled, sequence == self.fadeSequence else {
+                return
+            }
+
+            self.panel.orderOut(nil)
+            self.panel.alphaValue = 1
+            self.visible = false
+            self.fadeTask = nil
+        }
     }
 
     private func present(model: HUDModel) {

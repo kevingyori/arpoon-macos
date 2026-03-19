@@ -43,6 +43,7 @@ struct HUDView: View {
             .padding(containerPadding)
             .frame(width: model.preferredWidth, alignment: .leading)
         }
+        .preferredColorScheme(.dark)
     }
 
     @ViewBuilder
@@ -319,6 +320,8 @@ private struct GridMinimapAnimatedView: View {
 
     @ViewBuilder
     private func rowView(_ layer: GridMinimapLayer, rowIndex: Int) -> some View {
+        let isSelectedLayer = minimap.selectedLayerIndex == rowIndex
+
         HStack(spacing: columnSpacing) {
             if minimap.showsLayerPills {
                 HStack(spacing: 8) {
@@ -333,9 +336,23 @@ private struct GridMinimapAnimatedView: View {
                 .frame(width: rowLabelWidth, height: rowHeight, alignment: .leading)
                 .padding(.horizontal, 10)
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.secondary.opacity(0.05))
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.black.opacity(isSelectedLayer ? 0.44 : 0.26))
+
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(isSelectedLayer ? layer.color.swiftUIColor.opacity(0.22) : Color.white.opacity(0.03))
+                    }
                 )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            isSelectedLayer ? layer.color.swiftUIColor.opacity(0.52) : Color.white.opacity(0.08),
+                            lineWidth: 1
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.28), radius: 10, x: 0, y: 4)
+                .shadow(color: isSelectedLayer ? layer.color.swiftUIColor.opacity(0.42) : .clear, radius: 16, x: 0, y: 0)
             }
 
             ForEach(Array(layer.columns.enumerated()), id: \.element.id) { columnIndex, column in
@@ -390,15 +407,34 @@ private struct GridMinimapAnimatedView: View {
         .frame(width: cellWidth, height: rowHeight, alignment: .center)
         .padding(.horizontal, 8)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(isTargetSelected ? layerColor.swiftUIColor.opacity(0.18) : Color.secondary.opacity(0.06))
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.black.opacity(isTargetSelected ? 0.38 : 0.24))
+
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isTargetSelected ? layerColor.swiftUIColor.opacity(0.26) : Color.white.opacity(0.03))
+            }
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(
+                    isTargetSelected ? layerColor.swiftUIColor.opacity(0.48) : Color.white.opacity(0.08),
+                    lineWidth: 1
+                )
+        )
+        .shadow(color: Color.black.opacity(0.24), radius: 8, x: 0, y: 4)
+        .shadow(color: isTargetSelected ? layerColor.swiftUIColor.opacity(0.28) : .clear, radius: 10, x: 0, y: 0)
     }
 
     @ViewBuilder
     private var selectorView: some View {
         RoundedRectangle(cornerRadius: 12)
             .stroke(selectorColor, lineWidth: 1.5)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(selectorGlowColor.opacity(0.12))
+            )
+            .shadow(color: selectorGlowColor, radius: 18, x: 0, y: 0)
             .frame(width: selectorWidth, height: selectorHeight)
             .offset(x: selectorX, y: selectorY)
             .animation(selectorAnimation, value: displayedLayerIndex)
@@ -411,6 +447,14 @@ private struct GridMinimapAnimatedView: View {
         }
 
         return minimap.layers[displayedLayerIndex].color.swiftUIColor.opacity(0.45)
+    }
+
+    private var selectorGlowColor: Color {
+        guard displayedLayerIndex < minimap.layers.count else {
+            return .clear
+        }
+
+        return minimap.layers[displayedLayerIndex].color.swiftUIColor.opacity(0.62)
     }
 
     private var selectorX: CGFloat {
