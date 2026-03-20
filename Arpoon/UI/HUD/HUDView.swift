@@ -231,13 +231,13 @@ private struct GridMinimapAnimatedView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             ZStack(alignment: .topLeading) {
+                selectorView
+
                 VStack(alignment: .leading, spacing: rowSpacing) {
                     ForEach(Array(minimap.layers.enumerated()), id: \.element.id) { index, layer in
                         rowView(layer, rowIndex: index)
                     }
                 }
-
-                selectorView
             }
             .frame(width: gridBodyWidth, height: gridBodyHeight, alignment: .topLeading)
 
@@ -418,16 +418,16 @@ private struct GridMinimapAnimatedView: View {
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.black.opacity(isTargetSelected ? 0.38 + 0.10 * cellPulse : 0.24))
+                    .fill(Color.black.opacity(isTargetSelected ? 0.28 + 0.04 * cellPulse : 0.24))
 
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isTargetSelected ? layerColor.swiftUIColor.opacity(0.26 + 0.20 * cellPulse) : Color.white.opacity(0.03))
+                    .fill(isTargetSelected ? layerColor.swiftUIColor.opacity(0.10 + 0.08 * cellPulse) : Color.white.opacity(0.03))
             }
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(
-                    isTargetSelected ? layerColor.swiftUIColor.opacity(0.48 + 0.20 * cellPulse) : Color.white.opacity(0.08),
+                    isTargetSelected ? layerColor.swiftUIColor.opacity(0.22 + 0.10 * cellPulse) : Color.white.opacity(0.08),
                     lineWidth: 1
                 )
         )
@@ -442,14 +442,19 @@ private struct GridMinimapAnimatedView: View {
         RoundedRectangle(cornerRadius: 12)
             .stroke(selectorColor, lineWidth: 1.5 + 0.55 * selectionPulse)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(selectorGlowColor.opacity(0.12 + 0.12 * selectionPulse))
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.black.opacity(0.40 + 0.08 * selectionPulse))
+
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(selectorGlowColor.opacity(0.28 + 0.18 * selectionPulse))
+                }
             )
             .shadow(color: selectorGlowColor.opacity(0.9), radius: 18 + 12 * selectionPulse, x: 0, y: 0)
             .scaleEffect(x: selectorStretchX, y: selectorStretchY)
             .frame(width: selectorWidth, height: selectorHeight)
             .offset(x: selectorX + selectorLeadX, y: selectorY + selectorLeadY)
-            .zIndex(3)
+            .zIndex(0)
     }
 
     private var selectorColor: Color {
