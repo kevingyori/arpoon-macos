@@ -61,6 +61,17 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(optionHold.suppressedStates, [true, false])
     }
 
+    func testGridSchemeIncludesVisibleAppNavigationActions() {
+        let settings = makeSettings()
+
+        let gridActions = settings.activeHotkeyActions(for: .grid)
+
+        XCTAssertTrue(gridActions.contains(HotkeyAction(kind: .focusVisibleAppLeft, slot: nil)))
+        XCTAssertTrue(gridActions.contains(HotkeyAction(kind: .focusVisibleAppRight, slot: nil)))
+        XCTAssertTrue(gridActions.contains(HotkeyAction(kind: .focusVisibleAppUp, slot: nil)))
+        XCTAssertTrue(gridActions.contains(HotkeyAction(kind: .focusVisibleAppDown, slot: nil)))
+    }
+
     func testSlotAndDynamicJumpShareTargetFallbackPath() {
         let slotStore = makeSlotStore()
         let dynamicStore = makeDynamicHotkeyStore()
@@ -149,7 +160,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
 
     func testGridStandaloneShortcutValidationRejectsConfiguredActionShortcut() {
         let commandCenter = makeCommandCenter()
-        let duplicateShortcut = HotkeyShortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(optionKey | shiftKey))
+        let duplicateShortcut = HotkeyShortcut(keyCode: UInt32(kVK_ANSI_G), modifiers: UInt32(optionKey))
 
         XCTAssertEqual(
             commandCenter.validationErrorForGridStandaloneShortcut(duplicateShortcut),
@@ -437,8 +448,12 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             HotkeyShortcut(keyCode: UInt32(kVK_ANSI_J), modifiers: UInt32(optionKey))
         )
         XCTAssertEqual(
-            settings.shortcut(for: HotkeyAction(kind: .gridFocusBrowser, slot: nil)),
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.browser.id)),
             HotkeyShortcut(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .focusVisibleAppUp, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_K), modifiers: UInt32(optionKey | shiftKey))
         )
     }
 
@@ -466,8 +481,28 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             HotkeyShortcut(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(optionKey | shiftKey))
         )
         XCTAssertEqual(
-            settings.shortcut(for: HotkeyAction(kind: .gridFocusTerminal, slot: nil)),
+            settings.shortcut(for: HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_G), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridRenameProject, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_T), modifiers: UInt32(optionKey | shiftKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.terminal.id)),
             HotkeyShortcut(keyCode: UInt32(kVK_ANSI_Q), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.ide.id)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_E), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.browser.id)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_R), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .focusVisibleAppLeft, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(optionKey | shiftKey))
         )
     }
 
@@ -485,8 +520,28 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             HotkeyShortcut(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(optionKey | shiftKey))
         )
         XCTAssertEqual(
-            settings.shortcut(for: HotkeyAction(kind: .gridFocusTerminal, slot: nil)),
+            settings.shortcut(for: HotkeyAction(kind: .gridAddStandaloneHotkey, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_G), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridRenameProject, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_T), modifiers: UInt32(optionKey | shiftKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.terminal.id)),
             HotkeyShortcut(keyCode: UInt32(kVK_ANSI_Q), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.ide.id)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_E), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.browser.id)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_R), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            settings.shortcut(for: HotkeyAction(kind: .focusVisibleAppDown, slot: nil)),
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_S), modifiers: UInt32(optionKey | shiftKey))
         )
     }
 
@@ -514,6 +569,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
                 movement: .neutral,
                 hint: nil,
                 animateSelectionMotion: true,
+                showsLayerPills: true,
                 detailMode: .compact,
                 selectedLayerIndex: 0,
                 selectedColumnIndex: 0
@@ -549,6 +605,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
                 movement: .neutral,
                 hint: GridHUDHint(title: "Hint", detail: "Detail", tone: .neutral),
                 animateSelectionMotion: true,
+                showsLayerPills: true,
                 detailMode: .expanded,
                 selectedLayerIndex: 0,
                 selectedColumnIndex: 1
@@ -859,9 +916,7 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onGridJumpLayer: ((Int) -> Void)?
     var onGridFocusLeft: (() -> Void)?
     var onGridFocusRight: (() -> Void)?
-    var onGridFocusTerminal: (() -> Void)?
-    var onGridFocusIDE: (() -> Void)?
-    var onGridFocusBrowser: (() -> Void)?
+    var onGridFocusColumn: ((String) -> Void)?
     var onGridAddStandaloneHotkey: (() -> Void)?
     var onGridRenameProject: (() -> Void)?
     var onGridBindCurrent: (() -> Void)?

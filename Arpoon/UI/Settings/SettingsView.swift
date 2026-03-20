@@ -188,6 +188,11 @@ private struct GeneralSettingsPane: View {
                         actions: HotkeyAction.gridControlActions,
                         gridPreset: selectedGridPreset
                     )
+                    shortcutGroup(
+                        title: "General",
+                        actions: HotkeyAction.commonActions,
+                        gridPreset: selectedGridPreset
+                    )
                 }
 
                 controlRow(

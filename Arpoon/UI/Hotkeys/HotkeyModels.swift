@@ -39,9 +39,9 @@ enum GridShortcutPreset: String, CaseIterable, Identifiable {
     var summary: String {
         switch self {
         case .vim:
-            return "H/L move across apps, J/K switch projects, and direct column shortcuts follow your current Grid columns."
+            return "H/L move across apps, J/K switch projects, Shift+H/J/K/L switch visible windows, and direct column shortcuts follow your current Grid columns."
         case .gamer:
-            return "A/D move across apps, W/S switch projects, and direct column shortcuts follow your current Grid columns."
+            return "W/A/S/D drive Grid movement, Shift+W/A/S/D switch visible windows, Q/E/R focus your core columns, and G adds a standalone app hotkey."
         }
     }
 
@@ -51,6 +51,7 @@ enum GridShortcutPreset: String, CaseIterable, Identifiable {
                 action.defaultShortcut.map { (action, $0) }
             }
         )
+        applyPresetOverrides(to: &shortcuts)
         var usedKeyCodes = Set<UInt32>()
 
         for action in HotkeyAction.gridControlActions {
@@ -118,7 +119,12 @@ enum GridShortcutPreset: String, CaseIterable, Identifiable {
     }
 
     private var ideKeyCode: UInt32 {
-        UInt32(kVK_ANSI_I)
+        switch self {
+        case .vim:
+            return UInt32(kVK_ANSI_I)
+        case .gamer:
+            return UInt32(kVK_ANSI_E)
+        }
     }
 
     private var browserKeyCode: UInt32 {
@@ -126,7 +132,7 @@ enum GridShortcutPreset: String, CaseIterable, Identifiable {
         case .vim:
             return UInt32(kVK_ANSI_O)
         case .gamer:
-            return UInt32(kVK_ANSI_E)
+            return UInt32(kVK_ANSI_R)
         }
     }
 
@@ -136,6 +142,40 @@ enum GridShortcutPreset: String, CaseIterable, Identifiable {
 
     private func optionShiftShortcut(_ keyCode: UInt32) -> HotkeyShortcut {
         HotkeyShortcut(keyCode: keyCode, modifiers: UInt32(optionKey | shiftKey))
+    }
+
+    private func applyPresetOverrides(to shortcuts: inout [HotkeyAction: HotkeyShortcut]) {
+        let gridPreviousLayer = HotkeyAction(kind: .gridPreviousLayer, slot: nil)
+        let gridNextLayer = HotkeyAction(kind: .gridNextLayer, slot: nil)
+        let gridFocusLeft = HotkeyAction(kind: .gridFocusLeft, slot: nil)
+        let gridFocusRight = HotkeyAction(kind: .gridFocusRight, slot: nil)
+        let gridRenameProject = HotkeyAction(kind: .gridRenameProject, slot: nil)
+        let visibleLeft = HotkeyAction(kind: .focusVisibleAppLeft, slot: nil)
+        let visibleRight = HotkeyAction(kind: .focusVisibleAppRight, slot: nil)
+        let visibleUp = HotkeyAction(kind: .focusVisibleAppUp, slot: nil)
+        let visibleDown = HotkeyAction(kind: .focusVisibleAppDown, slot: nil)
+
+        switch self {
+        case .vim:
+            shortcuts[gridPreviousLayer] = optionShortcut(UInt32(kVK_ANSI_K))
+            shortcuts[gridNextLayer] = optionShortcut(UInt32(kVK_ANSI_J))
+            shortcuts[gridFocusLeft] = optionShortcut(UInt32(kVK_ANSI_H))
+            shortcuts[gridFocusRight] = optionShortcut(UInt32(kVK_ANSI_L))
+            shortcuts[visibleLeft] = optionShiftShortcut(UInt32(kVK_ANSI_H))
+            shortcuts[visibleRight] = optionShiftShortcut(UInt32(kVK_ANSI_L))
+            shortcuts[visibleUp] = optionShiftShortcut(UInt32(kVK_ANSI_K))
+            shortcuts[visibleDown] = optionShiftShortcut(UInt32(kVK_ANSI_J))
+        case .gamer:
+            shortcuts[gridPreviousLayer] = optionShortcut(UInt32(kVK_ANSI_W))
+            shortcuts[gridNextLayer] = optionShortcut(UInt32(kVK_ANSI_S))
+            shortcuts[gridFocusLeft] = optionShortcut(UInt32(kVK_ANSI_A))
+            shortcuts[gridFocusRight] = optionShortcut(UInt32(kVK_ANSI_D))
+            shortcuts[gridRenameProject] = optionShiftShortcut(UInt32(kVK_ANSI_T))
+            shortcuts[visibleLeft] = optionShiftShortcut(UInt32(kVK_ANSI_A))
+            shortcuts[visibleRight] = optionShiftShortcut(UInt32(kVK_ANSI_D))
+            shortcuts[visibleUp] = optionShiftShortcut(UInt32(kVK_ANSI_W))
+            shortcuts[visibleDown] = optionShiftShortcut(UInt32(kVK_ANSI_S))
+        }
     }
 }
 
@@ -324,8 +364,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return nil
         case .gridAddStandaloneHotkey:
             return HotkeyShortcut(
-                keyCode: UInt32(kVK_ANSI_A),
-                modifiers: UInt32(optionKey | shiftKey)
+                keyCode: UInt32(kVK_ANSI_G),
+                modifiers: UInt32(optionKey)
             )
         case .gridRenameProject:
             return HotkeyShortcut(
@@ -395,7 +435,7 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
     }
 
     static func gridActions(columns: [GridToolColumn], layerCount: Int) -> [HotkeyAction] {
-        gridNavigationActions(layerCount: layerCount) + gridToolActions(columns: columns)
+        gridNavigationActions(layerCount: layerCount) + gridToolActions(columns: columns) + commonActions
     }
 
     static let generalActions = commonActions + dynamicActions
