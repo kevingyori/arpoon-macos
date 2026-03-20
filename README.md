@@ -26,7 +26,9 @@ So instead of a flat list of bindings, it becomes more like a project map.
 
 Arpoon obviously does not solve this whole problem. It is just my quick take on one part of it: focusing the right app or window fast.
 
-<video src="https://github.com/user-attachments/assets/c840ea9b-57aa-442c-a0e1-cb16463b61e1"></video>
+<video src="https://github.com/user-attachments/assets/f2f13d9b-3c62-4b8a-a652-3ff2bc6eed1a"></video>
+
+
 
 ## What it is
 
