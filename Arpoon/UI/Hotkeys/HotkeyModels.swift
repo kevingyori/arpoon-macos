@@ -4,6 +4,7 @@ import Foundation
 
 enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
     case grid
+    case niri
     case staticSlots
     case dynamicWindows
 
@@ -17,6 +18,8 @@ enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
             return "Dynamic Windows"
         case .grid:
             return "The Grid"
+        case .niri:
+            return "Niri"
         }
     }
 }
@@ -198,6 +201,13 @@ enum HotkeyActionKind: String, Codable {
     case gridRenameProject
     case gridBindCurrent
     case gridShowHUD
+    case niriFocusLeft
+    case niriFocusRight
+    case niriFocusUp
+    case niriFocusDown
+    case niriCreateWorkspaceBelow
+    case niriRemoveCurrentWindow
+    case niriShowHUD
 }
 
 struct HotkeyAction: Hashable, Codable, Identifiable {
@@ -249,6 +259,20 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "grid-bind-current"
         case .gridShowHUD:
             return "grid-show-hud"
+        case .niriFocusLeft:
+            return "niri-focus-left"
+        case .niriFocusRight:
+            return "niri-focus-right"
+        case .niriFocusUp:
+            return "niri-focus-up"
+        case .niriFocusDown:
+            return "niri-focus-down"
+        case .niriCreateWorkspaceBelow:
+            return "niri-create-workspace-below"
+        case .niriRemoveCurrentWindow:
+            return "niri-remove-current-window"
+        case .niriShowHUD:
+            return "niri-show-hud"
         }
     }
 
@@ -290,6 +314,20 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return "The Grid Bind Focused Target"
         case .gridShowHUD:
             return "The Grid Show Minimap"
+        case .niriFocusLeft:
+            return "Niri Focus Left"
+        case .niriFocusRight:
+            return "Niri Focus Right"
+        case .niriFocusUp:
+            return "Niri Focus Up"
+        case .niriFocusDown:
+            return "Niri Focus Down"
+        case .niriCreateWorkspaceBelow:
+            return "Niri Create Workspace Below"
+        case .niriRemoveCurrentWindow:
+            return "Niri Remove Current Window"
+        case .niriShowHUD:
+            return "Niri Show HUD"
         }
     }
 
@@ -382,6 +420,41 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
                 keyCode: UInt32(kVK_Space),
                 modifiers: UInt32(optionKey)
             )
+        case .niriFocusLeft:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_H),
+                modifiers: UInt32(optionKey)
+            )
+        case .niriFocusRight:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_L),
+                modifiers: UInt32(optionKey)
+            )
+        case .niriFocusUp:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_K),
+                modifiers: UInt32(optionKey)
+            )
+        case .niriFocusDown:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_J),
+                modifiers: UInt32(optionKey)
+            )
+        case .niriCreateWorkspaceBelow:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_J),
+                modifiers: UInt32(optionKey | shiftKey)
+            )
+        case .niriRemoveCurrentWindow:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_ANSI_X),
+                modifiers: UInt32(optionKey | shiftKey)
+            )
+        case .niriShowHUD:
+            return HotkeyShortcut(
+                keyCode: UInt32(kVK_Space),
+                modifiers: UInt32(optionKey)
+            )
         }
     }
 
@@ -408,8 +481,17 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
     static let gridDefaultColumnActions = GridToolColumn.defaults.map {
         HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: $0.id)
     }
+    static let niriActions = [
+        HotkeyAction(kind: .niriFocusLeft, slot: nil),
+        HotkeyAction(kind: .niriFocusRight, slot: nil),
+        HotkeyAction(kind: .niriFocusUp, slot: nil),
+        HotkeyAction(kind: .niriFocusDown, slot: nil),
+        HotkeyAction(kind: .niriCreateWorkspaceBelow, slot: nil),
+        HotkeyAction(kind: .niriRemoveCurrentWindow, slot: nil),
+        HotkeyAction(kind: .niriShowHUD, slot: nil)
+    ]
     static let gridDefaultActions = gridNavigationActions(layerCount: 9) + gridToolActions(columns: GridToolColumn.defaults)
-    static let allCases = jumpActions + bindActions + commonActions + dynamicActions + gridDefaultActions
+    static let allCases = jumpActions + bindActions + commonActions + dynamicActions + gridDefaultActions + niriActions
 
     static func gridNavigationActions(layerCount: Int) -> [HotkeyAction] {
         let baseActions = [
@@ -448,6 +530,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             return dynamicActions + commonActions
         case .grid:
             return gridActions(columns: columns, layerCount: layerCount)
+        case .niri:
+            return niriActions
         }
     }
 
@@ -487,6 +571,20 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
             self = HotkeyAction(kind: .gridBindCurrent, slot: nil)
         case "grid-show-hud":
             self = HotkeyAction(kind: .gridShowHUD, slot: nil)
+        case "niri-focus-left":
+            self = HotkeyAction(kind: .niriFocusLeft, slot: nil)
+        case "niri-focus-right":
+            self = HotkeyAction(kind: .niriFocusRight, slot: nil)
+        case "niri-focus-up":
+            self = HotkeyAction(kind: .niriFocusUp, slot: nil)
+        case "niri-focus-down":
+            self = HotkeyAction(kind: .niriFocusDown, slot: nil)
+        case "niri-create-workspace-below":
+            self = HotkeyAction(kind: .niriCreateWorkspaceBelow, slot: nil)
+        case "niri-remove-current-window":
+            self = HotkeyAction(kind: .niriRemoveCurrentWindow, slot: nil)
+        case "niri-show-hud":
+            self = HotkeyAction(kind: .niriShowHUD, slot: nil)
         default:
             if id.hasPrefix("grid-jump-"),
                let slot = Int(id.replacingOccurrences(of: "grid-jump-", with: "")) {

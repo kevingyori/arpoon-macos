@@ -8,6 +8,8 @@ struct MenuBarView: View {
     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
     @ObservedObject var gridStore: GridStore
     @ObservedObject var gridSession: GridSession
+    @ObservedObject var niriStore: NiriStore
+    @ObservedObject var niriSession: NiriSession
     @ObservedObject var settings: SettingsStore
     @ObservedObject var permissions: AccessibilityPermissionService
 
@@ -39,6 +41,9 @@ struct MenuBarView: View {
         }
         .onReceive(gridStore.$columns) { columns in
             gridSession.sync(columns: columns, layers: gridStore.layers)
+        }
+        .onReceive(niriStore.$workspaces) { workspaces in
+            niriSession.sync(workspaces: workspaces)
         }
     }
 
@@ -114,6 +119,10 @@ struct MenuBarView: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
+            case .niri:
+                Text("Focused windows join the active Niri workspace automatically. Use the workspace controls below or the Niri shortcuts to move through the strip.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
             case .grid:
                 EmptyView()
             }
@@ -135,6 +144,8 @@ struct MenuBarView: View {
                 staticAssignments
             case .dynamicWindows:
                 dynamicAssignments
+            case .niri:
+                niriAssignments
             case .grid:
                 gridAssignments
             }
@@ -350,9 +361,124 @@ struct MenuBarView: View {
         }
     }
 
+    @ViewBuilder
+    private var niriAssignments: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if let workspace = currentNiriWorkspace {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Text(workspace.name)
+                            .font(.system(size: 13, weight: .semibold))
+
+                        Spacer()
+
+                        Text(currentNiriItem?.label ?? "Empty")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(workspace.items) { item in
+                                Button {
+                                    dismissPopover()
+                                    commands.focusNiriItem(workspace.id, item.id)
+                                } label: {
+                                    Text(item.label)
+                                        .lineLimit(1)
+                                }
+                                .controlSize(.small)
+                                .gridToolButtonStyle(item.id == niriSession.currentItemID)
+                            }
+                        }
+                    }
+
+                    HStack(spacing: 8) {
+                        Button("New Workspace") {
+                            dismissPopover()
+                            commands.createNiriWorkspaceBelow()
+                        }
+                        .controlSize(.small)
+                        .buttonStyle(.bordered)
+
+                        Button("Remove Current") {
+                            dismissPopover()
+                            commands.removeCurrentNiriItem()
+                        }
+                        .controlSize(.small)
+                        .buttonStyle(.bordered)
+                    }
+                }
+            }
+
+            if niriStore.workspaces.isEmpty {
+                emptyState("No Niri workspaces yet.")
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(niriStore.workspaces.enumerated()), id: \.element.id) { index, workspace in
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 10) {
+                                Text("\(index + 1)")
+                                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                                    .frame(width: 22, height: 22)
+                                    .background(Circle().fill(Color.secondary.opacity(0.14)))
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(workspace.name)
+                                        .font(.system(size: 12.5, weight: workspace.id == niriSession.currentWorkspaceID ? .semibold : .medium))
+
+                                    Text(niriSummary(for: workspace))
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+
+                                Spacer()
+                            }
+
+                            if !workspace.items.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 6) {
+                                        ForEach(workspace.items) { item in
+                                            Button {
+                                                dismissPopover()
+                                                commands.focusNiriItem(workspace.id, item.id)
+                                            } label: {
+                                                Text(item.label)
+                                                    .font(.system(size: 11, weight: .medium))
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 4)
+                                                    .background(Capsule().fill(Color.secondary.opacity(0.14)))
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .padding(.vertical, 8)
+
+                        if index < niriStore.workspaces.count - 1 {
+                            Divider()
+                                .padding(.leading, 34)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private var footer: some View {
         HStack {
-            Text(settings.hotkeyScheme == .grid ? "The Grid reflects the current layer and tool." : "Jump with a row click.")
+            Text(
+                settings.hotkeyScheme == .grid
+                    ? "The Grid reflects the current layer and tool."
+                    : settings.hotkeyScheme == .niri
+                        ? "Niri tracks your active workspace and focused window."
+                        : "Jump with a row click."
+            )
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
@@ -373,6 +499,8 @@ struct MenuBarView: View {
             return slotStore.assignments.count
         case .dynamicWindows:
             return dynamicHotkeys.assignments.count
+        case .niri:
+            return niriStore.workspaces.count
         case .grid:
             return gridStore.layers.count
         }
@@ -384,6 +512,8 @@ struct MenuBarView: View {
             return "Binding"
         case .dynamicWindows:
             return "Dynamic Hotkeys"
+        case .niri:
+            return "Niri"
         case .grid:
             return "The Grid"
         }
@@ -399,6 +529,8 @@ struct MenuBarView: View {
             return "Current Slots"
         case .dynamicWindows:
             return "Current Hotkeys"
+        case .niri:
+            return "Workspaces"
         case .grid:
             return "Project Layers"
         }
@@ -481,6 +613,36 @@ struct MenuBarView: View {
 
     private func currentGridColumn(in layer: GridLayer) -> GridToolColumn? {
         gridSession.currentTool(in: gridStore.columns)
+    }
+
+    private var currentNiriWorkspace: NiriWorkspace? {
+        if let workspaceID = niriSession.currentWorkspaceID,
+           let workspace = niriStore.workspace(id: workspaceID) {
+            return workspace
+        }
+
+        return niriStore.workspaces.first
+    }
+
+    private var currentNiriItem: NiriItem? {
+        guard let workspace = currentNiriWorkspace else {
+            return nil
+        }
+
+        if let itemID = niriSession.currentItemID,
+           let item = workspace.items.first(where: { $0.id == itemID }) {
+            return item
+        }
+
+        return workspace.items.first
+    }
+
+    private func niriSummary(for workspace: NiriWorkspace) -> String {
+        if workspace.items.isEmpty {
+            return "Empty workspace"
+        }
+
+        return workspace.items.map(\.label).joined(separator: " • ")
     }
 }
 

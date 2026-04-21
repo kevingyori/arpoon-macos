@@ -15,6 +15,9 @@ struct AppCommands {
     let captureGridBinding: (String, GridToolColumn, String?) -> Void
     let jumpToGridStandaloneApp: (String) -> Void
     let captureGridStandaloneApp: (String) -> Void
+    let focusNiriItem: (String, String) -> Void
+    let createNiriWorkspaceBelow: () -> Void
+    let removeCurrentNiriItem: () -> Void
     let setHotkeyRecordingActive: (Bool) -> Void
     let registerSettingsWindow: (NSWindow) -> Void
 }

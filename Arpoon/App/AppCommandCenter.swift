@@ -36,9 +36,15 @@ protocol WindowProviding {
 }
 
 @MainActor
+protocol HapticFeedbackPerforming: AnyObject {
+    func performFocusConfirmation()
+}
+
+@MainActor
 protocol HUDPresenting: AnyObject {
     func show(model: HUDModel, timeout: Double)
     func showPersistent(model: HUDModel)
+    func update(model: HUDModel)
     func hide()
 }
 
@@ -59,6 +65,25 @@ extension AccessibilityWindowProvider: WindowProviding {}
 extension HUDWindowController: HUDPresenting {}
 extension SettingsWindowController: SettingsWindowPresenting {}
 
+private struct GridGesturePreview {
+    let baseLayerIndex: Int
+    let baseColumnIndex: Int
+    let totalHorizontalOffset: Double
+    let totalVerticalOffset: Double
+}
+
+private enum GridGestureDestination {
+    case layer(layerIndex: Int, columnIndex: Int)
+    case standaloneApp(appIndex: Int)
+}
+
+private struct NiriGesturePreview {
+    let baseWorkspaceIndex: Int
+    let baseItemIndex: Int
+    let totalHorizontalOffset: Double
+    let totalVerticalOffset: Double
+}
+
 @MainActor
 final class AppCommandCenter {
     var settingsWindowPresenterProvider: (() -> (any SettingsWindowPresenting)?)?
@@ -71,19 +96,29 @@ final class AppCommandCenter {
     private let dynamicHotkeyStore: DynamicHotkeyStore
     private let gridStore: GridStore
     private let gridSession: GridSession
+    private let niriStore: NiriStore
+    private let niriSession: NiriSession
     private let labelPolicy: TargetLabelPolicy
     private let captureService: any TargetCapturing
     private let resolutionService: any TargetResolving
     private let focusService: any TargetFocusing
     private let appProvider: any AppProviding
     private let windowProvider: any WindowProviding
+    private let hapticPerformer: any HapticFeedbackPerforming
     private let hudController: any HUDPresenting
     private let setHotkeyRecordingActive: (Bool) -> Void
     private let windowMatchPolicy = WindowTargetMatchPolicy()
     private var liveSlotWindows: [Int: LiveWindow] = [:]
     private var liveDynamicWindows: [String: LiveWindow] = [:]
     private var liveGridWindows: [String: LiveWindow] = [:]
-    private var lastObservedExternalFocusSignature: String?
+    private var liveNiriWindows: [String: LiveWindow] = [:]
+    private var gridGestureActive = false
+    private var gridGesturePreview: GridGesturePreview?
+    private var gridSelectedStandaloneAppID: String?
+    private var niriGestureActive = false
+    private var niriGesturePreview: NiriGesturePreview?
+    private var lastObservedGridFocusSignature: String?
+    private var lastObservedNiriFocusSignature: String?
     private weak var settingsWindow: NSWindow?
     private var dynamicHotkeyCaptureController: DynamicHotkeyCaptureController?
     private var gridBindingSelectionController: (any GridBindingSelectionPresenting)?
@@ -95,12 +130,15 @@ final class AppCommandCenter {
         dynamicHotkeyStore: DynamicHotkeyStore,
         gridStore: GridStore,
         gridSession: GridSession,
+        niriStore: NiriStore,
+        niriSession: NiriSession,
         labelPolicy: TargetLabelPolicy,
         captureService: any TargetCapturing,
         resolutionService: any TargetResolving,
         focusService: any TargetFocusing,
         appProvider: any AppProviding,
         windowProvider: any WindowProviding,
+        hapticPerformer: any HapticFeedbackPerforming,
         hudController: any HUDPresenting,
         setHotkeyRecordingActive: @escaping (Bool) -> Void
     ) {
@@ -110,12 +148,15 @@ final class AppCommandCenter {
         self.dynamicHotkeyStore = dynamicHotkeyStore
         self.gridStore = gridStore
         self.gridSession = gridSession
+        self.niriStore = niriStore
+        self.niriSession = niriSession
         self.labelPolicy = labelPolicy
         self.captureService = captureService
         self.resolutionService = resolutionService
         self.focusService = focusService
         self.appProvider = appProvider
         self.windowProvider = windowProvider
+        self.hapticPerformer = hapticPerformer
         self.hudController = hudController
         self.setHotkeyRecordingActive = setHotkeyRecordingActive
     }
@@ -237,6 +278,7 @@ final class AppCommandCenter {
 
         if let focusedWindow = windowProvider.focusedWindow(),
            let match = gridMatch(for: focusedWindow) {
+            gridSelectedStandaloneAppID = nil
             gridSession.select(layerID: match.layerID, columnID: match.columnID, in: gridStore.columns, layers: gridStore.layers)
             return
         }
@@ -247,23 +289,69 @@ final class AppCommandCenter {
             return
         }
 
+        gridSelectedStandaloneAppID = nil
         gridSession.select(layerID: match.layerID, columnID: match.columnID, in: gridStore.columns, layers: gridStore.layers)
     }
 
     func syncGridSelectionToFocusedTargetIfNeeded() {
         let observation = currentExternalFocusObservation()
-        guard observation.signature != lastObservedExternalFocusSignature else {
+        guard observation.signature != lastObservedGridFocusSignature else {
             return
         }
 
-        lastObservedExternalFocusSignature = observation.signature
+        lastObservedGridFocusSignature = observation.signature
 
         guard let match = observation.match else {
             return
         }
 
         syncGridSession()
+        gridSelectedStandaloneAppID = nil
         gridSession.select(layerID: match.layerID, columnID: match.columnID, in: gridStore.columns, layers: gridStore.layers)
+    }
+
+    func syncNiriSelectionToFocusedTargetIfNeeded() {
+        let observation = currentNiriExternalFocusObservation()
+        guard observation.signature != lastObservedNiriFocusSignature else {
+            return
+        }
+
+        lastObservedNiriFocusSignature = observation.signature
+
+        guard observation.shouldTrack else {
+            return
+        }
+
+        syncNiriSession()
+
+        if let match = observation.match {
+            niriSession.select(workspaceID: match.workspaceID, itemID: match.itemID, in: niriStore.workspaces)
+            niriStore.rememberFocusedItem(workspaceID: match.workspaceID, itemID: match.itemID)
+            if let liveWindow = observation.liveWindow {
+                updateNiriLiveWindowCache(for: match.itemID, liveWindow: liveWindow)
+            }
+            return
+        }
+
+        guard let currentWorkspace = currentNiriWorkspace() else {
+            return
+        }
+
+        guard let outcome = captureService.captureFocusedTarget() else {
+            return
+        }
+
+        guard let item = niriStore.appendItem(
+            target: outcome.target,
+            label: labelPolicy.label(for: outcome.target),
+            toWorkspaceID: currentWorkspace.id
+        ) else {
+            return
+        }
+
+        niriSession.select(workspaceID: currentWorkspace.id, itemID: item.id, in: niriStore.workspaces)
+        niriStore.rememberFocusedItem(workspaceID: currentWorkspace.id, itemID: item.id)
+        updateNiriLiveWindowCache(for: item.id, liveWindow: outcome.liveWindow)
     }
 
     func showHeldHUD() {
@@ -279,6 +367,114 @@ final class AppCommandCenter {
             model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .expanded),
             timeout: gridHUDTimeout
         )
+    }
+
+    func setGridGestureActive(_ isActive: Bool) {
+        gridGestureActive = isActive
+
+        if isActive {
+            syncGridSession()
+            let currentSelection = currentGridMinimapSelection()
+            gridGesturePreview = GridGesturePreview(
+                baseLayerIndex: currentSelection.layerIndex,
+                baseColumnIndex: currentSelection.columnIndex,
+                totalHorizontalOffset: 0,
+                totalVerticalOffset: 0
+            )
+            hudController.showPersistent(
+                model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+            )
+        } else {
+            gridGesturePreview = nil
+            hudController.hide()
+        }
+    }
+
+    func applyGridGestureUpdate(_ update: TrackpadGestureUpdate) {
+        guard gridGestureActive else {
+            return
+        }
+
+        guard let preview = gridGesturePreview else {
+            return
+        }
+
+        gridGesturePreview = GridGesturePreview(
+            baseLayerIndex: preview.baseLayerIndex,
+            baseColumnIndex: preview.baseColumnIndex,
+            totalHorizontalOffset: update.totalHorizontalOffset,
+            totalVerticalOffset: update.totalVerticalOffset
+        )
+        guard let state = resolvedGridGestureState() else {
+            return
+        }
+
+        let didMove = moveGridGesture(to: state)
+
+        if !didMove {
+            hudController.update(
+                model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+            )
+        }
+    }
+
+    func showNiriHUD() {
+        presentNiriHUD(
+            model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .expanded)
+        )
+    }
+
+    func setNiriGestureActive(_ isActive: Bool) {
+        niriGestureActive = isActive
+
+        if isActive {
+            syncNiriSession()
+            let baseWorkspaceIndex = max(0, niriStore.workspaces.firstIndex(where: { $0.id == niriSession.currentWorkspaceID }) ?? 0)
+            let baseItemIndex = max(0, currentNiriWorkspace()?.items.firstIndex(where: { $0.id == niriSession.currentItemID }) ?? 0)
+            niriGesturePreview = NiriGesturePreview(
+                baseWorkspaceIndex: baseWorkspaceIndex,
+                baseItemIndex: baseItemIndex,
+                totalHorizontalOffset: 0,
+                totalVerticalOffset: 0
+            )
+            hudController.showPersistent(
+                model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+            )
+        } else {
+            niriGesturePreview = nil
+            hudController.hide()
+        }
+    }
+
+    func applyNiriGestureUpdate(_ update: TrackpadGestureUpdate) {
+        guard niriGestureActive else {
+            return
+        }
+
+        guard let preview = niriGesturePreview else {
+            return
+        }
+
+        niriGesturePreview = NiriGesturePreview(
+            baseWorkspaceIndex: preview.baseWorkspaceIndex,
+            baseItemIndex: preview.baseItemIndex,
+            totalHorizontalOffset: update.totalHorizontalOffset,
+            totalVerticalOffset: update.totalVerticalOffset
+        )
+        guard let state = resolvedNiriGestureState() else {
+            return
+        }
+
+        let didMove = moveNiriGesture(
+            workspaceIndex: state.workspaceIndex,
+            itemID: state.itemID
+        )
+
+        if !didMove {
+            hudController.update(
+                model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+            )
+        }
     }
 
     func renameCurrentGridProject() {
@@ -443,7 +639,81 @@ final class AppCommandCenter {
             return
         }
 
-        _ = focusService.focus(target: binding.target)
+        let outcome = focusService.focus(target: binding.target)
+        performFocusFeedbackIfNeeded(for: outcome)
+        if case .focused = outcome {
+            gridSelectedStandaloneAppID = app.id
+        }
+    }
+
+    func moveNiriFocusLeft() {
+        moveWithinNiriWorkspace(step: -1)
+    }
+
+    func moveNiriFocusRight() {
+        moveWithinNiriWorkspace(step: 1)
+    }
+
+    func moveNiriFocusUp() {
+        moveBetweenNiriWorkspaces(step: -1)
+    }
+
+    func moveNiriFocusDown() {
+        moveBetweenNiriWorkspaces(step: 1)
+    }
+
+    func createNiriWorkspaceBelow() {
+        syncNiriSession()
+        let workspace = niriStore.addWorkspace(below: niriSession.currentWorkspaceID)
+        niriSession.select(workspaceID: workspace.id, itemID: nil, in: niriStore.workspaces)
+        showNiriHint(
+            title: "Created \(workspace.name)",
+            detail: "Focus a window to add it here.",
+            tone: .success,
+            movement: .workspace(step: 1)
+        )
+    }
+
+    func removeCurrentNiriItem() {
+        syncNiriSession()
+        guard let workspace = currentNiriWorkspace() else {
+            showNiriHint(
+                title: "No Niri workspace yet",
+                detail: "Create a workspace first.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard let item = niriSession.currentItem(in: niriStore.workspaces) else {
+            showNiriHint(
+                title: "\(workspace.name) is empty",
+                detail: "Focus a window to add it here.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        liveNiriWindows.removeValue(forKey: item.id)
+        if let selection = niriStore.removeItem(workspaceID: workspace.id, itemID: item.id) {
+            niriSession.select(workspaceID: selection.workspaceID, itemID: selection.itemID, in: niriStore.workspaces)
+        }
+
+        showNiriHint(
+            title: "Removed \(item.label)",
+            detail: nil,
+            tone: .success,
+            movement: .neutral
+        )
+    }
+
+    func focusNiriItem(workspaceID: String, itemID: String) {
+        syncNiriSession()
+        niriSession.select(workspaceID: workspaceID, itemID: itemID, in: niriStore.workspaces)
+        niriStore.rememberFocusedItem(workspaceID: workspaceID, itemID: itemID)
+        focusCurrentNiriSelection(after: .neutral)
     }
 
     func captureGridStandaloneApp(_ appID: String) {
@@ -744,6 +1014,8 @@ final class AppCommandCenter {
     }
 
     private func present(outcome: FocusOutcome, fallbackLabel: String) {
+        performFocusFeedbackIfNeeded(for: outcome)
+
         switch outcome {
         case .focused(let label, let strategy):
             let detail = strategy.map { "Resolved via \($0.displayName)." }
@@ -837,14 +1109,17 @@ final class AppCommandCenter {
         tone: HUDTone,
         movement: GridSelectionChange
     ) {
-        hudController.show(
-            model: gridMinimapModel(
-                movement: movement,
-                hint: GridHUDHint(title: title, detail: detail, tone: tone),
-                detailMode: .compact
-            ),
-            timeout: gridHUDTimeout
+        let model = gridMinimapModel(
+            movement: movement,
+            hint: GridHUDHint(title: title, detail: detail, tone: tone),
+            detailMode: .compact
         )
+
+        if gridGestureActive {
+            hudController.update(model: model)
+        } else {
+            hudController.show(model: model, timeout: gridHUDTimeout)
+        }
     }
 
     private func showGridHintForOutcome(
@@ -852,8 +1127,17 @@ final class AppCommandCenter {
         fallbackLabel: String,
         movement: GridSelectionChange
     ) {
+        performFocusFeedbackIfNeeded(for: outcome)
+
         switch outcome {
         case .focused:
+            if gridGestureActive {
+                hudController.update(
+                    model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+                )
+                return
+            }
+
             guard settings.showJumpPopups else {
                 return
             }
@@ -1081,6 +1365,8 @@ final class AppCommandCenter {
             )
         case .grid:
             return gridMinimapModel(movement: .neutral, hint: nil)
+        case .niri:
+            return niriMinimapModel(movement: .neutral, hint: nil)
         }
     }
 
@@ -1108,6 +1394,14 @@ final class AppCommandCenter {
         }
     }
 
+    private func updateNiriLiveWindowCache(for itemID: String, liveWindow: LiveWindow?) {
+        if let liveWindow {
+            liveNiriWindows[itemID] = liveWindow
+        } else {
+            liveNiriWindows.removeValue(forKey: itemID)
+        }
+    }
+
     private func resolveLiveWindow(for target: Target) -> (window: LiveWindow, strategy: ResolutionStrategy)? {
         guard case .window = target else {
             return nil
@@ -1125,6 +1419,10 @@ final class AppCommandCenter {
         gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
     }
 
+    private func syncNiriSession() {
+        niriSession.sync(workspaces: niriStore.workspaces)
+    }
+
     private func currentGridLayer() -> GridLayer? {
         syncGridSession()
         guard let currentLayerID = gridSession.currentLayerID else {
@@ -1132,6 +1430,15 @@ final class AppCommandCenter {
         }
 
         return gridStore.layer(id: currentLayerID)
+    }
+
+    private func currentNiriWorkspace() -> NiriWorkspace? {
+        syncNiriSession()
+        guard let currentWorkspaceID = niriSession.currentWorkspaceID else {
+            return nil
+        }
+
+        return niriStore.workspace(id: currentWorkspaceID)
     }
 
     private func jumpBetweenGridLayers(step: Int) {
@@ -1176,6 +1483,8 @@ final class AppCommandCenter {
     }
 
     private func focusCurrentGridSelection(after movement: GridSelectionChange) {
+        gridSelectedStandaloneAppID = nil
+
         guard let layer = currentGridLayer() else {
             showGridHint(
                 title: "The Grid has no projects yet",
@@ -1198,6 +1507,13 @@ final class AppCommandCenter {
         let group = layer.group(for: tool)
 
         guard let binding = group.activeBinding else {
+            if gridGestureActive {
+                hudController.update(
+                    model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+                )
+                return
+            }
+
             guard showsGridJumpHUD else {
                 return
             }
@@ -1247,6 +1563,302 @@ final class AppCommandCenter {
         )
     }
 
+    private func resolvedGridGestureState() -> GridGestureDestination? {
+        guard let preview = gridGesturePreview,
+              !gridStore.layers.isEmpty else {
+            return nil
+        }
+
+        let hasStandaloneRow = !gridStore.standaloneApps.isEmpty
+        let rowCount = gridStore.layers.count + (hasStandaloneRow ? 1 : 0)
+        let rawLayerPosition = Double(preview.baseLayerIndex) + preview.totalVerticalOffset
+        let rawColumnPosition = Double(preview.baseColumnIndex) + preview.totalHorizontalOffset
+        let clampedLayerPosition = min(max(rawLayerPosition, 0), Double(max(0, rowCount - 1)))
+        let destinationRowIndex = Int(clampedLayerPosition.rounded())
+
+        if hasStandaloneRow, destinationRowIndex == gridStore.layers.count {
+            let clampedColumnPosition = min(max(rawColumnPosition, 0), Double(max(0, gridStore.standaloneApps.count - 1)))
+            return .standaloneApp(appIndex: Int(clampedColumnPosition.rounded()))
+        }
+
+        let clampedColumnPosition = min(max(rawColumnPosition, 0), Double(max(0, gridStore.columns.count - 1)))
+        return .layer(layerIndex: destinationRowIndex, columnIndex: Int(clampedColumnPosition.rounded()))
+    }
+
+    private func resolvedNiriGestureState() -> (workspaceIndex: Int, itemID: String?)? {
+        guard let preview = niriGesturePreview,
+              !niriStore.workspaces.isEmpty else {
+            return nil
+        }
+
+        let rawWorkspacePosition = Double(preview.baseWorkspaceIndex) + preview.totalVerticalOffset
+        let clampedWorkspacePosition = min(max(rawWorkspacePosition, 0), Double(niriStore.workspaces.count - 1))
+        let destinationWorkspaceIndex = Int(clampedWorkspacePosition.rounded())
+        let destinationWorkspace = niriStore.workspaces[destinationWorkspaceIndex]
+
+        guard !destinationWorkspace.items.isEmpty else {
+            return (workspaceIndex: destinationWorkspaceIndex, itemID: nil)
+        }
+
+        let rawItemPosition = Double(preview.baseItemIndex) + preview.totalHorizontalOffset
+        let clampedItemPosition = min(max(rawItemPosition, 0), Double(destinationWorkspace.items.count - 1))
+        let destinationItemIndex = Int(clampedItemPosition.rounded())
+
+        return (
+            workspaceIndex: destinationWorkspaceIndex,
+            itemID: destinationWorkspace.items[destinationItemIndex].id
+        )
+    }
+
+    private func moveGridGesture(to destination: GridGestureDestination) -> Bool {
+        syncGridSession()
+        guard !gridStore.layers.isEmpty else {
+            return false
+        }
+
+        switch destination {
+        case .layer(let layerIndex, let columnIndex):
+            guard !gridStore.columns.isEmpty else {
+                return false
+            }
+
+            let currentLayerIndex = gridStore.layers.firstIndex(where: { $0.id == gridSession.currentLayerID }) ?? 0
+            let currentColumnIndex = gridStore.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0
+
+            guard layerIndex != currentLayerIndex || columnIndex != currentColumnIndex || gridSelectedStandaloneAppID != nil else {
+                return false
+            }
+
+            gridSelectedStandaloneAppID = nil
+            let destinationLayerID = gridStore.layers[layerIndex].id
+            let destinationColumnID = gridStore.columns[columnIndex].id
+            gridSession.select(
+                layerID: destinationLayerID,
+                columnID: destinationColumnID,
+                in: gridStore.columns,
+                layers: gridStore.layers
+            )
+            focusCurrentGridSelection(after: .neutral)
+            return true
+
+        case .standaloneApp(let appIndex):
+            guard gridStore.standaloneApps.indices.contains(appIndex) else {
+                return false
+            }
+
+            let app = gridStore.standaloneApps[appIndex]
+            guard let binding = app.binding else {
+                return false
+            }
+
+            guard gridSelectedStandaloneAppID != app.id else {
+                return false
+            }
+
+            gridSelectedStandaloneAppID = app.id
+            let outcome = focusService.focus(target: binding.target)
+            performFocusFeedbackIfNeeded(for: outcome)
+
+            if case .focused = outcome {
+                hudController.update(
+                    model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+                )
+            } else {
+                showGridHintForOutcome(outcome, fallbackLabel: binding.label, movement: .neutral)
+            }
+            return true
+        }
+    }
+
+    private func moveWithinNiriWorkspace(step: Int) {
+        syncNiriSession()
+
+        guard let workspace = currentNiriWorkspace() else {
+            showNiriHint(
+                title: "No Niri workspace yet",
+                detail: "Create a workspace first.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard !workspace.items.isEmpty else {
+            showNiriHint(
+                title: "Current workspace is empty",
+                detail: "Focus a window to add it here.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard let movement = niriSession.selectAdjacentItem(step: step, in: niriStore.workspaces) else {
+            if niriGestureActive {
+                hudController.update(
+                    model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+                )
+            }
+            return
+        }
+
+        if let workspaceID = niriSession.currentWorkspaceID,
+           let itemID = niriSession.currentItemID {
+            niriStore.rememberFocusedItem(workspaceID: workspaceID, itemID: itemID)
+        }
+
+        focusCurrentNiriSelection(after: movement)
+    }
+
+    private func moveBetweenNiriWorkspaces(step: Int) {
+        syncNiriSession()
+
+        guard !niriStore.workspaces.isEmpty else {
+            showNiriHint(
+                title: "No Niri workspace yet",
+                detail: "Create a workspace first.",
+                tone: .neutral,
+                movement: .neutral
+            )
+            return
+        }
+
+        guard let movement = niriSession.selectAdjacentWorkspace(step: step, in: niriStore.workspaces) else {
+            if niriGestureActive {
+                hudController.update(
+                    model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+                )
+            }
+            return
+        }
+
+        if let workspaceID = niriSession.currentWorkspaceID,
+           let itemID = niriSession.currentItemID {
+            niriStore.rememberFocusedItem(workspaceID: workspaceID, itemID: itemID)
+        }
+
+        focusCurrentNiriSelection(after: movement)
+    }
+
+    private func focusCurrentNiriSelection(after movement: NiriSelectionChange) {
+        guard let workspace = currentNiriWorkspace() else {
+            showNiriHint(
+                title: "No Niri workspace yet",
+                detail: "Create a workspace first.",
+                tone: .neutral,
+                movement: movement
+            )
+            return
+        }
+
+        guard let item = niriSession.currentItem(in: niriStore.workspaces) else {
+            showNiriHint(
+                title: "\(workspace.name) is empty",
+                detail: "Focus a window to add it here.",
+                tone: .neutral,
+                movement: movement
+            )
+            return
+        }
+
+        niriStore.rememberFocusedItem(workspaceID: workspace.id, itemID: item.id)
+
+        if let liveWindow = liveNiriWindows[item.id] {
+            let liveOutcome = focusService.focus(liveWindow: liveWindow, strategy: .liveSessionWindow)
+            if case .focused = liveOutcome {
+                showNiriHintForOutcome(liveOutcome, fallbackLabel: item.label, movement: movement)
+                return
+            }
+        }
+
+        if let resolvedWindow = resolveLiveWindow(for: item.target) {
+            updateNiriLiveWindowCache(for: item.id, liveWindow: resolvedWindow.window)
+            let resolvedOutcome = focusService.focus(
+                liveWindow: resolvedWindow.window,
+                strategy: resolvedWindow.strategy
+            )
+
+            if case .focused = resolvedOutcome {
+                showNiriHintForOutcome(resolvedOutcome, fallbackLabel: item.label, movement: movement)
+                return
+            }
+        }
+
+        let outcome = focusService.focus(target: item.target)
+        showNiriHintForOutcome(outcome, fallbackLabel: item.label, movement: movement)
+    }
+
+    private func showNiriHint(
+        title: String,
+        detail: String?,
+        tone: HUDTone,
+        movement: NiriSelectionChange
+    ) {
+        presentNiriHUD(
+            model: niriMinimapModel(
+                movement: movement,
+                hint: GridHUDHint(title: title, detail: detail, tone: tone),
+                detailMode: .compact
+            )
+        )
+    }
+
+    private func showNiriHintForOutcome(
+        _ outcome: FocusOutcome,
+        fallbackLabel: String,
+        movement: NiriSelectionChange
+    ) {
+        performFocusFeedbackIfNeeded(for: outcome)
+
+        switch outcome {
+        case .focused:
+            if niriGestureActive {
+                hudController.update(
+                    model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+                )
+                return
+            }
+
+            guard settings.showJumpPopups else {
+                return
+            }
+
+            presentNiriHUD(
+                model: niriMinimapModel(movement: movement, hint: nil, detailMode: .compact)
+            )
+        case .launched(let appName):
+            showNiriHint(
+                title: "Launching \(appName)",
+                detail: "Niri opened the app because it wasn’t running.",
+                tone: .success,
+                movement: movement
+            )
+        case .unavailable(let reason):
+            showNiriHint(
+                title: "\(fallbackLabel) is unavailable",
+                detail: reason,
+                tone: .warning,
+                movement: movement
+            )
+        }
+    }
+
+    private func presentNiriHUD(model: HUDModel) {
+        if niriGestureActive {
+            hudController.update(model: model)
+        } else {
+            hudController.show(model: model, timeout: gridHUDTimeout)
+        }
+    }
+
+    private func performFocusFeedbackIfNeeded(for outcome: FocusOutcome) {
+        guard case .focused = outcome else {
+            return
+        }
+
+        hapticPerformer.performFocusConfirmation()
+    }
+
     private func standaloneGridTarget(from target: Target) -> Target {
         switch target {
         case .app:
@@ -1289,39 +1901,229 @@ final class AppCommandCenter {
         hint: GridHUDHint?,
         detailMode: GridMinimapModel.DetailMode = .compact
     ) -> HUDModel {
-        let selectedLayerIndex = max(0, gridStore.layers.firstIndex(where: { $0.id == gridSession.currentLayerID }) ?? 0)
-        let selectedColumnIndex = max(0, gridStore.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0)
+        let defaultSelection = currentGridMinimapSelection()
+        let defaultSelectedLayerIndex = defaultSelection.layerIndex
+        let defaultSelectedColumnIndex = defaultSelection.columnIndex
+        let selectedLayerIndex: Int
+        let selectedColumnIndex: Int
+
+        if let gestureDestination = resolvedGridGestureState() {
+            switch gestureDestination {
+            case .layer(let layerIndex, let columnIndex):
+                selectedLayerIndex = layerIndex
+                selectedColumnIndex = columnIndex
+            case .standaloneApp(let appIndex):
+                selectedLayerIndex = gridStore.layers.count
+                selectedColumnIndex = appIndex
+            }
+        } else {
+            selectedLayerIndex = defaultSelectedLayerIndex
+            selectedColumnIndex = defaultSelectedColumnIndex
+        }
+
+        let selectorPosition = gridSelectorPosition(
+            selectedLayerIndex: defaultSelectedLayerIndex,
+            selectedColumnIndex: defaultSelectedColumnIndex
+        )
 
         return HUDModel.gridMinimap(
             GridMinimapModel(
-                layers: gridStore.layers.map { layer in
-                    GridMinimapLayer(
-                        id: layer.id,
-                        name: layer.name,
-                        color: layer.color,
-                        columns: gridStore.columns.map { column in
-                            let group = layer.group(for: column)
-                            return GridMinimapColumn(
-                                id: column.id,
-                                name: column.name,
-                                iconSymbol: column.iconSymbol,
-                                bundleId: group.activeBinding?.bundleId,
-                                isFilled: !group.bindings.isEmpty,
-                                activeLabel: group.activeBinding?.label
-                            )
-                        },
-                        isCurrent: gridSession.currentLayerID == layer.id
-                    )
-                },
+                layers: gridMinimapRows(),
                 movement: movement,
                 hint: hint,
                 animateSelectionMotion: settings.animateGridMinimapSelection,
                 showsLayerPills: settings.showGridProjectsInHUD,
                 detailMode: detailMode,
                 selectedLayerIndex: selectedLayerIndex,
-                selectedColumnIndex: selectedColumnIndex
+                selectedColumnIndex: selectedColumnIndex,
+                selectorLayerPosition: selectorPosition.layerPosition,
+                selectorColumnPosition: selectorPosition.columnPosition,
+                selectorTracksFinger: gridGesturePreview != nil
             )
         )
+    }
+
+    private func gridMinimapRows() -> [GridMinimapLayer] {
+        var rows = gridStore.layers.map { layer in
+            GridMinimapLayer(
+                id: layer.id,
+                name: layer.name,
+                color: layer.color,
+                columns: gridStore.columns.map { column in
+                    let group = layer.group(for: column)
+                    return GridMinimapColumn(
+                        id: column.id,
+                        name: column.name,
+                        iconSymbol: column.iconSymbol,
+                        bundleId: group.activeBinding?.bundleId,
+                        isFilled: !group.bindings.isEmpty,
+                        activeLabel: group.activeBinding?.label
+                    )
+                },
+                isCurrent: gridSession.currentLayerID == layer.id
+            )
+        }
+
+        if !gridStore.standaloneApps.isEmpty {
+            rows.append(
+                GridMinimapLayer(
+                    id: "grid-standalone-row",
+                    name: "Standalone",
+                    color: .slate,
+                    columns: gridStore.standaloneApps.map { app in
+                        GridMinimapColumn(
+                            id: app.id,
+                            name: app.name,
+                            iconSymbol: app.iconSymbol,
+                            bundleId: standaloneAppBundleID(for: app),
+                            isFilled: app.binding != nil,
+                            activeLabel: app.binding?.label ?? app.name
+                        )
+                    },
+                    isCurrent: false
+                )
+            )
+        }
+
+        return rows
+    }
+
+    private func standaloneAppBundleID(for app: GridStandaloneApp) -> String? {
+        guard let target = app.binding?.target else {
+            return nil
+        }
+
+        switch target {
+        case .app(let appTarget):
+            return appTarget.bundleId
+        case .window(let windowTarget):
+            return windowTarget.bundleId
+        }
+    }
+
+    private func currentGridMinimapSelection() -> (layerIndex: Int, columnIndex: Int) {
+        if let standaloneAppID = gridSelectedStandaloneAppID,
+           let standaloneIndex = gridStore.standaloneApps.firstIndex(where: { $0.id == standaloneAppID }) {
+            return (gridStore.layers.count, standaloneIndex)
+        }
+
+        if gridSelectedStandaloneAppID != nil {
+            gridSelectedStandaloneAppID = nil
+        }
+
+        let layerIndex = max(0, gridStore.layers.firstIndex(where: { $0.id == gridSession.currentLayerID }) ?? 0)
+        let columnIndex = max(0, gridStore.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0)
+        return (layerIndex, columnIndex)
+    }
+
+    private func niriMinimapModel(
+        movement: NiriSelectionChange,
+        hint: GridHUDHint?,
+        detailMode: GridMinimapModel.DetailMode = .compact
+    ) -> HUDModel {
+        let selectedWorkspaceIndex = max(0, niriStore.workspaces.firstIndex(where: { $0.id == niriSession.currentWorkspaceID }) ?? 0)
+        let selectedItemIndex = max(0, currentNiriWorkspace()?.items.firstIndex(where: { $0.id == niriSession.currentItemID }) ?? 0)
+        let selectorPosition = niriSelectorPosition(
+            selectedWorkspaceIndex: selectedWorkspaceIndex,
+            selectedItemIndex: selectedItemIndex
+        )
+
+        return HUDModel.gridMinimap(
+            GridMinimapModel(
+                layers: niriStore.workspaces.map { workspace in
+                    GridMinimapLayer(
+                        id: workspace.id,
+                        name: workspace.name,
+                        color: .cobalt,
+                        columns: workspace.items.map { item in
+                            GridMinimapColumn(
+                                id: item.id,
+                                name: item.label,
+                                iconSymbol: "app.fill",
+                                bundleId: item.bundleId,
+                                isFilled: true,
+                                activeLabel: item.label
+                            )
+                        },
+                        isCurrent: workspace.id == niriSession.currentWorkspaceID
+                    )
+                },
+                movement: niriMovement(for: movement),
+                hint: hint,
+                animateSelectionMotion: settings.animateGridMinimapSelection,
+                showsLayerPills: true,
+                detailMode: detailMode,
+                selectedLayerIndex: selectedWorkspaceIndex,
+                selectedColumnIndex: selectedItemIndex,
+                selectorLayerPosition: selectorPosition.layerPosition,
+                selectorColumnPosition: selectorPosition.columnPosition,
+                selectorTracksFinger: niriGesturePreview != nil
+            )
+        )
+    }
+
+    private func niriSelectorPosition(
+        selectedWorkspaceIndex: Int,
+        selectedItemIndex: Int
+    ) -> (layerPosition: Double, columnPosition: Double) {
+        guard let preview = niriGesturePreview else {
+            return (Double(selectedWorkspaceIndex), Double(selectedItemIndex))
+        }
+
+        let maxWorkspaceIndex = Double(max(0, niriStore.workspaces.count - 1))
+        let maxPreviewColumnIndex = Double(max(0, (niriStore.workspaces.map(\.items.count).max() ?? 1) - 1))
+        let rawWorkspacePosition = Double(preview.baseWorkspaceIndex) + preview.totalVerticalOffset
+        let rawColumnPosition = Double(preview.baseItemIndex) + preview.totalHorizontalOffset
+
+        return (
+            min(max(rawWorkspacePosition, 0), maxWorkspaceIndex),
+            min(max(rawColumnPosition, 0), maxPreviewColumnIndex)
+        )
+    }
+
+    private func gridSelectorPosition(
+        selectedLayerIndex: Int,
+        selectedColumnIndex: Int
+    ) -> (layerPosition: Double, columnPosition: Double) {
+        guard let preview = gridGesturePreview else {
+            return (Double(selectedLayerIndex), Double(selectedColumnIndex))
+        }
+
+        let maxLayerIndex = Double(max(0, gridStore.layers.count + (gridStore.standaloneApps.isEmpty ? 0 : 1) - 1))
+        let maxColumnIndex = Double(max(0, max(gridStore.columns.count, gridStore.standaloneApps.count) - 1))
+        return (
+            min(max(Double(preview.baseLayerIndex) + preview.totalVerticalOffset, 0), maxLayerIndex),
+            min(max(Double(preview.baseColumnIndex) + preview.totalHorizontalOffset, 0), maxColumnIndex)
+        )
+    }
+
+    private func moveNiriGesture(workspaceIndex: Int, itemID: String?) -> Bool {
+        syncNiriSession()
+
+        guard !niriStore.workspaces.isEmpty else {
+            return false
+        }
+
+        let currentWorkspaceIndex = niriStore.workspaces.firstIndex(where: { $0.id == niriSession.currentWorkspaceID }) ?? 0
+        let destinationWorkspace = niriStore.workspaces[workspaceIndex]
+
+        let didChangeWorkspace = workspaceIndex != currentWorkspaceIndex
+        let didChangeItem = itemID != niriSession.currentItemID
+        guard didChangeWorkspace || didChangeItem else {
+            return false
+        }
+
+        niriSession.select(workspaceID: destinationWorkspace.id, itemID: itemID, in: niriStore.workspaces)
+        if let itemID {
+            niriStore.rememberFocusedItem(workspaceID: destinationWorkspace.id, itemID: itemID)
+            focusCurrentNiriSelection(after: .neutral)
+        } else {
+            hudController.update(
+                model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
+            )
+        }
+
+        return true
     }
 
     private func gridMatch(for liveWindow: LiveWindow) -> (layerID: String, columnID: String)? {
@@ -1364,6 +2166,29 @@ final class AppCommandCenter {
         return (signature, gridMatch(forBundleID: focusedApp.bundleId))
     }
 
+    private func currentNiriExternalFocusObservation() -> (signature: String?, shouldTrack: Bool, liveWindow: LiveWindow?, match: NiriTrackedMatch?) {
+        if let focusedWindow = windowProvider.focusedWindow() {
+            let shouldTrack = focusedWindow.bundleId != Bundle.main.bundleIdentifier
+            return (
+                signature: externalFocusSignature(for: focusedWindow),
+                shouldTrack: shouldTrack,
+                liveWindow: focusedWindow,
+                match: shouldTrack ? niriMatch(for: focusedWindow) : nil
+            )
+        }
+
+        guard let focusedApp = appProvider.focusedApp() else {
+            return (nil, false, nil, nil)
+        }
+
+        let signature = "app:\(focusedApp.bundleId)#\(focusedApp.pid)"
+        guard focusedApp.bundleId != Bundle.main.bundleIdentifier else {
+            return (signature, false, nil, nil)
+        }
+
+        return (signature, true, nil, niriMatch(forBundleID: focusedApp.bundleId))
+    }
+
     private func matchingGridCells(where predicate: (Target) -> Bool) -> [(layerID: String, columnID: String)] {
         gridStore.layers.flatMap { layer in
             gridStore.columns.compactMap { column in
@@ -1390,6 +2215,51 @@ final class AppCommandCenter {
         return matches.first
     }
 
+    private func matchingNiriItems(where predicate: (Target) -> Bool) -> [NiriTrackedMatch] {
+        niriStore.workspaces.flatMap { workspace in
+            workspace.items.compactMap { item in
+                guard predicate(item.target) else {
+                    return nil
+                }
+
+                return NiriTrackedMatch(workspaceID: workspace.id, itemID: item.id)
+            }
+        }
+    }
+
+    private func niriMatch(for liveWindow: LiveWindow) -> NiriTrackedMatch? {
+        let exactMatches = matchingNiriItems { target in
+            matches(liveWindow: liveWindow, target: target)
+        }
+
+        if let preferred = preferredNiriMatch(from: exactMatches) {
+            return preferred
+        }
+
+        return preferredNiriMatch(from: matchingNiriItems { target in
+            target.bundleId == liveWindow.bundleId
+        })
+    }
+
+    private func niriMatch(forBundleID bundleID: String) -> NiriTrackedMatch? {
+        preferredNiriMatch(from: matchingNiriItems { target in
+            target.bundleId == bundleID
+        })
+    }
+
+    private func preferredNiriMatch(from matches: [NiriTrackedMatch]) -> NiriTrackedMatch? {
+        guard !matches.isEmpty else {
+            return nil
+        }
+
+        if let currentWorkspaceID = niriSession.currentWorkspaceID,
+           let currentWorkspaceMatch = matches.first(where: { $0.workspaceID == currentWorkspaceID }) {
+            return currentWorkspaceMatch
+        }
+
+        return matches.first
+    }
+
     private func matches(liveWindow: LiveWindow, target: Target) -> Bool {
         guard case .window(let windowTarget) = target,
               windowTarget.bundleId == liveWindow.bundleId else {
@@ -1411,6 +2281,17 @@ final class AppCommandCenter {
     private func externalFocusSignature(for liveWindow: LiveWindow) -> String {
         "window:\(liveWindow.bundleId)#\(liveWindow.pid)#\(liveWindow.windowID ?? -1)#\(normalizedWindowText(liveWindow.title) ?? "")#\(liveWindow.frame?.x ?? -1)#\(liveWindow.frame?.y ?? -1)#\(liveWindow.frame?.width ?? -1)#\(liveWindow.frame?.height ?? -1)"
     }
+
+    private func niriMovement(for movement: NiriSelectionChange) -> GridSelectionChange {
+        switch movement {
+        case .workspace(let step):
+            return .layer(step: step)
+        case .item(let fromIndex, let toIndex):
+            return .tool(fromIndex: fromIndex, toIndex: toIndex)
+        case .neutral:
+            return .neutral
+        }
+    }
 }
 
 private protocol AssignmentPresenting {
@@ -1421,6 +2302,7 @@ private protocol AssignmentPresenting {
 extension SlotAssignment: AssignmentPresenting {}
 extension DynamicHotkeyAssignment: AssignmentPresenting {}
 extension GridBinding: AssignmentPresenting {}
+extension NiriItem: AssignmentPresenting {}
 
 private extension SlotAssignment {
     var bundleId: String {
@@ -1458,6 +2340,17 @@ private extension GridBinding {
 private extension Target {
     var bundleId: String {
         switch self {
+        case .app(let target):
+            return target.bundleId
+        case .window(let target):
+            return target.bundleId
+        }
+    }
+}
+
+private extension NiriItem {
+    var bundleId: String {
+        switch target {
         case .app(let target):
             return target.bundleId
         case .window(let target):

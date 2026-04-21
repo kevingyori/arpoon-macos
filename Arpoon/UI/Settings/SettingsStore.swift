@@ -1,6 +1,28 @@
 import Combine
 import Foundation
 
+enum TrackpadGestureModifier: String, CaseIterable, Codable, Identifiable {
+    case option
+    case command
+    case control
+    case shift
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .option:
+            return "Option"
+        case .command:
+            return "Command"
+        case .control:
+            return "Control"
+        case .shift:
+            return "Shift"
+        }
+    }
+}
+
 enum AddPopupStyle: String, CaseIterable, Identifiable {
     case full
     case minimal
@@ -66,6 +88,14 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(enableExperimentalGridExternalSync, forKey: Keys.enableExperimentalGridExternalSync) }
     }
 
+    @Published var enableNiriTrackpadGestures: Bool {
+        didSet { defaults.set(enableNiriTrackpadGestures, forKey: Keys.enableNiriTrackpadGestures) }
+    }
+
+    @Published var trackpadGestureModifier: TrackpadGestureModifier {
+        didSet { defaults.set(trackpadGestureModifier.rawValue, forKey: Keys.trackpadGestureModifier) }
+    }
+
     private let defaults: UserDefaults
     private var gridColumns: [GridToolColumn] = GridToolColumn.defaults
     private var gridLayerNames: [String] = (1 ... 3).map { "Project \($0)" }
@@ -104,6 +134,10 @@ final class SettingsStore: ObservableObject {
             showGridProjectsInHUD = defaults.object(forKey: Keys.showGridProjectNamesInHUD) as? Bool ?? true
         }
         enableExperimentalGridExternalSync = defaults.object(forKey: Keys.enableExperimentalGridExternalSync) as? Bool ?? true
+        enableNiriTrackpadGestures = defaults.object(forKey: Keys.enableNiriTrackpadGestures) as? Bool ?? true
+        trackpadGestureModifier = TrackpadGestureModifier(
+            rawValue: defaults.string(forKey: Keys.trackpadGestureModifier) ?? ""
+        ) ?? .option
     }
 
     func shortcut(for action: HotkeyAction) -> HotkeyShortcut? {
@@ -262,6 +296,8 @@ private enum Keys {
     static let showGridProjectsInHUD = "showGridProjectsInHUD"
     static let showGridProjectNamesInHUD = "showGridProjectNamesInHUD"
     static let enableExperimentalGridExternalSync = "enableExperimentalGridExternalSync"
+    static let enableNiriTrackpadGestures = "enableNiriTrackpadGestures"
+    static let trackpadGestureModifier = "trackpadGestureModifier"
     static let showNotificationPopups = "showNotificationPopups"
 }
 

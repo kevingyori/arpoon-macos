@@ -10,6 +10,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         dynamicHotkeys: DynamicHotkeyStore,
         gridStore: GridStore,
         gridSession: GridSession,
+        niriStore: NiriStore,
+        niriSession: NiriSession,
         permissions: AccessibilityPermissionService,
         availableWindowsProvider: @escaping @MainActor () -> [LiveWindow],
         commands: AppCommands
@@ -20,6 +22,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
                 dynamicHotkeys: dynamicHotkeys,
                 gridStore: gridStore,
                 gridSession: gridSession,
+                niriStore: niriStore,
+                niriSession: niriSession,
                 permissions: permissions,
                 availableWindowsProvider: availableWindowsProvider,
                 commands: commands

@@ -1,0 +1,4653 @@
+diff --git a/Arpoon.xcodeproj/project.pbxproj b/Arpoon.xcodeproj/project.pbxproj
+index 8092269..bc9e11a 100644
+--- a/Arpoon.xcodeproj/project.pbxproj
++++ b/Arpoon.xcodeproj/project.pbxproj
+@@ -8,6 +8,7 @@
+ 
+ /* Begin PBXBuildFile section */
+ 		0470A504CF41752F752B9F1D /* GridLayerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D65432968FF225A7452CD78 /* GridLayerStore.swift */; };
++		0D912F80BFBA7D8AAD49A5C4 /* NiriStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851F41C5D1FC0D22BF479616 /* NiriStore.swift */; };
+ 		13FA5D0D68BACCB7EB9F2CE7 /* TargetLabelPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88E5BAFB7FDE9C156B430C0 /* TargetLabelPolicy.swift */; };
+ 		16642193E70A6B5078EFB9F7 /* OptionHoldHUDController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB188FD750342ECE5E9FB625 /* OptionHoldHUDController.swift */; };
+ 		1812F9F59DAE5237B3AE36DB /* AppRuntimeAndCommandCenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B53C3057E7053F99C0F372 /* AppRuntimeAndCommandCenterTests.swift */; };
+@@ -17,6 +18,7 @@
+ 		235E80AFBF670A194238F275 /* ArpoonStatusItemTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 68AEB03F38EF54D9513E4CF5 /* ArpoonStatusItemTemplate.pdf */; };
+ 		2A1D9B565730F496589D12BA /* HotkeyConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5A64B1C9DBA2FCC947296B /* HotkeyConfiguration.swift */; };
+ 		2B069C3A43608C4D04062093 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9D68426CD3319B171227149 /* AppDelegate.swift */; };
++		319A9CACCD307A9A71B97AF5 /* NiriWorkspaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F71D917C01D02893288BBD97 /* NiriWorkspaceStore.swift */; };
+ 		32039FD3926E4C1F86770852 /* ArpoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD456FB635AF6FDEE03A08B1 /* ArpoonApp.swift */; };
+ 		36EA5450D2470A1B5267FE50 /* JSONAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */; };
+ 		398CB1C61A08E2A0C176DB68 /* TargetResolutionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDE3692B52A17217431C179 /* TargetResolutionService.swift */; };
+@@ -39,6 +41,7 @@
+ 		71D97E17941BCE9244AAD5E2 /* LiveWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61885319E1A75B41FA73D79F /* LiveWindow.swift */; };
+ 		76E657F1B2A158817D3FCBF2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBA207003F95549BF992D88 /* SettingsView.swift */; };
+ 		784B9C89CCC1217E264D8E0C /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3CF14EAC864AE6E4AD4C8D0 /* StatusItemController.swift */; };
++		78EC719E4A7E1E9B8E7F2823 /* NiriModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448C569FFE02C89AD11DBBDD /* NiriModels.swift */; };
+ 		7AE7207E8FF85A238A9278E7 /* SlotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB706286B84913284F0EB019 /* SlotStore.swift */; };
+ 		7DA7F576F8FC43B0E74227E0 /* TargetCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C8F4DD8F9D8025F85BB55B /* TargetCaptureService.swift */; };
+ 		8B0007B9AEA33D4F898DA320 /* GridUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E5B9C63CCF3320E0923884B /* GridUI.swift */; };
+@@ -49,13 +52,16 @@
+ 		A716B26FB64E27C11A0E3BBC /* DynamicHotkeyAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2753ABB84682EBD417F90765 /* DynamicHotkeyAssignmentStore.swift */; };
+ 		A7B6AA50EBBDABC471872CC7 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A707DE71C1F2EB1D638D3F /* SettingsWindowController.swift */; };
+ 		ABD8909B3A2C804EF588B3E4 /* AppRuntimeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71600255BD0E1A41BF6BF8D2 /* AppRuntimeCoordinator.swift */; };
++		B51A4A86F4568CF4928B6FB0 /* TrackpadGestureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4565A94D20E7DA970B54406F /* TrackpadGestureController.swift */; };
+ 		B874421BE5815DED193456F7 /* MacOSFocusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9E5DEE440535264242E9CC /* MacOSFocusController.swift */; };
+ 		C28907ABC1D5C54EFD38C2DF /* GridSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED5401E57F41E387FF0D2DD /* GridSettingsPane.swift */; };
+ 		C8B51BB2E595C171DEEF3060 /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6A6383ECCC5D131E07E2A /* HUDView.swift */; };
++		C918541A2201AFEA5843F2B4 /* JSONNiriWorkspaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D69A7AEC9F1C8F0373728571 /* JSONNiriWorkspaceStore.swift */; };
+ 		C9F8E99657C7478E15C9FAB8 /* AppCommandCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEDE966A407E8911B6157CF /* AppCommandCenter.swift */; };
+ 		CA927B35F5BAA71E7AF88408 /* HUDWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C4534FC70FA0A3E238FC7F /* HUDWindowController.swift */; };
+ 		CBA8168B90EDE12ED96E39E0 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06882F59C8D449A2357EF8D9 /* AppModel.swift */; };
+ 		DCE1DBDAFA16133794336049 /* DynamicHotkeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8CCCF8D06F1AADFB5BAE6B /* DynamicHotkeyStore.swift */; };
++		DE7AC162601FC32ABF6FD23B /* NiriSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12C474C0662787441F34FCB /* NiriSession.swift */; };
+ 		DFA003D74830497F4C84519A /* GridSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27639FB54D530EF835FAB1F3 /* GridSession.swift */; };
+ 		E2C03D8AB7A05A073621DCCC /* AssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD964FEC1316C403F9B81B6 /* AssignmentStore.swift */; };
+ 		E2C83BB20C9D1C447F5524A3 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEC90199DF96151C50695B /* MenuBarView.swift */; };
+@@ -64,6 +70,7 @@
+ 		F1FCE7AC94145226D8B20476 /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = E59D5B08B432400809F73F6E /* Target.swift */; };
+ 		F30488BA68118B331BE7DC73 /* JSONGridLayerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671CF9127FF50F8BB0A50599 /* JSONGridLayerStore.swift */; };
+ 		F765943EAB72F590B73BCC44 /* JSONDynamicHotkeyAssignmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C8AA0643B06F6D2FE9EDD23 /* JSONDynamicHotkeyAssignmentStore.swift */; };
++		FC27802EB66477514203071C /* MacOSHapticFeedbackPerformer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06F45E3D8505BCE2ADA96400 /* MacOSHapticFeedbackPerformer.swift */; };
+ 		FFA23E1801DBED48460E1D55 /* TitleMatchPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20576B0C4205419731150495 /* TitleMatchPolicy.swift */; };
+ /* End PBXBuildFile section */
+ 
+@@ -79,6 +86,7 @@
+ 
+ /* Begin PBXFileReference section */
+ 		06882F59C8D449A2357EF8D9 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
++		06F45E3D8505BCE2ADA96400 /* MacOSHapticFeedbackPerformer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSHapticFeedbackPerformer.swift; sourceTree = "<group>"; };
+ 		0B687024CB78678408B17760 /* AccessibilityWindowProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityWindowProvider.swift; sourceTree = "<group>"; };
+ 		0CEDE966A407E8911B6157CF /* AppCommandCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCommandCenter.swift; sourceTree = "<group>"; };
+ 		101332250301C279FAACB183 /* SlotAssignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotAssignment.swift; sourceTree = "<group>"; };
+@@ -93,6 +101,8 @@
+ 		3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONAssignmentStore.swift; sourceTree = "<group>"; };
+ 		3ED5401E57F41E387FF0D2DD /* GridSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridSettingsPane.swift; sourceTree = "<group>"; };
+ 		41905081B395CDD394D2AA53 /* ControlPanelWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanelWindowController.swift; sourceTree = "<group>"; };
++		448C569FFE02C89AD11DBBDD /* NiriModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NiriModels.swift; sourceTree = "<group>"; };
++		4565A94D20E7DA970B54406F /* TrackpadGestureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadGestureController.swift; sourceTree = "<group>"; };
+ 		473B09F7B81CEC7F4E3590D8 /* GridBindingSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridBindingSelectionController.swift; sourceTree = "<group>"; };
+ 		505037AA2B824883562E0B6A /* GlassKeyPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKeyPanel.swift; sourceTree = "<group>"; };
+ 		550E15860054C4A1346D279B /* AccessibilityPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermissionService.swift; sourceTree = "<group>"; };
+@@ -109,6 +119,7 @@
+ 		7C9E5DEE440535264242E9CC /* MacOSFocusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSFocusController.swift; sourceTree = "<group>"; };
+ 		82C4534FC70FA0A3E238FC7F /* HUDWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDWindowController.swift; sourceTree = "<group>"; };
+ 		83B6A6383ECCC5D131E07E2A /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
++		851F41C5D1FC0D22BF479616 /* NiriStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NiriStore.swift; sourceTree = "<group>"; };
+ 		8DAEC90199DF96151C50695B /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+ 		962EED9020BCE6D2782B239D /* ArpoonTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ArpoonTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		97E7ED41EFE58BA3E9269FC0 /* GridModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridModels.swift; sourceTree = "<group>"; };
+@@ -122,10 +133,12 @@
+ 		BB706286B84913284F0EB019 /* SlotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotStore.swift; sourceTree = "<group>"; };
+ 		BD456FB635AF6FDEE03A08B1 /* ArpoonApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArpoonApp.swift; sourceTree = "<group>"; };
+ 		C0032085E6AA0107B3150B23 /* Arpoon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Arpoon.app; sourceTree = BUILT_PRODUCTS_DIR; };
++		C12C474C0662787441F34FCB /* NiriSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NiriSession.swift; sourceTree = "<group>"; };
+ 		C17CE934774DE9C989208E72 /* RunningAppProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningAppProvider.swift; sourceTree = "<group>"; };
+ 		C3C8F4DD8F9D8025F85BB55B /* TargetCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetCaptureService.swift; sourceTree = "<group>"; };
+ 		CB188FD750342ECE5E9FB625 /* OptionHoldHUDController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionHoldHUDController.swift; sourceTree = "<group>"; };
+ 		D514ABF921ABA84FFB18328E /* FocusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusService.swift; sourceTree = "<group>"; };
++		D69A7AEC9F1C8F0373728571 /* JSONNiriWorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONNiriWorkspaceStore.swift; sourceTree = "<group>"; };
+ 		D88E5BAFB7FDE9C156B430C0 /* TargetLabelPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetLabelPolicy.swift; sourceTree = "<group>"; };
+ 		E4ACBED9F2036A080DB28F2B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+ 		E59D5B08B432400809F73F6E /* Target.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Target.swift; sourceTree = "<group>"; };
+@@ -133,6 +146,7 @@
+ 		E9D68426CD3319B171227149 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+ 		EF01F9A38CAA7ACBA0710F27 /* ShortcutRecorderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorderRow.swift; sourceTree = "<group>"; };
+ 		F2742A046F84717DE703BC81 /* GlassPanelSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanelSurface.swift; sourceTree = "<group>"; };
++		F71D917C01D02893288BBD97 /* NiriWorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NiriWorkspaceStore.swift; sourceTree = "<group>"; };
+ 		FAD52F4C9348C005FE5C5A08 /* AppCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCommands.swift; sourceTree = "<group>"; };
+ 		FBBA207003F95549BF992D88 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+ 		FC562A82A67514B70A2118BB /* DynamicHotkeyAssignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHotkeyAssignment.swift; sourceTree = "<group>"; };
+@@ -196,6 +210,7 @@
+ 				06882F59C8D449A2357EF8D9 /* AppModel.swift */,
+ 				71600255BD0E1A41BF6BF8D2 /* AppRuntimeCoordinator.swift */,
+ 				BD456FB635AF6FDEE03A08B1 /* ArpoonApp.swift */,
++				4565A94D20E7DA970B54406F /* TrackpadGestureController.swift */,
+ 			);
+ 			path = App;
+ 			sourceTree = "<group>";
+@@ -210,6 +225,9 @@
+ 				1D65432968FF225A7452CD78 /* GridLayerStore.swift */,
+ 				27639FB54D530EF835FAB1F3 /* GridSession.swift */,
+ 				7421044B5A6658DFF9A092B2 /* GridStore.swift */,
++				C12C474C0662787441F34FCB /* NiriSession.swift */,
++				851F41C5D1FC0D22BF479616 /* NiriStore.swift */,
++				F71D917C01D02893288BBD97 /* NiriWorkspaceStore.swift */,
+ 				BB706286B84913284F0EB019 /* SlotStore.swift */,
+ 				C3C8F4DD8F9D8025F85BB55B /* TargetCaptureService.swift */,
+ 				6BDE3692B52A17217431C179 /* TargetResolutionService.swift */,
+@@ -265,6 +283,7 @@
+ 				550E15860054C4A1346D279B /* AccessibilityPermissionService.swift */,
+ 				0B687024CB78678408B17760 /* AccessibilityWindowProvider.swift */,
+ 				7C9E5DEE440535264242E9CC /* MacOSFocusController.swift */,
++				06F45E3D8505BCE2ADA96400 /* MacOSHapticFeedbackPerformer.swift */,
+ 				C17CE934774DE9C989208E72 /* RunningAppProvider.swift */,
+ 			);
+ 			path = MacOS;
+@@ -287,6 +306,7 @@
+ 				97E7ED41EFE58BA3E9269FC0 /* GridModels.swift */,
+ 				B8E5B9DCF658738AB7452E44 /* LiveApp.swift */,
+ 				61885319E1A75B41FA73D79F /* LiveWindow.swift */,
++				448C569FFE02C89AD11DBBDD /* NiriModels.swift */,
+ 				101332250301C279FAACB183 /* SlotAssignment.swift */,
+ 				E59D5B08B432400809F73F6E /* Target.swift */,
+ 			);
+@@ -311,6 +331,7 @@
+ 				3C03305C04201C88A8414241 /* JSONAssignmentStore.swift */,
+ 				6C8AA0643B06F6D2FE9EDD23 /* JSONDynamicHotkeyAssignmentStore.swift */,
+ 				671CF9127FF50F8BB0A50599 /* JSONGridLayerStore.swift */,
++				D69A7AEC9F1C8F0373728571 /* JSONNiriWorkspaceStore.swift */,
+ 			);
+ 			path = Persistence;
+ 			sourceTree = "<group>";
+@@ -478,10 +499,16 @@
+ 				36EA5450D2470A1B5267FE50 /* JSONAssignmentStore.swift in Sources */,
+ 				F765943EAB72F590B73BCC44 /* JSONDynamicHotkeyAssignmentStore.swift in Sources */,
+ 				F30488BA68118B331BE7DC73 /* JSONGridLayerStore.swift in Sources */,
++				C918541A2201AFEA5843F2B4 /* JSONNiriWorkspaceStore.swift in Sources */,
+ 				1A2D1D1658AB9CE857DCA79A /* LiveApp.swift in Sources */,
+ 				71D97E17941BCE9244AAD5E2 /* LiveWindow.swift in Sources */,
+ 				B874421BE5815DED193456F7 /* MacOSFocusController.swift in Sources */,
++				FC27802EB66477514203071C /* MacOSHapticFeedbackPerformer.swift in Sources */,
+ 				E2C83BB20C9D1C447F5524A3 /* MenuBarView.swift in Sources */,
++				78EC719E4A7E1E9B8E7F2823 /* NiriModels.swift in Sources */,
++				DE7AC162601FC32ABF6FD23B /* NiriSession.swift in Sources */,
++				0D912F80BFBA7D8AAD49A5C4 /* NiriStore.swift in Sources */,
++				319A9CACCD307A9A71B97AF5 /* NiriWorkspaceStore.swift in Sources */,
+ 				16642193E70A6B5078EFB9F7 /* OptionHoldHUDController.swift in Sources */,
+ 				4D0E1320F01A3F88C75763F6 /* RunningAppProvider.swift in Sources */,
+ 				4160CDE0B0628E277D6647C0 /* SettingsStore.swift in Sources */,
+@@ -496,6 +523,7 @@
+ 				13FA5D0D68BACCB7EB9F2CE7 /* TargetLabelPolicy.swift in Sources */,
+ 				398CB1C61A08E2A0C176DB68 /* TargetResolutionService.swift in Sources */,
+ 				FFA23E1801DBED48460E1D55 /* TitleMatchPolicy.swift in Sources */,
++				B51A4A86F4568CF4928B6FB0 /* TrackpadGestureController.swift in Sources */,
+ 				6B90D3954744FF1C41BB0198 /* WindowAccessor.swift in Sources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+diff --git a/Arpoon/App/AppCommandCenter.swift b/Arpoon/App/AppCommandCenter.swift
+index f9f4012..eab0fe9 100644
+--- a/Arpoon/App/AppCommandCenter.swift
++++ b/Arpoon/App/AppCommandCenter.swift
+@@ -35,10 +35,16 @@ protocol WindowProviding {
+     func visibleWindow(from reference: LiveWindow, toward direction: SpatialNavigationDirection) -> LiveWindow?
+ }
+ 
++@MainActor
++protocol HapticFeedbackPerforming: AnyObject {
++    func performFocusConfirmation()
++}
++
+ @MainActor
+ protocol HUDPresenting: AnyObject {
+     func show(model: HUDModel, timeout: Double)
+     func showPersistent(model: HUDModel)
++    func update(model: HUDModel)
+     func hide()
+ }
+ 
+@@ -59,6 +65,25 @@ extension AccessibilityWindowProvider: WindowProviding {}
+ extension HUDWindowController: HUDPresenting {}
+ extension SettingsWindowController: SettingsWindowPresenting {}
+ 
++private struct GridGesturePreview {
++    let baseLayerIndex: Int
++    let baseColumnIndex: Int
++    let totalHorizontalOffset: Double
++    let totalVerticalOffset: Double
++}
++
++private enum GridGestureDestination {
++    case layer(layerIndex: Int, columnIndex: Int)
++    case standaloneApp(appIndex: Int)
++}
++
++private struct NiriGesturePreview {
++    let baseWorkspaceIndex: Int
++    let baseItemIndex: Int
++    let totalHorizontalOffset: Double
++    let totalVerticalOffset: Double
++}
++
+ @MainActor
+ final class AppCommandCenter {
+     var settingsWindowPresenterProvider: (() -> (any SettingsWindowPresenting)?)?
+@@ -71,19 +96,29 @@ final class AppCommandCenter {
+     private let dynamicHotkeyStore: DynamicHotkeyStore
+     private let gridStore: GridStore
+     private let gridSession: GridSession
++    private let niriStore: NiriStore
++    private let niriSession: NiriSession
+     private let labelPolicy: TargetLabelPolicy
+     private let captureService: any TargetCapturing
+     private let resolutionService: any TargetResolving
+     private let focusService: any TargetFocusing
+     private let appProvider: any AppProviding
+     private let windowProvider: any WindowProviding
++    private let hapticPerformer: any HapticFeedbackPerforming
+     private let hudController: any HUDPresenting
+     private let setHotkeyRecordingActive: (Bool) -> Void
+     private let windowMatchPolicy = WindowTargetMatchPolicy()
+     private var liveSlotWindows: [Int: LiveWindow] = [:]
+     private var liveDynamicWindows: [String: LiveWindow] = [:]
+     private var liveGridWindows: [String: LiveWindow] = [:]
+-    private var lastObservedExternalFocusSignature: String?
++    private var liveNiriWindows: [String: LiveWindow] = [:]
++    private var gridGestureActive = false
++    private var gridGesturePreview: GridGesturePreview?
++    private var gridSelectedStandaloneAppID: String?
++    private var niriGestureActive = false
++    private var niriGesturePreview: NiriGesturePreview?
++    private var lastObservedGridFocusSignature: String?
++    private var lastObservedNiriFocusSignature: String?
+     private weak var settingsWindow: NSWindow?
+     private var dynamicHotkeyCaptureController: DynamicHotkeyCaptureController?
+     private var gridBindingSelectionController: (any GridBindingSelectionPresenting)?
+@@ -95,12 +130,15 @@ final class AppCommandCenter {
+         dynamicHotkeyStore: DynamicHotkeyStore,
+         gridStore: GridStore,
+         gridSession: GridSession,
++        niriStore: NiriStore,
++        niriSession: NiriSession,
+         labelPolicy: TargetLabelPolicy,
+         captureService: any TargetCapturing,
+         resolutionService: any TargetResolving,
+         focusService: any TargetFocusing,
+         appProvider: any AppProviding,
+         windowProvider: any WindowProviding,
++        hapticPerformer: any HapticFeedbackPerforming,
+         hudController: any HUDPresenting,
+         setHotkeyRecordingActive: @escaping (Bool) -> Void
+     ) {
+@@ -110,12 +148,15 @@ final class AppCommandCenter {
+         self.dynamicHotkeyStore = dynamicHotkeyStore
+         self.gridStore = gridStore
+         self.gridSession = gridSession
++        self.niriStore = niriStore
++        self.niriSession = niriSession
+         self.labelPolicy = labelPolicy
+         self.captureService = captureService
+         self.resolutionService = resolutionService
+         self.focusService = focusService
+         self.appProvider = appProvider
+         self.windowProvider = windowProvider
++        self.hapticPerformer = hapticPerformer
+         self.hudController = hudController
+         self.setHotkeyRecordingActive = setHotkeyRecordingActive
+     }
+@@ -237,6 +278,7 @@ final class AppCommandCenter {
+ 
+         if let focusedWindow = windowProvider.focusedWindow(),
+            let match = gridMatch(for: focusedWindow) {
++            gridSelectedStandaloneAppID = nil
+             gridSession.select(layerID: match.layerID, columnID: match.columnID, in: gridStore.columns, layers: gridStore.layers)
+             return
+         }
+@@ -247,25 +289,71 @@ final class AppCommandCenter {
+             return
+         }
+ 
++        gridSelectedStandaloneAppID = nil
+         gridSession.select(layerID: match.layerID, columnID: match.columnID, in: gridStore.columns, layers: gridStore.layers)
+     }
+ 
+     func syncGridSelectionToFocusedTargetIfNeeded() {
+         let observation = currentExternalFocusObservation()
+-        guard observation.signature != lastObservedExternalFocusSignature else {
++        guard observation.signature != lastObservedGridFocusSignature else {
+             return
+         }
+ 
+-        lastObservedExternalFocusSignature = observation.signature
++        lastObservedGridFocusSignature = observation.signature
+ 
+         guard let match = observation.match else {
+             return
+         }
+ 
+         syncGridSession()
++        gridSelectedStandaloneAppID = nil
+         gridSession.select(layerID: match.layerID, columnID: match.columnID, in: gridStore.columns, layers: gridStore.layers)
+     }
+ 
++    func syncNiriSelectionToFocusedTargetIfNeeded() {
++        let observation = currentNiriExternalFocusObservation()
++        guard observation.signature != lastObservedNiriFocusSignature else {
++            return
++        }
++
++        lastObservedNiriFocusSignature = observation.signature
++
++        guard observation.shouldTrack else {
++            return
++        }
++
++        syncNiriSession()
++
++        if let match = observation.match {
++            niriSession.select(workspaceID: match.workspaceID, itemID: match.itemID, in: niriStore.workspaces)
++            niriStore.rememberFocusedItem(workspaceID: match.workspaceID, itemID: match.itemID)
++            if let liveWindow = observation.liveWindow {
++                updateNiriLiveWindowCache(for: match.itemID, liveWindow: liveWindow)
++            }
++            return
++        }
++
++        guard let currentWorkspace = currentNiriWorkspace() else {
++            return
++        }
++
++        guard let outcome = captureService.captureFocusedTarget() else {
++            return
++        }
++
++        guard let item = niriStore.appendItem(
++            target: outcome.target,
++            label: labelPolicy.label(for: outcome.target),
++            toWorkspaceID: currentWorkspace.id
++        ) else {
++            return
++        }
++
++        niriSession.select(workspaceID: currentWorkspace.id, itemID: item.id, in: niriStore.workspaces)
++        niriStore.rememberFocusedItem(workspaceID: currentWorkspace.id, itemID: item.id)
++        updateNiriLiveWindowCache(for: item.id, liveWindow: outcome.liveWindow)
++    }
++
+     func showHeldHUD() {
+         hudController.showPersistent(model: hudOverviewModel())
+     }
+@@ -281,6 +369,114 @@ final class AppCommandCenter {
+         )
+     }
+ 
++    func setGridGestureActive(_ isActive: Bool) {
++        gridGestureActive = isActive
++
++        if isActive {
++            syncGridSession()
++            let currentSelection = currentGridMinimapSelection()
++            gridGesturePreview = GridGesturePreview(
++                baseLayerIndex: currentSelection.layerIndex,
++                baseColumnIndex: currentSelection.columnIndex,
++                totalHorizontalOffset: 0,
++                totalVerticalOffset: 0
++            )
++            hudController.showPersistent(
++                model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++            )
++        } else {
++            gridGesturePreview = nil
++            hudController.hide()
++        }
++    }
++
++    func applyGridGestureUpdate(_ update: TrackpadGestureUpdate) {
++        guard gridGestureActive else {
++            return
++        }
++
++        guard let preview = gridGesturePreview else {
++            return
++        }
++
++        gridGesturePreview = GridGesturePreview(
++            baseLayerIndex: preview.baseLayerIndex,
++            baseColumnIndex: preview.baseColumnIndex,
++            totalHorizontalOffset: update.totalHorizontalOffset,
++            totalVerticalOffset: update.totalVerticalOffset
++        )
++        guard let state = resolvedGridGestureState() else {
++            return
++        }
++
++        let didMove = moveGridGesture(to: state)
++
++        if !didMove {
++            hudController.update(
++                model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++            )
++        }
++    }
++
++    func showNiriHUD() {
++        presentNiriHUD(
++            model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .expanded)
++        )
++    }
++
++    func setNiriGestureActive(_ isActive: Bool) {
++        niriGestureActive = isActive
++
++        if isActive {
++            syncNiriSession()
++            let baseWorkspaceIndex = max(0, niriStore.workspaces.firstIndex(where: { $0.id == niriSession.currentWorkspaceID }) ?? 0)
++            let baseItemIndex = max(0, currentNiriWorkspace()?.items.firstIndex(where: { $0.id == niriSession.currentItemID }) ?? 0)
++            niriGesturePreview = NiriGesturePreview(
++                baseWorkspaceIndex: baseWorkspaceIndex,
++                baseItemIndex: baseItemIndex,
++                totalHorizontalOffset: 0,
++                totalVerticalOffset: 0
++            )
++            hudController.showPersistent(
++                model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++            )
++        } else {
++            niriGesturePreview = nil
++            hudController.hide()
++        }
++    }
++
++    func applyNiriGestureUpdate(_ update: TrackpadGestureUpdate) {
++        guard niriGestureActive else {
++            return
++        }
++
++        guard let preview = niriGesturePreview else {
++            return
++        }
++
++        niriGesturePreview = NiriGesturePreview(
++            baseWorkspaceIndex: preview.baseWorkspaceIndex,
++            baseItemIndex: preview.baseItemIndex,
++            totalHorizontalOffset: update.totalHorizontalOffset,
++            totalVerticalOffset: update.totalVerticalOffset
++        )
++        guard let state = resolvedNiriGestureState() else {
++            return
++        }
++
++        let didMove = moveNiriGesture(
++            workspaceIndex: state.workspaceIndex,
++            itemID: state.itemID
++        )
++
++        if !didMove {
++            hudController.update(
++                model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++            )
++        }
++    }
++
+     func renameCurrentGridProject() {
+         syncGridSession()
+         guard let layer = currentGridLayer() else {
+@@ -443,7 +639,81 @@ final class AppCommandCenter {
+             return
+         }
+ 
+-        _ = focusService.focus(target: binding.target)
++        let outcome = focusService.focus(target: binding.target)
++        performFocusFeedbackIfNeeded(for: outcome)
++        if case .focused = outcome {
++            gridSelectedStandaloneAppID = app.id
++        }
++    }
++
++    func moveNiriFocusLeft() {
++        moveWithinNiriWorkspace(step: -1)
++    }
++
++    func moveNiriFocusRight() {
++        moveWithinNiriWorkspace(step: 1)
++    }
++
++    func moveNiriFocusUp() {
++        moveBetweenNiriWorkspaces(step: -1)
++    }
++
++    func moveNiriFocusDown() {
++        moveBetweenNiriWorkspaces(step: 1)
++    }
++
++    func createNiriWorkspaceBelow() {
++        syncNiriSession()
++        let workspace = niriStore.addWorkspace(below: niriSession.currentWorkspaceID)
++        niriSession.select(workspaceID: workspace.id, itemID: nil, in: niriStore.workspaces)
++        showNiriHint(
++            title: "Created \(workspace.name)",
++            detail: "Focus a window to add it here.",
++            tone: .success,
++            movement: .workspace(step: 1)
++        )
++    }
++
++    func removeCurrentNiriItem() {
++        syncNiriSession()
++        guard let workspace = currentNiriWorkspace() else {
++            showNiriHint(
++                title: "No Niri workspace yet",
++                detail: "Create a workspace first.",
++                tone: .neutral,
++                movement: .neutral
++            )
++            return
++        }
++
++        guard let item = niriSession.currentItem(in: niriStore.workspaces) else {
++            showNiriHint(
++                title: "\(workspace.name) is empty",
++                detail: "Focus a window to add it here.",
++                tone: .neutral,
++                movement: .neutral
++            )
++            return
++        }
++
++        liveNiriWindows.removeValue(forKey: item.id)
++        if let selection = niriStore.removeItem(workspaceID: workspace.id, itemID: item.id) {
++            niriSession.select(workspaceID: selection.workspaceID, itemID: selection.itemID, in: niriStore.workspaces)
++        }
++
++        showNiriHint(
++            title: "Removed \(item.label)",
++            detail: nil,
++            tone: .success,
++            movement: .neutral
++        )
++    }
++
++    func focusNiriItem(workspaceID: String, itemID: String) {
++        syncNiriSession()
++        niriSession.select(workspaceID: workspaceID, itemID: itemID, in: niriStore.workspaces)
++        niriStore.rememberFocusedItem(workspaceID: workspaceID, itemID: itemID)
++        focusCurrentNiriSelection(after: .neutral)
+     }
+ 
+     func captureGridStandaloneApp(_ appID: String) {
+@@ -744,6 +1014,8 @@ final class AppCommandCenter {
+     }
+ 
+     private func present(outcome: FocusOutcome, fallbackLabel: String) {
++        performFocusFeedbackIfNeeded(for: outcome)
++
+         switch outcome {
+         case .focused(let label, let strategy):
+             let detail = strategy.map { "Resolved via \($0.displayName)." }
+@@ -837,14 +1109,17 @@ final class AppCommandCenter {
+         tone: HUDTone,
+         movement: GridSelectionChange
+     ) {
+-        hudController.show(
+-            model: gridMinimapModel(
+-                movement: movement,
+-                hint: GridHUDHint(title: title, detail: detail, tone: tone),
+-                detailMode: .compact
+-            ),
+-            timeout: gridHUDTimeout
++        let model = gridMinimapModel(
++            movement: movement,
++            hint: GridHUDHint(title: title, detail: detail, tone: tone),
++            detailMode: .compact
+         )
++
++        if gridGestureActive {
++            hudController.update(model: model)
++        } else {
++            hudController.show(model: model, timeout: gridHUDTimeout)
++        }
+     }
+ 
+     private func showGridHintForOutcome(
+@@ -852,8 +1127,17 @@ final class AppCommandCenter {
+         fallbackLabel: String,
+         movement: GridSelectionChange
+     ) {
++        performFocusFeedbackIfNeeded(for: outcome)
++
+         switch outcome {
+         case .focused:
++            if gridGestureActive {
++                hudController.update(
++                    model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++                )
++                return
++            }
++
+             guard settings.showJumpPopups else {
+                 return
+             }
+@@ -1081,6 +1365,8 @@ final class AppCommandCenter {
+             )
+         case .grid:
+             return gridMinimapModel(movement: .neutral, hint: nil)
++        case .niri:
++            return niriMinimapModel(movement: .neutral, hint: nil)
+         }
+     }
+ 
+@@ -1108,6 +1394,14 @@ final class AppCommandCenter {
+         }
+     }
+ 
++    private func updateNiriLiveWindowCache(for itemID: String, liveWindow: LiveWindow?) {
++        if let liveWindow {
++            liveNiriWindows[itemID] = liveWindow
++        } else {
++            liveNiriWindows.removeValue(forKey: itemID)
++        }
++    }
++
+     private func resolveLiveWindow(for target: Target) -> (window: LiveWindow, strategy: ResolutionStrategy)? {
+         guard case .window = target else {
+             return nil
+@@ -1125,6 +1419,10 @@ final class AppCommandCenter {
+         gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+     }
+ 
++    private func syncNiriSession() {
++        niriSession.sync(workspaces: niriStore.workspaces)
++    }
++
+     private func currentGridLayer() -> GridLayer? {
+         syncGridSession()
+         guard let currentLayerID = gridSession.currentLayerID else {
+@@ -1134,6 +1432,15 @@ final class AppCommandCenter {
+         return gridStore.layer(id: currentLayerID)
+     }
+ 
++    private func currentNiriWorkspace() -> NiriWorkspace? {
++        syncNiriSession()
++        guard let currentWorkspaceID = niriSession.currentWorkspaceID else {
++            return nil
++        }
++
++        return niriStore.workspace(id: currentWorkspaceID)
++    }
++
+     private func jumpBetweenGridLayers(step: Int) {
+         syncGridSession()
+         guard let movement = gridSession.selectAdjacentLayer(step: step, in: gridStore.layers) else {
+@@ -1176,6 +1483,8 @@ final class AppCommandCenter {
+     }
+ 
+     private func focusCurrentGridSelection(after movement: GridSelectionChange) {
++        gridSelectedStandaloneAppID = nil
++
+         guard let layer = currentGridLayer() else {
+             showGridHint(
+                 title: "The Grid has no projects yet",
+@@ -1198,6 +1507,13 @@ final class AppCommandCenter {
+         let group = layer.group(for: tool)
+ 
+         guard let binding = group.activeBinding else {
++            if gridGestureActive {
++                hudController.update(
++                    model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++                )
++                return
++            }
++
+             guard showsGridJumpHUD else {
+                 return
+             }
+@@ -1247,6 +1563,302 @@ final class AppCommandCenter {
+         )
+     }
+ 
++    private func resolvedGridGestureState() -> GridGestureDestination? {
++        guard let preview = gridGesturePreview,
++              !gridStore.layers.isEmpty else {
++            return nil
++        }
++
++        let hasStandaloneRow = !gridStore.standaloneApps.isEmpty
++        let rowCount = gridStore.layers.count + (hasStandaloneRow ? 1 : 0)
++        let rawLayerPosition = Double(preview.baseLayerIndex) + preview.totalVerticalOffset
++        let rawColumnPosition = Double(preview.baseColumnIndex) + preview.totalHorizontalOffset
++        let clampedLayerPosition = min(max(rawLayerPosition, 0), Double(max(0, rowCount - 1)))
++        let destinationRowIndex = Int(clampedLayerPosition.rounded())
++
++        if hasStandaloneRow, destinationRowIndex == gridStore.layers.count {
++            let clampedColumnPosition = min(max(rawColumnPosition, 0), Double(max(0, gridStore.standaloneApps.count - 1)))
++            return .standaloneApp(appIndex: Int(clampedColumnPosition.rounded()))
++        }
++
++        let clampedColumnPosition = min(max(rawColumnPosition, 0), Double(max(0, gridStore.columns.count - 1)))
++        return .layer(layerIndex: destinationRowIndex, columnIndex: Int(clampedColumnPosition.rounded()))
++    }
++
++    private func resolvedNiriGestureState() -> (workspaceIndex: Int, itemID: String?)? {
++        guard let preview = niriGesturePreview,
++              !niriStore.workspaces.isEmpty else {
++            return nil
++        }
++
++        let rawWorkspacePosition = Double(preview.baseWorkspaceIndex) + preview.totalVerticalOffset
++        let clampedWorkspacePosition = min(max(rawWorkspacePosition, 0), Double(niriStore.workspaces.count - 1))
++        let destinationWorkspaceIndex = Int(clampedWorkspacePosition.rounded())
++        let destinationWorkspace = niriStore.workspaces[destinationWorkspaceIndex]
++
++        guard !destinationWorkspace.items.isEmpty else {
++            return (workspaceIndex: destinationWorkspaceIndex, itemID: nil)
++        }
++
++        let rawItemPosition = Double(preview.baseItemIndex) + preview.totalHorizontalOffset
++        let clampedItemPosition = min(max(rawItemPosition, 0), Double(destinationWorkspace.items.count - 1))
++        let destinationItemIndex = Int(clampedItemPosition.rounded())
++
++        return (
++            workspaceIndex: destinationWorkspaceIndex,
++            itemID: destinationWorkspace.items[destinationItemIndex].id
++        )
++    }
++
++    private func moveGridGesture(to destination: GridGestureDestination) -> Bool {
++        syncGridSession()
++        guard !gridStore.layers.isEmpty else {
++            return false
++        }
++
++        switch destination {
++        case .layer(let layerIndex, let columnIndex):
++            guard !gridStore.columns.isEmpty else {
++                return false
++            }
++
++            let currentLayerIndex = gridStore.layers.firstIndex(where: { $0.id == gridSession.currentLayerID }) ?? 0
++            let currentColumnIndex = gridStore.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0
++
++            guard layerIndex != currentLayerIndex || columnIndex != currentColumnIndex || gridSelectedStandaloneAppID != nil else {
++                return false
++            }
++
++            gridSelectedStandaloneAppID = nil
++            let destinationLayerID = gridStore.layers[layerIndex].id
++            let destinationColumnID = gridStore.columns[columnIndex].id
++            gridSession.select(
++                layerID: destinationLayerID,
++                columnID: destinationColumnID,
++                in: gridStore.columns,
++                layers: gridStore.layers
++            )
++            focusCurrentGridSelection(after: .neutral)
++            return true
++
++        case .standaloneApp(let appIndex):
++            guard gridStore.standaloneApps.indices.contains(appIndex) else {
++                return false
++            }
++
++            let app = gridStore.standaloneApps[appIndex]
++            guard let binding = app.binding else {
++                return false
++            }
++
++            guard gridSelectedStandaloneAppID != app.id else {
++                return false
++            }
++
++            gridSelectedStandaloneAppID = app.id
++            let outcome = focusService.focus(target: binding.target)
++            performFocusFeedbackIfNeeded(for: outcome)
++
++            if case .focused = outcome {
++                hudController.update(
++                    model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++                )
++            } else {
++                showGridHintForOutcome(outcome, fallbackLabel: binding.label, movement: .neutral)
++            }
++            return true
++        }
++    }
++
++    private func moveWithinNiriWorkspace(step: Int) {
++        syncNiriSession()
++
++        guard let workspace = currentNiriWorkspace() else {
++            showNiriHint(
++                title: "No Niri workspace yet",
++                detail: "Create a workspace first.",
++                tone: .neutral,
++                movement: .neutral
++            )
++            return
++        }
++
++        guard !workspace.items.isEmpty else {
++            showNiriHint(
++                title: "Current workspace is empty",
++                detail: "Focus a window to add it here.",
++                tone: .neutral,
++                movement: .neutral
++            )
++            return
++        }
++
++        guard let movement = niriSession.selectAdjacentItem(step: step, in: niriStore.workspaces) else {
++            if niriGestureActive {
++                hudController.update(
++                    model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++                )
++            }
++            return
++        }
++
++        if let workspaceID = niriSession.currentWorkspaceID,
++           let itemID = niriSession.currentItemID {
++            niriStore.rememberFocusedItem(workspaceID: workspaceID, itemID: itemID)
++        }
++
++        focusCurrentNiriSelection(after: movement)
++    }
++
++    private func moveBetweenNiriWorkspaces(step: Int) {
++        syncNiriSession()
++
++        guard !niriStore.workspaces.isEmpty else {
++            showNiriHint(
++                title: "No Niri workspace yet",
++                detail: "Create a workspace first.",
++                tone: .neutral,
++                movement: .neutral
++            )
++            return
++        }
++
++        guard let movement = niriSession.selectAdjacentWorkspace(step: step, in: niriStore.workspaces) else {
++            if niriGestureActive {
++                hudController.update(
++                    model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++                )
++            }
++            return
++        }
++
++        if let workspaceID = niriSession.currentWorkspaceID,
++           let itemID = niriSession.currentItemID {
++            niriStore.rememberFocusedItem(workspaceID: workspaceID, itemID: itemID)
++        }
++
++        focusCurrentNiriSelection(after: movement)
++    }
++
++    private func focusCurrentNiriSelection(after movement: NiriSelectionChange) {
++        guard let workspace = currentNiriWorkspace() else {
++            showNiriHint(
++                title: "No Niri workspace yet",
++                detail: "Create a workspace first.",
++                tone: .neutral,
++                movement: movement
++            )
++            return
++        }
++
++        guard let item = niriSession.currentItem(in: niriStore.workspaces) else {
++            showNiriHint(
++                title: "\(workspace.name) is empty",
++                detail: "Focus a window to add it here.",
++                tone: .neutral,
++                movement: movement
++            )
++            return
++        }
++
++        niriStore.rememberFocusedItem(workspaceID: workspace.id, itemID: item.id)
++
++        if let liveWindow = liveNiriWindows[item.id] {
++            let liveOutcome = focusService.focus(liveWindow: liveWindow, strategy: .liveSessionWindow)
++            if case .focused = liveOutcome {
++                showNiriHintForOutcome(liveOutcome, fallbackLabel: item.label, movement: movement)
++                return
++            }
++        }
++
++        if let resolvedWindow = resolveLiveWindow(for: item.target) {
++            updateNiriLiveWindowCache(for: item.id, liveWindow: resolvedWindow.window)
++            let resolvedOutcome = focusService.focus(
++                liveWindow: resolvedWindow.window,
++                strategy: resolvedWindow.strategy
++            )
++
++            if case .focused = resolvedOutcome {
++                showNiriHintForOutcome(resolvedOutcome, fallbackLabel: item.label, movement: movement)
++                return
++            }
++        }
++
++        let outcome = focusService.focus(target: item.target)
++        showNiriHintForOutcome(outcome, fallbackLabel: item.label, movement: movement)
++    }
++
++    private func showNiriHint(
++        title: String,
++        detail: String?,
++        tone: HUDTone,
++        movement: NiriSelectionChange
++    ) {
++        presentNiriHUD(
++            model: niriMinimapModel(
++                movement: movement,
++                hint: GridHUDHint(title: title, detail: detail, tone: tone),
++                detailMode: .compact
++            )
++        )
++    }
++
++    private func showNiriHintForOutcome(
++        _ outcome: FocusOutcome,
++        fallbackLabel: String,
++        movement: NiriSelectionChange
++    ) {
++        performFocusFeedbackIfNeeded(for: outcome)
++
++        switch outcome {
++        case .focused:
++            if niriGestureActive {
++                hudController.update(
++                    model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++                )
++                return
++            }
++
++            guard settings.showJumpPopups else {
++                return
++            }
++
++            presentNiriHUD(
++                model: niriMinimapModel(movement: movement, hint: nil, detailMode: .compact)
++            )
++        case .launched(let appName):
++            showNiriHint(
++                title: "Launching \(appName)",
++                detail: "Niri opened the app because it wasn’t running.",
++                tone: .success,
++                movement: movement
++            )
++        case .unavailable(let reason):
++            showNiriHint(
++                title: "\(fallbackLabel) is unavailable",
++                detail: reason,
++                tone: .warning,
++                movement: movement
++            )
++        }
++    }
++
++    private func presentNiriHUD(model: HUDModel) {
++        if niriGestureActive {
++            hudController.update(model: model)
++        } else {
++            hudController.show(model: model, timeout: gridHUDTimeout)
++        }
++    }
++
++    private func performFocusFeedbackIfNeeded(for outcome: FocusOutcome) {
++        guard case .focused = outcome else {
++            return
++        }
++
++        hapticPerformer.performFocusConfirmation()
++    }
++
+     private func standaloneGridTarget(from target: Target) -> Target {
+         switch target {
+         case .app:
+@@ -1289,41 +1901,231 @@ final class AppCommandCenter {
+         hint: GridHUDHint?,
+         detailMode: GridMinimapModel.DetailMode = .compact
+     ) -> HUDModel {
+-        let selectedLayerIndex = max(0, gridStore.layers.firstIndex(where: { $0.id == gridSession.currentLayerID }) ?? 0)
+-        let selectedColumnIndex = max(0, gridStore.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0)
++        let defaultSelection = currentGridMinimapSelection()
++        let defaultSelectedLayerIndex = defaultSelection.layerIndex
++        let defaultSelectedColumnIndex = defaultSelection.columnIndex
++        let selectedLayerIndex: Int
++        let selectedColumnIndex: Int
++
++        if let gestureDestination = resolvedGridGestureState() {
++            switch gestureDestination {
++            case .layer(let layerIndex, let columnIndex):
++                selectedLayerIndex = layerIndex
++                selectedColumnIndex = columnIndex
++            case .standaloneApp(let appIndex):
++                selectedLayerIndex = gridStore.layers.count
++                selectedColumnIndex = appIndex
++            }
++        } else {
++            selectedLayerIndex = defaultSelectedLayerIndex
++            selectedColumnIndex = defaultSelectedColumnIndex
++        }
++
++        let selectorPosition = gridSelectorPosition(
++            selectedLayerIndex: defaultSelectedLayerIndex,
++            selectedColumnIndex: defaultSelectedColumnIndex
++        )
+ 
+         return HUDModel.gridMinimap(
+             GridMinimapModel(
+-                layers: gridStore.layers.map { layer in
++                layers: gridMinimapRows(),
++                movement: movement,
++                hint: hint,
++                animateSelectionMotion: settings.animateGridMinimapSelection,
++                showsLayerPills: settings.showGridProjectsInHUD,
++                detailMode: detailMode,
++                selectedLayerIndex: selectedLayerIndex,
++                selectedColumnIndex: selectedColumnIndex,
++                selectorLayerPosition: selectorPosition.layerPosition,
++                selectorColumnPosition: selectorPosition.columnPosition,
++                selectorTracksFinger: gridGesturePreview != nil
++            )
++        )
++    }
++
++    private func gridMinimapRows() -> [GridMinimapLayer] {
++        var rows = gridStore.layers.map { layer in
++            GridMinimapLayer(
++                id: layer.id,
++                name: layer.name,
++                color: layer.color,
++                columns: gridStore.columns.map { column in
++                    let group = layer.group(for: column)
++                    return GridMinimapColumn(
++                        id: column.id,
++                        name: column.name,
++                        iconSymbol: column.iconSymbol,
++                        bundleId: group.activeBinding?.bundleId,
++                        isFilled: !group.bindings.isEmpty,
++                        activeLabel: group.activeBinding?.label
++                    )
++                },
++                isCurrent: gridSession.currentLayerID == layer.id
++            )
++        }
++
++        if !gridStore.standaloneApps.isEmpty {
++            rows.append(
++                GridMinimapLayer(
++                    id: "grid-standalone-row",
++                    name: "Standalone",
++                    color: .slate,
++                    columns: gridStore.standaloneApps.map { app in
++                        GridMinimapColumn(
++                            id: app.id,
++                            name: app.name,
++                            iconSymbol: app.iconSymbol,
++                            bundleId: standaloneAppBundleID(for: app),
++                            isFilled: app.binding != nil,
++                            activeLabel: app.binding?.label ?? app.name
++                        )
++                    },
++                    isCurrent: false
++                )
++            )
++        }
++
++        return rows
++    }
++
++    private func standaloneAppBundleID(for app: GridStandaloneApp) -> String? {
++        guard let target = app.binding?.target else {
++            return nil
++        }
++
++        switch target {
++        case .app(let appTarget):
++            return appTarget.bundleId
++        case .window(let windowTarget):
++            return windowTarget.bundleId
++        }
++    }
++
++    private func currentGridMinimapSelection() -> (layerIndex: Int, columnIndex: Int) {
++        if let standaloneAppID = gridSelectedStandaloneAppID,
++           let standaloneIndex = gridStore.standaloneApps.firstIndex(where: { $0.id == standaloneAppID }) {
++            return (gridStore.layers.count, standaloneIndex)
++        }
++
++        if gridSelectedStandaloneAppID != nil {
++            gridSelectedStandaloneAppID = nil
++        }
++
++        let layerIndex = max(0, gridStore.layers.firstIndex(where: { $0.id == gridSession.currentLayerID }) ?? 0)
++        let columnIndex = max(0, gridStore.columns.firstIndex(where: { $0.id == gridSession.currentColumnID }) ?? 0)
++        return (layerIndex, columnIndex)
++    }
++
++    private func niriMinimapModel(
++        movement: NiriSelectionChange,
++        hint: GridHUDHint?,
++        detailMode: GridMinimapModel.DetailMode = .compact
++    ) -> HUDModel {
++        let selectedWorkspaceIndex = max(0, niriStore.workspaces.firstIndex(where: { $0.id == niriSession.currentWorkspaceID }) ?? 0)
++        let selectedItemIndex = max(0, currentNiriWorkspace()?.items.firstIndex(where: { $0.id == niriSession.currentItemID }) ?? 0)
++        let selectorPosition = niriSelectorPosition(
++            selectedWorkspaceIndex: selectedWorkspaceIndex,
++            selectedItemIndex: selectedItemIndex
++        )
++
++        return HUDModel.gridMinimap(
++            GridMinimapModel(
++                layers: niriStore.workspaces.map { workspace in
+                     GridMinimapLayer(
+-                        id: layer.id,
+-                        name: layer.name,
+-                        color: layer.color,
+-                        columns: gridStore.columns.map { column in
+-                            let group = layer.group(for: column)
+-                            return GridMinimapColumn(
+-                                id: column.id,
+-                                name: column.name,
+-                                iconSymbol: column.iconSymbol,
+-                                bundleId: group.activeBinding?.bundleId,
+-                                isFilled: !group.bindings.isEmpty,
+-                                activeLabel: group.activeBinding?.label
++                        id: workspace.id,
++                        name: workspace.name,
++                        color: .cobalt,
++                        columns: workspace.items.map { item in
++                            GridMinimapColumn(
++                                id: item.id,
++                                name: item.label,
++                                iconSymbol: "app.fill",
++                                bundleId: item.bundleId,
++                                isFilled: true,
++                                activeLabel: item.label
+                             )
+                         },
+-                        isCurrent: gridSession.currentLayerID == layer.id
++                        isCurrent: workspace.id == niriSession.currentWorkspaceID
+                     )
+                 },
+-                movement: movement,
++                movement: niriMovement(for: movement),
+                 hint: hint,
+                 animateSelectionMotion: settings.animateGridMinimapSelection,
+-                showsLayerPills: settings.showGridProjectsInHUD,
++                showsLayerPills: true,
+                 detailMode: detailMode,
+-                selectedLayerIndex: selectedLayerIndex,
+-                selectedColumnIndex: selectedColumnIndex
++                selectedLayerIndex: selectedWorkspaceIndex,
++                selectedColumnIndex: selectedItemIndex,
++                selectorLayerPosition: selectorPosition.layerPosition,
++                selectorColumnPosition: selectorPosition.columnPosition,
++                selectorTracksFinger: niriGesturePreview != nil
+             )
+         )
+     }
+ 
++    private func niriSelectorPosition(
++        selectedWorkspaceIndex: Int,
++        selectedItemIndex: Int
++    ) -> (layerPosition: Double, columnPosition: Double) {
++        guard let preview = niriGesturePreview else {
++            return (Double(selectedWorkspaceIndex), Double(selectedItemIndex))
++        }
++
++        let maxWorkspaceIndex = Double(max(0, niriStore.workspaces.count - 1))
++        let maxPreviewColumnIndex = Double(max(0, (niriStore.workspaces.map(\.items.count).max() ?? 1) - 1))
++        let rawWorkspacePosition = Double(preview.baseWorkspaceIndex) + preview.totalVerticalOffset
++        let rawColumnPosition = Double(preview.baseItemIndex) + preview.totalHorizontalOffset
++
++        return (
++            min(max(rawWorkspacePosition, 0), maxWorkspaceIndex),
++            min(max(rawColumnPosition, 0), maxPreviewColumnIndex)
++        )
++    }
++
++    private func gridSelectorPosition(
++        selectedLayerIndex: Int,
++        selectedColumnIndex: Int
++    ) -> (layerPosition: Double, columnPosition: Double) {
++        guard let preview = gridGesturePreview else {
++            return (Double(selectedLayerIndex), Double(selectedColumnIndex))
++        }
++
++        let maxLayerIndex = Double(max(0, gridStore.layers.count + (gridStore.standaloneApps.isEmpty ? 0 : 1) - 1))
++        let maxColumnIndex = Double(max(0, max(gridStore.columns.count, gridStore.standaloneApps.count) - 1))
++        return (
++            min(max(Double(preview.baseLayerIndex) + preview.totalVerticalOffset, 0), maxLayerIndex),
++            min(max(Double(preview.baseColumnIndex) + preview.totalHorizontalOffset, 0), maxColumnIndex)
++        )
++    }
++
++    private func moveNiriGesture(workspaceIndex: Int, itemID: String?) -> Bool {
++        syncNiriSession()
++
++        guard !niriStore.workspaces.isEmpty else {
++            return false
++        }
++
++        let currentWorkspaceIndex = niriStore.workspaces.firstIndex(where: { $0.id == niriSession.currentWorkspaceID }) ?? 0
++        let destinationWorkspace = niriStore.workspaces[workspaceIndex]
++
++        let didChangeWorkspace = workspaceIndex != currentWorkspaceIndex
++        let didChangeItem = itemID != niriSession.currentItemID
++        guard didChangeWorkspace || didChangeItem else {
++            return false
++        }
++
++        niriSession.select(workspaceID: destinationWorkspace.id, itemID: itemID, in: niriStore.workspaces)
++        if let itemID {
++            niriStore.rememberFocusedItem(workspaceID: destinationWorkspace.id, itemID: itemID)
++            focusCurrentNiriSelection(after: .neutral)
++        } else {
++            hudController.update(
++                model: niriMinimapModel(movement: .neutral, hint: nil, detailMode: .compact)
++            )
++        }
++
++        return true
++    }
++
+     private func gridMatch(for liveWindow: LiveWindow) -> (layerID: String, columnID: String)? {
+         let exactMatches = matchingGridCells { target in
+             matches(liveWindow: liveWindow, target: target)
+@@ -1364,6 +2166,29 @@ final class AppCommandCenter {
+         return (signature, gridMatch(forBundleID: focusedApp.bundleId))
+     }
+ 
++    private func currentNiriExternalFocusObservation() -> (signature: String?, shouldTrack: Bool, liveWindow: LiveWindow?, match: NiriTrackedMatch?) {
++        if let focusedWindow = windowProvider.focusedWindow() {
++            let shouldTrack = focusedWindow.bundleId != Bundle.main.bundleIdentifier
++            return (
++                signature: externalFocusSignature(for: focusedWindow),
++                shouldTrack: shouldTrack,
++                liveWindow: focusedWindow,
++                match: shouldTrack ? niriMatch(for: focusedWindow) : nil
++            )
++        }
++
++        guard let focusedApp = appProvider.focusedApp() else {
++            return (nil, false, nil, nil)
++        }
++
++        let signature = "app:\(focusedApp.bundleId)#\(focusedApp.pid)"
++        guard focusedApp.bundleId != Bundle.main.bundleIdentifier else {
++            return (signature, false, nil, nil)
++        }
++
++        return (signature, true, nil, niriMatch(forBundleID: focusedApp.bundleId))
++    }
++
+     private func matchingGridCells(where predicate: (Target) -> Bool) -> [(layerID: String, columnID: String)] {
+         gridStore.layers.flatMap { layer in
+             gridStore.columns.compactMap { column in
+@@ -1390,6 +2215,51 @@ final class AppCommandCenter {
+         return matches.first
+     }
+ 
++    private func matchingNiriItems(where predicate: (Target) -> Bool) -> [NiriTrackedMatch] {
++        niriStore.workspaces.flatMap { workspace in
++            workspace.items.compactMap { item in
++                guard predicate(item.target) else {
++                    return nil
++                }
++
++                return NiriTrackedMatch(workspaceID: workspace.id, itemID: item.id)
++            }
++        }
++    }
++
++    private func niriMatch(for liveWindow: LiveWindow) -> NiriTrackedMatch? {
++        let exactMatches = matchingNiriItems { target in
++            matches(liveWindow: liveWindow, target: target)
++        }
++
++        if let preferred = preferredNiriMatch(from: exactMatches) {
++            return preferred
++        }
++
++        return preferredNiriMatch(from: matchingNiriItems { target in
++            target.bundleId == liveWindow.bundleId
++        })
++    }
++
++    private func niriMatch(forBundleID bundleID: String) -> NiriTrackedMatch? {
++        preferredNiriMatch(from: matchingNiriItems { target in
++            target.bundleId == bundleID
++        })
++    }
++
++    private func preferredNiriMatch(from matches: [NiriTrackedMatch]) -> NiriTrackedMatch? {
++        guard !matches.isEmpty else {
++            return nil
++        }
++
++        if let currentWorkspaceID = niriSession.currentWorkspaceID,
++           let currentWorkspaceMatch = matches.first(where: { $0.workspaceID == currentWorkspaceID }) {
++            return currentWorkspaceMatch
++        }
++
++        return matches.first
++    }
++
+     private func matches(liveWindow: LiveWindow, target: Target) -> Bool {
+         guard case .window(let windowTarget) = target,
+               windowTarget.bundleId == liveWindow.bundleId else {
+@@ -1411,6 +2281,17 @@ final class AppCommandCenter {
+     private func externalFocusSignature(for liveWindow: LiveWindow) -> String {
+         "window:\(liveWindow.bundleId)#\(liveWindow.pid)#\(liveWindow.windowID ?? -1)#\(normalizedWindowText(liveWindow.title) ?? "")#\(liveWindow.frame?.x ?? -1)#\(liveWindow.frame?.y ?? -1)#\(liveWindow.frame?.width ?? -1)#\(liveWindow.frame?.height ?? -1)"
+     }
++
++    private func niriMovement(for movement: NiriSelectionChange) -> GridSelectionChange {
++        switch movement {
++        case .workspace(let step):
++            return .layer(step: step)
++        case .item(let fromIndex, let toIndex):
++            return .tool(fromIndex: fromIndex, toIndex: toIndex)
++        case .neutral:
++            return .neutral
++        }
++    }
+ }
+ 
+ private protocol AssignmentPresenting {
+@@ -1421,6 +2302,7 @@ private protocol AssignmentPresenting {
+ extension SlotAssignment: AssignmentPresenting {}
+ extension DynamicHotkeyAssignment: AssignmentPresenting {}
+ extension GridBinding: AssignmentPresenting {}
++extension NiriItem: AssignmentPresenting {}
+ 
+ private extension SlotAssignment {
+     var bundleId: String {
+@@ -1465,3 +2347,14 @@ private extension Target {
+         }
+     }
+ }
++
++private extension NiriItem {
++    var bundleId: String {
++        switch target {
++        case .app(let target):
++            return target.bundleId
++        case .window(let target):
++            return target.bundleId
++        }
++    }
++}
+diff --git a/Arpoon/App/AppCommands.swift b/Arpoon/App/AppCommands.swift
+index 301930f..ba9d06b 100644
+--- a/Arpoon/App/AppCommands.swift
++++ b/Arpoon/App/AppCommands.swift
+@@ -15,6 +15,9 @@ struct AppCommands {
+     let captureGridBinding: (String, GridToolColumn, String?) -> Void
+     let jumpToGridStandaloneApp: (String) -> Void
+     let captureGridStandaloneApp: (String) -> Void
++    let focusNiriItem: (String, String) -> Void
++    let createNiriWorkspaceBelow: () -> Void
++    let removeCurrentNiriItem: () -> Void
+     let setHotkeyRecordingActive: (Bool) -> Void
+     let registerSettingsWindow: (NSWindow) -> Void
+ }
+diff --git a/Arpoon/App/AppModel.swift b/Arpoon/App/AppModel.swift
+index 1ca754a..8ef126b 100644
+--- a/Arpoon/App/AppModel.swift
++++ b/Arpoon/App/AppModel.swift
+@@ -11,22 +11,27 @@ final class AppModel: ObservableObject {
+     let dynamicHotkeyStore: DynamicHotkeyStore
+     let gridStore: GridStore
+     let gridSession: GridSession
++    let niriStore: NiriStore
++    let niriSession: NiriSession
+     let availableWindowsProvider: @MainActor () -> [LiveWindow]
+     let commands: AppCommands
+ 
+     private let commandCenter: AppCommandCenter
+     private let runtimeCoordinator: AppRuntimeCoordinator
++    private let trackpadGestureController: TrackpadGestureController
+     private lazy var settingsWindowController = SettingsWindowController(
+         settings: settings,
+         dynamicHotkeys: dynamicHotkeyStore,
+         gridStore: gridStore,
+         gridSession: gridSession,
++        niriStore: niriStore,
++        niriSession: niriSession,
+         permissions: accessibilityPermissions,
+         availableWindowsProvider: availableWindowsProvider,
+         commands: commands
+     )
+     private var started = false
+-    private var gridFocusSyncTask: Task<Void, Never>?
++    private var externalFocusSyncTask: Task<Void, Never>?
+ 
+     private init() {
+         settings = SettingsStore()
+@@ -47,6 +52,9 @@ final class AppModel: ObservableObject {
+         let gridLayerStore = JSONGridLayerStore()
+         gridStore = GridStore(store: gridLayerStore, labelPolicy: labelPolicy)
+         gridSession = GridSession()
++        let niriWorkspaceStore = JSONNiriWorkspaceStore()
++        niriStore = NiriStore(store: niriWorkspaceStore)
++        niriSession = NiriSession()
+ 
+         let captureService = TargetCaptureService(
+             appProvider: appProvider,
+@@ -65,8 +73,10 @@ final class AppModel: ObservableObject {
+             labelPolicy: labelPolicy
+         )
+         let hudController = HUDWindowController()
++        let hapticPerformer = MacOSHapticFeedbackPerformer()
+         let optionHoldHUDController = OptionHoldHUDController(settings: settings)
+         let hotkeyController = HotkeyController()
++        let trackpadGestureController = TrackpadGestureController(settings: settings)
+ 
+         let runtimeCoordinator = AppRuntimeCoordinator(
+             settings: settings,
+@@ -83,20 +93,25 @@ final class AppModel: ObservableObject {
+             dynamicHotkeyStore: dynamicHotkeyStore,
+             gridStore: gridStore,
+             gridSession: gridSession,
++            niriStore: niriStore,
++            niriSession: niriSession,
+             labelPolicy: labelPolicy,
+             captureService: captureService,
+             resolutionService: resolutionService,
+             focusService: focusService,
+             appProvider: appProvider,
+             windowProvider: windowProvider,
++            hapticPerformer: hapticPerformer,
+             hudController: hudController,
+             setHotkeyRecordingActive: { isActive in
+                 runtimeCoordinator.setHotkeyRecordingActive(isActive)
++                trackpadGestureController.setSuppressed(isActive)
+             }
+         )
+ 
+         self.runtimeCoordinator = runtimeCoordinator
+         self.commandCenter = commandCenter
++        self.trackpadGestureController = trackpadGestureController
+         commands = AppCommands(
+             showHUD: {
+                 commandCenter.showHUD()
+@@ -137,8 +152,18 @@ final class AppModel: ObservableObject {
+             captureGridStandaloneApp: { appID in
+                 commandCenter.captureGridStandaloneApp(appID)
+             },
++            focusNiriItem: { workspaceID, itemID in
++                commandCenter.focusNiriItem(workspaceID: workspaceID, itemID: itemID)
++            },
++            createNiriWorkspaceBelow: {
++                commandCenter.createNiriWorkspaceBelow()
++            },
++            removeCurrentNiriItem: {
++                commandCenter.removeCurrentNiriItem()
++            },
+             setHotkeyRecordingActive: { isActive in
+                 runtimeCoordinator.setHotkeyRecordingActive(isActive)
++                trackpadGestureController.setSuppressed(isActive)
+             },
+             registerSettingsWindow: { window in
+                 commandCenter.registerSettingsWindow(window)
+@@ -215,6 +240,60 @@ final class AppModel: ObservableObject {
+         runtimeCoordinator.onGridStandaloneApp = { [weak commandCenter] appID in
+             commandCenter?.jumpToGridStandaloneApp(appID)
+         }
++        runtimeCoordinator.onNiriFocusLeft = { [weak commandCenter] in
++            commandCenter?.moveNiriFocusLeft()
++        }
++        runtimeCoordinator.onNiriFocusRight = { [weak commandCenter] in
++            commandCenter?.moveNiriFocusRight()
++        }
++        runtimeCoordinator.onNiriFocusUp = { [weak commandCenter] in
++            commandCenter?.moveNiriFocusUp()
++        }
++        runtimeCoordinator.onNiriFocusDown = { [weak commandCenter] in
++            commandCenter?.moveNiriFocusDown()
++        }
++        runtimeCoordinator.onNiriCreateWorkspaceBelow = { [weak commandCenter] in
++            commandCenter?.createNiriWorkspaceBelow()
++        }
++        runtimeCoordinator.onNiriRemoveCurrentWindow = { [weak commandCenter] in
++            commandCenter?.removeCurrentNiriItem()
++        }
++        runtimeCoordinator.onNiriShowHUD = { [weak commandCenter] in
++            commandCenter?.showNiriHUD()
++        }
++
++        trackpadGestureController.onGestureUpdate = { [weak commandCenter, weak settings] update in
++            switch settings?.hotkeyScheme {
++            case .grid:
++                commandCenter?.applyGridGestureUpdate(update)
++            case .niri:
++                commandCenter?.applyNiriGestureUpdate(update)
++            default:
++                break
++            }
++        }
++        trackpadGestureController.onGestureBegan = { [weak commandCenter, weak runtimeCoordinator, weak settings] in
++            runtimeCoordinator?.setOptionHoldHUDSuppressed(true)
++            switch settings?.hotkeyScheme {
++            case .grid:
++                commandCenter?.setGridGestureActive(true)
++            case .niri:
++                commandCenter?.setNiriGestureActive(true)
++            default:
++                break
++            }
++        }
++        trackpadGestureController.onGestureEnded = { [weak commandCenter, weak runtimeCoordinator, weak settings] in
++            switch settings?.hotkeyScheme {
++            case .grid:
++                commandCenter?.setGridGestureActive(false)
++            case .niri:
++                commandCenter?.setNiriGestureActive(false)
++            default:
++                break
++            }
++            runtimeCoordinator?.setOptionHoldHUDSuppressed(false)
++        }
+ 
+         commandCenter.settingsWindowPresenterProvider = { [weak self] in
+             self?.settingsWindowController
+@@ -231,22 +310,32 @@ final class AppModel: ObservableObject {
+             await slotStore.load()
+             await dynamicHotkeyStore.load()
+             await gridStore.load()
++            await niriStore.load()
+             gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
++            niriSession.sync(workspaces: niriStore.workspaces)
+             runtimeCoordinator.start()
+-            startGridFocusSyncLoop()
++            trackpadGestureController.start()
++            startExternalFocusSyncLoop()
+         }
+     }
+ 
+-    private func startGridFocusSyncLoop() {
+-        gridFocusSyncTask?.cancel()
+-        gridFocusSyncTask = Task { [weak self] in
++    private func startExternalFocusSyncLoop() {
++        externalFocusSyncTask?.cancel()
++        externalFocusSyncTask = Task { [weak self] in
+             while let self, !Task.isCancelled {
+                 await MainActor.run {
+-                    guard self.settings.enableExperimentalGridExternalSync else {
+-                        return
+-                    }
++                    switch self.settings.hotkeyScheme {
++                    case .grid:
++                        guard self.settings.enableExperimentalGridExternalSync else {
++                            return
++                        }
+ 
+-                    self.commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
++                        self.commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
++                    case .niri:
++                        self.commandCenter.syncNiriSelectionToFocusedTargetIfNeeded()
++                    case .staticSlots, .dynamicWindows:
++                        break
++                    }
+                 }
+ 
+                 try? await Task.sleep(nanoseconds: 350_000_000)
+@@ -258,5 +347,6 @@ final class AppModel: ObservableObject {
+         await slotStore.flushPersistence()
+         await dynamicHotkeyStore.flushPersistence()
+         await gridStore.flushPersistence()
++        await niriStore.flushPersistence()
+     }
+ }
+diff --git a/Arpoon/App/AppRuntimeCoordinator.swift b/Arpoon/App/AppRuntimeCoordinator.swift
+index 81ff717..cfc0212 100644
+--- a/Arpoon/App/AppRuntimeCoordinator.swift
++++ b/Arpoon/App/AppRuntimeCoordinator.swift
+@@ -25,6 +25,13 @@ final class AppRuntimeCoordinator {
+     var onGridBindCurrent: (() -> Void)?
+     var onGridShowHUD: (() -> Void)?
+     var onGridStandaloneApp: ((String) -> Void)?
++    var onNiriFocusLeft: (() -> Void)?
++    var onNiriFocusRight: (() -> Void)?
++    var onNiriFocusUp: (() -> Void)?
++    var onNiriFocusDown: (() -> Void)?
++    var onNiriCreateWorkspaceBelow: (() -> Void)?
++    var onNiriRemoveCurrentWindow: (() -> Void)?
++    var onNiriShowHUD: (() -> Void)?
+ 
+     private let settings: SettingsStore
+     private let accessibilityPermissions: any AccessibilityPermissionMonitoring
+@@ -110,6 +117,27 @@ final class AppRuntimeCoordinator {
+         hotkeyController.onGridStandaloneApp = { [weak self] id in
+             self?.onGridStandaloneApp?(id)
+         }
++        hotkeyController.onNiriFocusLeft = { [weak self] in
++            self?.onNiriFocusLeft?()
++        }
++        hotkeyController.onNiriFocusRight = { [weak self] in
++            self?.onNiriFocusRight?()
++        }
++        hotkeyController.onNiriFocusUp = { [weak self] in
++            self?.onNiriFocusUp?()
++        }
++        hotkeyController.onNiriFocusDown = { [weak self] in
++            self?.onNiriFocusDown?()
++        }
++        hotkeyController.onNiriCreateWorkspaceBelow = { [weak self] in
++            self?.onNiriCreateWorkspaceBelow?()
++        }
++        hotkeyController.onNiriRemoveCurrentWindow = { [weak self] in
++            self?.onNiriRemoveCurrentWindow?()
++        }
++        hotkeyController.onNiriShowHUD = { [weak self] in
++            self?.onNiriShowHUD?()
++        }
+ 
+         optionHoldHUDController.onShow = { [weak self] in
+             self?.onShowHeldHUD?()
+@@ -181,4 +209,8 @@ final class AppRuntimeCoordinator {
+             hotkeyController.resume()
+         }
+     }
++
++    func setOptionHoldHUDSuppressed(_ isSuppressed: Bool) {
++        optionHoldHUDController.setSuppressed(isSuppressed)
++    }
+ }
+diff --git a/Arpoon/App/ArpoonApp.swift b/Arpoon/App/ArpoonApp.swift
+index ec6b635..d6db0eb 100644
+--- a/Arpoon/App/ArpoonApp.swift
++++ b/Arpoon/App/ArpoonApp.swift
+@@ -11,6 +11,8 @@ struct ArpoonApp: App {
+                 dynamicHotkeys: AppModel.shared.dynamicHotkeyStore,
+                 gridStore: AppModel.shared.gridStore,
+                 gridSession: AppModel.shared.gridSession,
++                niriStore: AppModel.shared.niriStore,
++                niriSession: AppModel.shared.niriSession,
+                 permissions: AppModel.shared.accessibilityPermissions,
+                 availableWindowsProvider: AppModel.shared.availableWindowsProvider,
+                 commands: AppModel.shared.commands
+diff --git a/Arpoon/App/TrackpadGestureController.swift b/Arpoon/App/TrackpadGestureController.swift
+new file mode 100644
+index 0000000..78f944e
+--- /dev/null
++++ b/Arpoon/App/TrackpadGestureController.swift
+@@ -0,0 +1,396 @@
++import AppKit
++import Combine
++import Foundation
++@preconcurrency
++import Quartz
++
++struct TrackpadGestureUpdate: Equatable {
++    let horizontalStepCount: Int
++    let verticalStepCount: Int
++    let horizontalFractionalOffset: Double
++    let verticalFractionalOffset: Double
++    let totalHorizontalOffset: Double
++    let totalVerticalOffset: Double
++}
++
++private struct UncheckedSendableValue<T>: @unchecked Sendable {
++    let value: T
++}
++
++private final class EventTapResultBox: @unchecked Sendable {
++    var result: Unmanaged<CGEvent>?
++}
++
++final class TrackpadGestureController {
++    var onGestureBegan: (() -> Void)?
++    var onGestureEnded: (() -> Void)?
++    var onGestureUpdate: ((TrackpadGestureUpdate) -> Void)?
++
++    private let settings: SettingsStore
++    private var settingsCancellables = Set<AnyCancellable>()
++    private var localMonitor: Any?
++    private var globalMonitor: Any?
++    private var eventTap: CFMachPort?
++    private var eventTapSource: CFRunLoopSource?
++    private var suppressed = false
++    private var gestureActive = false
++    private var accumulatedHorizontalDelta = 0.0
++    private var accumulatedVerticalDelta = 0.0
++    private var totalHorizontalOffset = 0.0
++    private var totalVerticalOffset = 0.0
++    private var currentHotkeyScheme: HotkeyScheme
++    private var currentNiriTrackpadGesturesEnabled: Bool
++    private var currentNiriGestureGateMode: NiriGestureGateMode
++
++    // The minimap cells are much wider than they are tall, and vertical trackpad
++    // scroll tends to come through a bit hotter than horizontal in practice.
++    // Bias the thresholds so the on-screen pill feels more even across axes.
++    private let horizontalActionThreshold = 74.0
++    private let verticalActionThreshold = 52.0
++    private let edgeInset = 24.0
++    private let dominantAxisCrossBlendFloor = 0.12
++    private let secondaryAxisCrossBlendFloor = 0.22
++    private let crossAxisBlendExponent = 1.7
++
++    @MainActor
++    init(settings: SettingsStore) {
++        self.settings = settings
++        currentHotkeyScheme = settings.hotkeyScheme
++        currentNiriTrackpadGesturesEnabled = settings.enableNiriTrackpadGestures
++        currentNiriGestureGateMode = settings.niriGestureGateMode
++
++        settings.$hotkeyScheme
++            .sink { [weak self] in
++                self?.currentHotkeyScheme = $0
++            }
++            .store(in: &settingsCancellables)
++
++        settings.$enableNiriTrackpadGestures
++            .sink { [weak self] in
++                self?.currentNiriTrackpadGesturesEnabled = $0
++            }
++            .store(in: &settingsCancellables)
++
++        settings.$niriGestureGateMode
++            .sink { [weak self] in
++                self?.currentNiriGestureGateMode = $0
++            }
++            .store(in: &settingsCancellables)
++    }
++
++    func start() {
++        guard localMonitor == nil, globalMonitor == nil, eventTap == nil else {
++            return
++        }
++
++        if installEventTap() {
++            return
++        }
++
++        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
++            guard let self else {
++                return event
++            }
++
++            return self.processLocalMonitorEvent(event) ? nil : event
++        }
++        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
++            self?.processScrollEvent(event)
++        }
++    }
++
++    func setSuppressed(_ isSuppressed: Bool) {
++        suppressed = isSuppressed
++
++        if isSuppressed {
++            resetGestureTracking()
++        }
++    }
++
++    @discardableResult
++    func handleScroll(
++        deltaX: Double,
++        deltaY: Double,
++        phase: NSEvent.Phase,
++        momentumPhase: NSEvent.Phase,
++        hasPreciseScrollingDeltas: Bool,
++        modifierFlags: NSEvent.ModifierFlags,
++        mouseLocation: CGPoint,
++        timestamp: TimeInterval
++    ) -> TrackpadGestureUpdate? {
++        guard !suppressed,
++              supportsTrackpadGestures(for: currentHotkeyScheme),
++              currentNiriTrackpadGesturesEnabled else {
++            resetGestureTracking()
++            return nil
++        }
++
++        if phase.contains(.ended) || phase.contains(.cancelled) ||
++            momentumPhase.contains(.ended) || momentumPhase.contains(.cancelled) {
++            resetGestureTracking()
++            return nil
++        }
++
++        guard hasPreciseScrollingDeltas else {
++            resetGestureTracking()
++            return nil
++        }
++
++        let gateSatisfied = gateAllows(modifierFlags: modifierFlags, mouseLocation: mouseLocation)
++        guard gateSatisfied || gestureActive else {
++            resetGestureTracking()
++            return nil
++        }
++
++        if !momentumPhase.isEmpty {
++            return nil
++        }
++
++        guard !phase.isEmpty else {
++            return nil
++        }
++
++        if !gestureActive {
++            gestureActive = true
++            notifyGestureBegan()
++        }
++
++        let adjustedDelta = adjustedGestureDelta(deltaX: deltaX, deltaY: deltaY)
++        accumulatedHorizontalDelta += adjustedDelta.x
++        accumulatedVerticalDelta += adjustedDelta.y
++        totalHorizontalOffset += adjustedDelta.x / horizontalActionThreshold
++        totalVerticalOffset += adjustedDelta.y / verticalActionThreshold
++
++        let update = TrackpadGestureUpdate(
++            horizontalStepCount: extractStepCount(from: &accumulatedHorizontalDelta, threshold: horizontalActionThreshold),
++            verticalStepCount: extractStepCount(from: &accumulatedVerticalDelta, threshold: verticalActionThreshold),
++            horizontalFractionalOffset: accumulatedHorizontalDelta / horizontalActionThreshold,
++            verticalFractionalOffset: accumulatedVerticalDelta / verticalActionThreshold,
++            totalHorizontalOffset: totalHorizontalOffset,
++            totalVerticalOffset: totalVerticalOffset
++        )
++        notifyGestureUpdate(update)
++        return update
++    }
++
++    private func adjustedGestureDelta(deltaX: Double, deltaY: Double) -> (x: Double, y: Double) {
++        let absoluteX = abs(deltaX)
++        let absoluteY = abs(deltaY)
++
++        guard absoluteX > 0, absoluteY > 0 else {
++            return (deltaX, deltaY)
++        }
++
++        if absoluteY >= absoluteX {
++            return (
++                deltaX * crossAxisBlend(crossAxisMagnitude: absoluteX, dominantAxisMagnitude: absoluteY, floor: dominantAxisCrossBlendFloor),
++                deltaY
++            )
++        }
++
++        return (
++            deltaX,
++            deltaY * crossAxisBlend(crossAxisMagnitude: absoluteY, dominantAxisMagnitude: absoluteX, floor: secondaryAxisCrossBlendFloor)
++        )
++    }
++
++    private func crossAxisBlend(crossAxisMagnitude: Double, dominantAxisMagnitude: Double, floor: Double) -> Double {
++        guard dominantAxisMagnitude > 0 else {
++            return 1
++        }
++
++        let ratio = min(max(crossAxisMagnitude / dominantAxisMagnitude, 0), 1)
++        return floor + (1 - floor) * pow(ratio, crossAxisBlendExponent)
++    }
++
++    private func processLocalMonitorEvent(_ event: NSEvent) -> Bool {
++        let shouldConsume = shouldConsumeScrollEvent(event)
++        processScrollEvent(event)
++        return shouldConsume
++    }
++
++    private func processScrollEvent(_ event: NSEvent) {
++        _ = handleScroll(
++            deltaX: event.scrollingDeltaX,
++            deltaY: event.scrollingDeltaY,
++            phase: event.phase,
++            momentumPhase: event.momentumPhase,
++            hasPreciseScrollingDeltas: event.hasPreciseScrollingDeltas,
++            modifierFlags: event.modifierFlags,
++            mouseLocation: NSEvent.mouseLocation,
++            timestamp: event.timestamp
++        )
++    }
++
++    private func installEventTap() -> Bool {
++        let eventMask = (1 << CGEventType.scrollWheel.rawValue)
++        let callback: CGEventTapCallBack = { _, type, event, refcon in
++            guard let refcon else {
++                return Unmanaged.passUnretained(event)
++            }
++
++            let controller = Unmanaged<TrackpadGestureController>.fromOpaque(refcon).takeUnretainedValue()
++            return controller.handleTapEvent(type: type, event: event)
++        }
++
++        let refcon = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
++        let tapLocations: [CGEventTapLocation] = [.cghidEventTap, .cgSessionEventTap]
++
++        for location in tapLocations {
++            guard let eventTap = CGEvent.tapCreate(
++                tap: location,
++                place: .headInsertEventTap,
++                options: .defaultTap,
++                eventsOfInterest: CGEventMask(eventMask),
++                callback: callback,
++                userInfo: refcon
++            ) else {
++                continue
++            }
++
++            guard let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0) else {
++                continue
++            }
++
++            CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
++            CGEvent.tapEnable(tap: eventTap, enable: true)
++
++            self.eventTap = eventTap
++            self.eventTapSource = source
++            return true
++        }
++
++        return false
++    }
++
++    private func handleTapEvent(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
++        if Thread.isMainThread {
++            return processTapEvent(type: type, event: event)
++        }
++
++        let controller = UncheckedSendableValue(value: self)
++        let wrappedEvent = UncheckedSendableValue(value: event)
++        let resultBox = EventTapResultBox()
++        DispatchQueue.main.sync {
++            resultBox.result = controller.value.processTapEvent(type: type, event: wrappedEvent.value)
++        }
++        return resultBox.result ?? Unmanaged.passUnretained(event)
++    }
++
++    private func processTapEvent(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
++        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
++            if let eventTap {
++                CGEvent.tapEnable(tap: eventTap, enable: true)
++            }
++            return Unmanaged.passUnretained(event)
++        }
++
++        guard type == .scrollWheel,
++              let nsEvent = NSEvent(cgEvent: event) else {
++            return Unmanaged.passUnretained(event)
++        }
++
++        let shouldConsume = shouldConsumeScrollEvent(nsEvent)
++        processScrollEvent(nsEvent)
++        return shouldConsume ? nil : Unmanaged.passUnretained(event)
++    }
++
++    private func shouldConsumeScrollEvent(_ event: NSEvent) -> Bool {
++        shouldConsumeTrackpadScroll(
++            phase: event.phase,
++            momentumPhase: event.momentumPhase,
++            hasPreciseScrollingDeltas: event.hasPreciseScrollingDeltas,
++            modifierFlags: event.modifierFlags,
++            mouseLocation: NSEvent.mouseLocation
++        )
++    }
++
++    func shouldConsumeTrackpadScroll(
++        phase: NSEvent.Phase,
++        momentumPhase: NSEvent.Phase,
++        hasPreciseScrollingDeltas: Bool,
++        modifierFlags: NSEvent.ModifierFlags,
++        mouseLocation: CGPoint
++    ) -> Bool {
++        guard !suppressed,
++              supportsTrackpadGestures(for: currentHotkeyScheme),
++              currentNiriTrackpadGesturesEnabled,
++              hasPreciseScrollingDeltas else {
++            return false
++        }
++
++        if phase.contains(.ended) || phase.contains(.cancelled) ||
++            momentumPhase.contains(.ended) || momentumPhase.contains(.cancelled) {
++            return gestureActive
++        }
++
++        if gateAllows(modifierFlags: modifierFlags, mouseLocation: mouseLocation) {
++            return true
++        }
++
++        return gestureActive
++    }
++
++    private func supportsTrackpadGestures(for scheme: HotkeyScheme) -> Bool {
++        scheme == .niri || scheme == .grid
++    }
++
++    private func gateAllows(modifierFlags: NSEvent.ModifierFlags, mouseLocation: CGPoint) -> Bool {
++        switch currentNiriGestureGateMode {
++        case .optionHold:
++            return modifierFlags.contains(.option)
++        case .screenEdgeZones:
++            guard let screen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }) ?? NSScreen.main else {
++                return false
++            }
++
++            let frame = screen.frame
++            return mouseLocation.x <= frame.minX + edgeInset ||
++                mouseLocation.x >= frame.maxX - edgeInset ||
++                mouseLocation.y <= frame.minY + edgeInset ||
++                mouseLocation.y >= frame.maxY - edgeInset
++        case .alwaysOn:
++            return true
++        }
++    }
++
++    private func extractStepCount(from accumulator: inout Double, threshold: Double) -> Int {
++        var stepCount = 0
++
++        while abs(accumulator) >= threshold {
++            if accumulator > 0 {
++                accumulator -= threshold
++                stepCount += 1
++            } else {
++                accumulator += threshold
++                stepCount -= 1
++            }
++        }
++
++        return stepCount
++    }
++
++    private func resetGestureTracking() {
++        if gestureActive {
++            gestureActive = false
++            notifyGestureEnded()
++        }
++
++        accumulatedHorizontalDelta = 0
++        accumulatedVerticalDelta = 0
++        totalHorizontalOffset = 0
++        totalVerticalOffset = 0
++    }
++
++    private func notifyGestureBegan() {
++        onGestureBegan?()
++    }
++
++    private func notifyGestureUpdate(_ update: TrackpadGestureUpdate) {
++        onGestureUpdate?(update)
++    }
++
++    private func notifyGestureEnded() {
++        onGestureEnded?()
++    }
++}
+diff --git a/Arpoon/Domain/Models/NiriModels.swift b/Arpoon/Domain/Models/NiriModels.swift
+new file mode 100644
+index 0000000..329b666
+--- /dev/null
++++ b/Arpoon/Domain/Models/NiriModels.swift
+@@ -0,0 +1,121 @@
++import Foundation
++
++struct NiriItem: Codable, Identifiable, Hashable {
++    let id: String
++    let label: String
++    let target: Target
++    let createdAt: Date
++    let updatedAt: Date
++
++    init(
++        id: String = UUID().uuidString,
++        label: String,
++        target: Target,
++        createdAt: Date = .now,
++        updatedAt: Date = .now
++    ) {
++        self.id = id
++        self.label = label
++        self.target = target
++        self.createdAt = createdAt
++        self.updatedAt = updatedAt
++    }
++
++    func updating(label: String, target: Target) -> NiriItem {
++        NiriItem(
++            id: id,
++            label: label,
++            target: target,
++            createdAt: createdAt,
++            updatedAt: .now
++        )
++    }
++}
++
++struct NiriWorkspace: Codable, Identifiable, Hashable {
++    let id: String
++    let name: String
++    let items: [NiriItem]
++    let lastFocusedItemID: String?
++    let createdAt: Date
++    let updatedAt: Date
++
++    init(
++        id: String = UUID().uuidString,
++        name: String,
++        items: [NiriItem] = [],
++        lastFocusedItemID: String? = nil,
++        createdAt: Date = .now,
++        updatedAt: Date = .now
++    ) {
++        self.id = id
++        self.name = name
++        self.items = items
++        self.lastFocusedItemID = lastFocusedItemID
++        self.createdAt = createdAt
++        self.updatedAt = updatedAt
++    }
++
++    var focusedItemID: String? {
++        if let lastFocusedItemID,
++           items.contains(where: { $0.id == lastFocusedItemID }) {
++            return lastFocusedItemID
++        }
++
++        return items.first?.id
++    }
++
++    func appendingItem(_ item: NiriItem) -> NiriWorkspace {
++        NiriWorkspace(
++            id: id,
++            name: name,
++            items: items + [item],
++            lastFocusedItemID: item.id,
++            createdAt: createdAt,
++            updatedAt: .now
++        )
++    }
++
++    func removingItem(id itemID: String) -> NiriWorkspace {
++        let filteredItems = items.filter { $0.id != itemID }
++        let nextFocusedItemID: String?
++
++        if lastFocusedItemID == itemID {
++            nextFocusedItemID = filteredItems.first?.id
++        } else {
++            nextFocusedItemID = lastFocusedItemID
++        }
++
++        return NiriWorkspace(
++            id: id,
++            name: name,
++            items: filteredItems,
++            lastFocusedItemID: nextFocusedItemID,
++            createdAt: createdAt,
++            updatedAt: .now
++        )
++    }
++
++    func updatingFocus(itemID: String?) -> NiriWorkspace {
++        let resolvedItemID = itemID.flatMap { requestedID in
++            items.contains(where: { $0.id == requestedID }) ? requestedID : nil
++        }
++
++        return NiriWorkspace(
++            id: id,
++            name: name,
++            items: items,
++            lastFocusedItemID: resolvedItemID,
++            createdAt: createdAt,
++            updatedAt: .now
++        )
++    }
++}
++
++struct NiriWorkspaceState: Codable, Hashable {
++    let workspaces: [NiriWorkspace]
++
++    init(workspaces: [NiriWorkspace] = []) {
++        self.workspaces = workspaces
++    }
++}
+diff --git a/Arpoon/Domain/Services/NiriSession.swift b/Arpoon/Domain/Services/NiriSession.swift
+new file mode 100644
+index 0000000..3abe350
+--- /dev/null
++++ b/Arpoon/Domain/Services/NiriSession.swift
+@@ -0,0 +1,114 @@
++import Foundation
++
++enum NiriSelectionChange: Hashable {
++    case workspace(step: Int)
++    case item(fromIndex: Int, toIndex: Int)
++    case neutral
++}
++
++@MainActor
++final class NiriSession: ObservableObject {
++    @Published private(set) var currentWorkspaceID: String?
++    @Published private(set) var currentItemID: String?
++
++    func sync(workspaces: [NiriWorkspace]) {
++        guard let firstWorkspace = workspaces.first else {
++            currentWorkspaceID = nil
++            currentItemID = nil
++            return
++        }
++
++        if currentWorkspaceID == nil || !workspaces.contains(where: { $0.id == currentWorkspaceID }) {
++            currentWorkspaceID = firstWorkspace.id
++        }
++
++        guard let currentWorkspace = currentWorkspace(in: workspaces) else {
++            currentWorkspaceID = firstWorkspace.id
++            currentItemID = firstWorkspace.focusedItemID
++            return
++        }
++
++        if currentWorkspace.items.contains(where: { $0.id == currentItemID }) {
++            return
++        }
++
++        currentItemID = currentWorkspace.focusedItemID
++    }
++
++    func currentWorkspace(in workspaces: [NiriWorkspace]) -> NiriWorkspace? {
++        guard let currentWorkspaceID else {
++            return workspaces.first
++        }
++
++        return workspaces.first(where: { $0.id == currentWorkspaceID }) ?? workspaces.first
++    }
++
++    func currentItem(in workspaces: [NiriWorkspace]) -> NiriItem? {
++        guard let workspace = currentWorkspace(in: workspaces) else {
++            return nil
++        }
++
++        if let currentItemID,
++           let currentItem = workspace.items.first(where: { $0.id == currentItemID }) {
++            return currentItem
++        }
++
++        return workspace.items.first
++    }
++
++    func select(workspaceID: String, itemID: String?, in workspaces: [NiriWorkspace]) {
++        guard let workspace = workspaces.first(where: { $0.id == workspaceID }) else {
++            return
++        }
++
++        currentWorkspaceID = workspace.id
++        if let itemID,
++           workspace.items.contains(where: { $0.id == itemID }) {
++            currentItemID = itemID
++        } else {
++            currentItemID = workspace.focusedItemID
++        }
++    }
++
++    func selectAdjacentWorkspace(step: Int, in workspaces: [NiriWorkspace]) -> NiriSelectionChange? {
++        guard !workspaces.isEmpty else {
++            return nil
++        }
++
++        let currentIndex = workspaces.firstIndex(where: { $0.id == currentWorkspaceID }) ?? 0
++        let destinationIndex = min(max(currentIndex + step, 0), workspaces.count - 1)
++        guard destinationIndex != currentIndex else {
++            return nil
++        }
++        let destination = workspaces[destinationIndex]
++        currentWorkspaceID = destination.id
++        currentItemID = destination.focusedItemID
++        return .workspace(step: step)
++    }
++
++    func selectAdjacentItem(step: Int, in workspaces: [NiriWorkspace]) -> NiriSelectionChange? {
++        guard let workspace = currentWorkspace(in: workspaces), !workspace.items.isEmpty else {
++            return nil
++        }
++
++        let currentIndex = workspace.items.firstIndex(where: { $0.id == currentItemID }) ?? 0
++        let destinationIndex = min(max(currentIndex + step, 0), workspace.items.count - 1)
++        guard destinationIndex != currentIndex else {
++            return nil
++        }
++        let destination = workspace.items[destinationIndex]
++        currentItemID = destination.id
++        return .item(fromIndex: currentIndex, toIndex: destinationIndex)
++    }
++
++    func selectItem(id: String, in workspaces: [NiriWorkspace]) -> NiriSelectionChange {
++        guard let workspace = currentWorkspace(in: workspaces),
++              let destinationIndex = workspace.items.firstIndex(where: { $0.id == id }) else {
++            return .neutral
++        }
++
++        let currentIndex = workspace.items.firstIndex(where: { $0.id == currentItemID }) ?? destinationIndex
++        currentItemID = id
++        return .item(fromIndex: currentIndex, toIndex: destinationIndex)
++    }
++}
+diff --git a/Arpoon/Domain/Services/NiriStore.swift b/Arpoon/Domain/Services/NiriStore.swift
+new file mode 100644
+index 0000000..ee46cf8
+--- /dev/null
++++ b/Arpoon/Domain/Services/NiriStore.swift
+@@ -0,0 +1,214 @@
++import Combine
++import Foundation
++
++struct NiriTrackedMatch: Hashable {
++    let workspaceID: String
++    let itemID: String
++}
++
++struct NiriRemovalSelection: Equatable {
++    let workspaceID: String
++    let itemID: String?
++}
++
++@MainActor
++final class NiriStore: ObservableObject {
++    @Published private(set) var workspaces: [NiriWorkspace] = []
++
++    private let store: any NiriWorkspaceStore
++    private var persistenceTask: Task<Void, Never>?
++    private var pendingState: NiriWorkspaceState?
++
++    init(store: any NiriWorkspaceStore) {
++        self.store = store
++    }
++
++    func load() async {
++        do {
++            let loaded = try await store.loadState()
++            let normalized = Self.normalized(state: loaded)
++            workspaces = normalized.workspaces
++
++            if loaded != normalized {
++                persist()
++            }
++        } catch {
++            workspaces = Self.seedWorkspaces()
++            persist()
++        }
++    }
++
++    func flushPersistence() async {
++        await persistenceTask?.value
++    }
++
++    func reset() {
++        workspaces = Self.seedWorkspaces()
++        persist()
++    }
++
++    func workspace(id: String) -> NiriWorkspace? {
++        workspaces.first(where: { $0.id == id })
++    }
++
++    func item(workspaceID: String, itemID: String) -> NiriItem? {
++        workspace(id: workspaceID)?.items.first(where: { $0.id == itemID })
++    }
++
++    @discardableResult
++    func addWorkspace(below workspaceID: String?) -> NiriWorkspace {
++        let workspace = NiriWorkspace(name: nextWorkspaceName())
++
++        if let workspaceID,
++           let currentIndex = workspaces.firstIndex(where: { $0.id == workspaceID }) {
++            workspaces.insert(workspace, at: currentIndex + 1)
++        } else {
++            workspaces.append(workspace)
++        }
++
++        persist()
++        return workspace
++    }
++
++    @discardableResult
++    func appendItem(target: Target, label: String, toWorkspaceID workspaceID: String) -> NiriItem? {
++        let item = NiriItem(label: label, target: target)
++        var appended = false
++
++        workspaces = workspaces.map { workspace in
++            guard workspace.id == workspaceID else {
++                return workspace
++            }
++
++            appended = true
++            return workspace.appendingItem(item)
++        }
++
++        guard appended else {
++            return nil
++        }
++
++        persist()
++        return item
++    }
++
++    func rememberFocusedItem(workspaceID: String, itemID: String?) {
++        guard let index = workspaces.firstIndex(where: { $0.id == workspaceID }) else {
++            return
++        }
++
++        let updatedWorkspace = workspaces[index].updatingFocus(itemID: itemID)
++        guard updatedWorkspace != workspaces[index] else {
++            return
++        }
++
++        workspaces[index] = updatedWorkspace
++        persist()
++    }
++
++    @discardableResult
++    func removeItem(workspaceID: String, itemID: String) -> NiriRemovalSelection? {
++        guard let workspaceIndex = workspaces.firstIndex(where: { $0.id == workspaceID }) else {
++            return nil
++        }
++
++        let workspace = workspaces[workspaceIndex]
++        guard workspace.items.contains(where: { $0.id == itemID }) else {
++            return nil
++        }
++
++        let updatedWorkspace = workspace.removingItem(id: itemID)
++
++        if updatedWorkspace.items.isEmpty, workspaces.count > 1 {
++            workspaces.remove(at: workspaceIndex)
++            let destinationIndex = min(workspaceIndex, workspaces.count - 1)
++            let destination = workspaces[destinationIndex]
++            persist()
++            return NiriRemovalSelection(
++                workspaceID: destination.id,
++                itemID: destination.focusedItemID
++            )
++        }
++
++        workspaces[workspaceIndex] = updatedWorkspace
++        persist()
++        return NiriRemovalSelection(
++            workspaceID: updatedWorkspace.id,
++            itemID: updatedWorkspace.focusedItemID
++        )
++    }
++
++    private func persist() {
++        pendingState = NiriWorkspaceState(workspaces: workspaces)
++
++        guard persistenceTask == nil else {
++            return
++        }
++
++        persistenceTask = Task { [weak self] in
++            await self?.drainPersistenceQueue()
++        }
++    }
++
++    private func drainPersistenceQueue() async {
++        while let state = pendingState {
++            pendingState = nil
++
++            do {
++                try await store.saveState(state)
++            } catch {
++                // Keep the in-memory state authoritative for the active session.
++            }
++        }
++
++        persistenceTask = nil
++    }
++
++    private func nextWorkspaceName() -> String {
++        let highestIndex = workspaces.compactMap { workspace in
++            let prefix = "Workspace "
++            guard workspace.name.hasPrefix(prefix) else {
++                return nil
++            }
++
++            return Int(workspace.name.dropFirst(prefix.count))
++        }.max() ?? 0
++
++        return "Workspace \(highestIndex + 1)"
++    }
++
++    private static func seedWorkspaces() -> [NiriWorkspace] {
++        [NiriWorkspace(name: "Workspace 1")]
++    }
++
++    private static func normalized(state: NiriWorkspaceState) -> NiriWorkspaceState {
++        let uniqueWorkspaces = state.workspaces.reduce(into: [NiriWorkspace]()) { result, workspace in
++            guard !result.contains(where: { $0.id == workspace.id }) else {
++                return
++            }
++
++            let uniqueItems = workspace.items.reduce(into: [NiriItem]()) { items, item in
++                guard !items.contains(where: { $0.id == item.id }) else {
++                    return
++                }
++
++                items.append(item)
++            }
++
++            let normalizedName = workspace.name.trimmingCharacters(in: .whitespacesAndNewlines)
++            let normalized = NiriWorkspace(
++                id: workspace.id,
++                name: normalizedName.isEmpty ? "Untitled Workspace" : normalizedName,
++                items: uniqueItems,
++                lastFocusedItemID: uniqueItems.contains(where: { $0.id == workspace.lastFocusedItemID }) ? workspace.lastFocusedItemID : uniqueItems.first?.id,
++                createdAt: workspace.createdAt,
++                updatedAt: workspace.updatedAt
++            )
++            result.append(normalized)
++        }
++
++        return NiriWorkspaceState(
++            workspaces: uniqueWorkspaces.isEmpty ? seedWorkspaces() : uniqueWorkspaces
++        )
++    }
++}
+diff --git a/Arpoon/Domain/Services/NiriWorkspaceStore.swift b/Arpoon/Domain/Services/NiriWorkspaceStore.swift
+new file mode 100644
+index 0000000..496f59b
+--- /dev/null
++++ b/Arpoon/Domain/Services/NiriWorkspaceStore.swift
+@@ -0,0 +1,7 @@
++import Foundation
++
++@MainActor
++protocol NiriWorkspaceStore {
++    func loadState() async throws -> NiriWorkspaceState
++    func saveState(_ state: NiriWorkspaceState) async throws
++}
+diff --git a/Arpoon/Infra/MacOS/MacOSHapticFeedbackPerformer.swift b/Arpoon/Infra/MacOS/MacOSHapticFeedbackPerformer.swift
+new file mode 100644
+index 0000000..01f616b
+--- /dev/null
++++ b/Arpoon/Infra/MacOS/MacOSHapticFeedbackPerformer.swift
+@@ -0,0 +1,37 @@
++import AppKit
++import Foundation
++
++@MainActor
++final class MacOSHapticFeedbackPerformer: HapticFeedbackPerforming {
++    private let minimumInterval: TimeInterval
++    private let followUpDelayNanoseconds: UInt64
++    private var lastFeedbackDate = Date.distantPast
++    private var pendingFollowUpTask: Task<Void, Never>?
++
++    init(
++        minimumInterval: TimeInterval = 0.12,
++        followUpDelayNanoseconds: UInt64 = 35_000_000
++    ) {
++        self.minimumInterval = minimumInterval
++        self.followUpDelayNanoseconds = followUpDelayNanoseconds
++    }
++
++    func performFocusConfirmation() {
++        let now = Date()
++        guard now.timeIntervalSince(lastFeedbackDate) >= minimumInterval else {
++            return
++        }
++
++        lastFeedbackDate = now
++        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
++        pendingFollowUpTask?.cancel()
++        pendingFollowUpTask = Task { @MainActor [followUpDelayNanoseconds] in
++            try? await Task.sleep(nanoseconds: followUpDelayNanoseconds)
++            guard !Task.isCancelled else {
++                return
++            }
++
++            NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
++        }
++    }
++}
+diff --git a/Arpoon/Infra/Persistence/JSONNiriWorkspaceStore.swift b/Arpoon/Infra/Persistence/JSONNiriWorkspaceStore.swift
+new file mode 100644
+index 0000000..5cd8686
+--- /dev/null
++++ b/Arpoon/Infra/Persistence/JSONNiriWorkspaceStore.swift
+@@ -0,0 +1,57 @@
++import Foundation
++
++final class JSONNiriWorkspaceStore: NiriWorkspaceStore {
++    private let encoder: JSONEncoder
++    private let decoder: JSONDecoder
++
++    init() {
++        encoder = JSONEncoder()
++        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
++        encoder.dateEncodingStrategy = .iso8601
++
++        decoder = JSONDecoder()
++        decoder.dateDecodingStrategy = .iso8601
++    }
++
++    func loadState() async throws -> NiriWorkspaceState {
++        let url = try fileURL()
++        let decoder = self.decoder
++
++        return try await Task.detached {
++            guard FileManager.default.fileExists(atPath: url.path) else {
++                return NiriWorkspaceState()
++            }
++
++            let data = try Data(contentsOf: url)
++            return try decoder.decode(NiriWorkspaceState.self, from: data)
++        }.value
++    }
++
++    func saveState(_ state: NiriWorkspaceState) async throws {
++        let url = try fileURL()
++        let encoder = self.encoder
++
++        try await Task.detached {
++            try FileManager.default.createDirectory(
++                at: url.deletingLastPathComponent(),
++                withIntermediateDirectories: true
++            )
++
++            let data = try encoder.encode(state)
++            try data.write(to: url, options: .atomic)
++        }.value
++    }
++
++    private func fileURL() throws -> URL {
++        let base = try FileManager.default.url(
++            for: .applicationSupportDirectory,
++            in: .userDomainMask,
++            appropriateFor: nil,
++            create: true
++        )
++
++        return base
++            .appendingPathComponent("Arpoon", isDirectory: true)
++            .appendingPathComponent("niri-workspaces.json", isDirectory: false)
++    }
++}
+diff --git a/Arpoon/UI/HUD/HUDModel.swift b/Arpoon/UI/HUD/HUDModel.swift
+index 5252de5..f74930e 100644
+--- a/Arpoon/UI/HUD/HUDModel.swift
++++ b/Arpoon/UI/HUD/HUDModel.swift
+@@ -44,6 +44,9 @@ struct GridMinimapModel: Hashable {
+     let detailMode: DetailMode
+     let selectedLayerIndex: Int
+     let selectedColumnIndex: Int
++    let selectorLayerPosition: Double
++    let selectorColumnPosition: Double
++    let selectorTracksFinger: Bool
+ 
+     var maxColumnCount: Int {
+         layers.map(\.columns.count).max() ?? 0
+diff --git a/Arpoon/UI/HUD/HUDView.swift b/Arpoon/UI/HUD/HUDView.swift
+index 8530d50..35b5ca3 100644
+--- a/Arpoon/UI/HUD/HUDView.swift
++++ b/Arpoon/UI/HUD/HUDView.swift
+@@ -211,8 +211,8 @@ struct HUDView: View {
+ private struct GridMinimapAnimatedView: View {
+     let minimap: GridMinimapModel
+ 
+-    @State private var displayedLayerIndex: Int = 0
+-    @State private var displayedColumnIndex: Int = 0
++    @State private var displayedSelectorLayerPosition: Double = 0
++    @State private var displayedSelectorColumnPosition: Double = 0
+     @State private var hasAppeared = false
+     @State private var selectionPulse: CGFloat = 0
+     @State private var selectorLeadX: CGFloat = 0
+@@ -224,8 +224,8 @@ private struct GridMinimapAnimatedView: View {
+         self.minimap = minimap
+ 
+         let initialPosition = Self.initialSelectorPosition(for: minimap)
+-        _displayedLayerIndex = State(initialValue: initialPosition.layerIndex)
+-        _displayedColumnIndex = State(initialValue: initialPosition.columnIndex)
++        _displayedSelectorLayerPosition = State(initialValue: initialPosition.layerPosition)
++        _displayedSelectorColumnPosition = State(initialValue: initialPosition.columnPosition)
+     }
+ 
+     var body: some View {
+@@ -273,6 +273,12 @@ private struct GridMinimapAnimatedView: View {
+         .onChange(of: minimap.selectedColumnIndex) { _, _ in
+             animateSelectorToTarget()
+         }
++        .onChange(of: minimap.selectorLayerPosition) { _, _ in
++            animateSelectorToTarget()
++        }
++        .onChange(of: minimap.selectorColumnPosition) { _, _ in
++            animateSelectorToTarget()
++        }
+     }
+ 
+     private var rowLabelWidth: CGFloat {
+@@ -458,22 +464,28 @@ private struct GridMinimapAnimatedView: View {
+     }
+ 
+     private var selectorColor: Color {
+-        guard displayedLayerIndex < minimap.layers.count else {
++        let layerIndex = clampedLayerIndex(for: displayedSelectorLayerPosition)
++        guard layerIndex < minimap.layers.count else {
+             return Color.primary.opacity(0.24)
+         }
+ 
+-        return minimap.layers[displayedLayerIndex].color.swiftUIColor.opacity(0.45)
++        return minimap.layers[layerIndex].color.swiftUIColor.opacity(0.45)
+     }
+ 
+     private var selectorGlowColor: Color {
+-        guard displayedLayerIndex < minimap.layers.count else {
++        let layerIndex = clampedLayerIndex(for: displayedSelectorLayerPosition)
++        guard layerIndex < minimap.layers.count else {
+             return .clear
+         }
+ 
+-        return minimap.layers[displayedLayerIndex].color.swiftUIColor.opacity(0.62)
++        return minimap.layers[layerIndex].color.swiftUIColor.opacity(0.62)
+     }
+ 
+     private var selectedLayerPulse: CGFloat {
++        guard !minimap.selectorTracksFinger else {
++            return 0
++        }
++
+         switch minimap.movement {
+         case .layer:
+             return selectionPulse
+@@ -485,6 +497,10 @@ private struct GridMinimapAnimatedView: View {
+     }
+ 
+     private var selectedCellPulse: CGFloat {
++        guard !minimap.selectorTracksFinger else {
++            return 0
++        }
++
+         switch minimap.movement {
+         case .layer:
+             return selectionPulse * 0.45
+@@ -496,11 +512,11 @@ private struct GridMinimapAnimatedView: View {
+     }
+ 
+     private var selectorX: CGFloat {
+-        rowLabelTotalWidth + leadingGridSpacing + CGFloat(displayedColumnIndex) * (cellTotalWidth + columnSpacing)
++        rowLabelTotalWidth + leadingGridSpacing + magneticSelectorOffset(for: displayedSelectorColumnPosition, axis: .horizontal) * (cellTotalWidth + columnSpacing)
+     }
+ 
+     private var selectorY: CGFloat {
+-        CGFloat(displayedLayerIndex) * (rowHeight + rowSpacing)
++        magneticSelectorOffset(for: displayedSelectorLayerPosition, axis: .vertical) * (rowHeight + rowSpacing)
+     }
+ 
+     private var selectorAnimation: Animation {
+@@ -512,24 +528,31 @@ private struct GridMinimapAnimatedView: View {
+     }
+ 
+     private func animateSelectorToTarget() {
+-        let targetLayerIndex = minimap.selectedLayerIndex
+-        let targetColumnIndex = minimap.selectedColumnIndex
++        let targetLayerPosition = minimap.selectorLayerPosition
++        let targetColumnPosition = minimap.selectorColumnPosition
+ 
+         guard minimap.animateSelectionMotion else {
+             resetSelectionMotion()
+-            displayedLayerIndex = targetLayerIndex
+-            displayedColumnIndex = targetColumnIndex
++            displayedSelectorLayerPosition = targetLayerPosition
++            displayedSelectorColumnPosition = targetColumnPosition
+             return
+         }
+ 
+         guard hasAppeared else {
+             resetSelectionMotion()
+-            displayedLayerIndex = targetLayerIndex
+-            displayedColumnIndex = targetColumnIndex
++            displayedSelectorLayerPosition = targetLayerPosition
++            displayedSelectorColumnPosition = targetColumnPosition
+             return
+         }
+ 
+-        guard displayedLayerIndex != targetLayerIndex || displayedColumnIndex != targetColumnIndex else {
++        guard displayedSelectorLayerPosition != targetLayerPosition || displayedSelectorColumnPosition != targetColumnPosition else {
++            return
++        }
++
++        guard !minimap.selectorTracksFinger else {
++            resetSelectionMotion()
++            displayedSelectorLayerPosition = targetLayerPosition
++            displayedSelectorColumnPosition = targetColumnPosition
+             return
+         }
+ 
+@@ -541,8 +564,8 @@ private struct GridMinimapAnimatedView: View {
+         selectionPulse = 1
+ 
+         withAnimation(selectorAnimation) {
+-            displayedLayerIndex = targetLayerIndex
+-            displayedColumnIndex = targetColumnIndex
++            displayedSelectorLayerPosition = targetLayerPosition
++            displayedSelectorColumnPosition = targetColumnPosition
+             selectorLeadX = 0
+             selectorLeadY = 0
+             selectorStretchX = 1
+@@ -580,24 +603,58 @@ private struct GridMinimapAnimatedView: View {
+         selectorStretchY = 1
+     }
+ 
+-    private static func initialSelectorPosition(for minimap: GridMinimapModel) -> (layerIndex: Int, columnIndex: Int) {
+-        let targetLayerIndex = minimap.selectedLayerIndex
+-        let targetColumnIndex = minimap.selectedColumnIndex
++    private static func initialSelectorPosition(for minimap: GridMinimapModel) -> (layerPosition: Double, columnPosition: Double) {
++        let targetLayerPosition = minimap.selectorLayerPosition
++        let targetColumnPosition = minimap.selectorColumnPosition
+ 
+         guard minimap.animateSelectionMotion else {
+-            return (targetLayerIndex, targetColumnIndex)
++            return (targetLayerPosition, targetColumnPosition)
+         }
+ 
+         switch minimap.movement {
+         case .layer(let step):
+-            return (max(0, targetLayerIndex - step), targetColumnIndex)
++            return (Double(max(0, Int(round(targetLayerPosition)) - step)), targetColumnPosition)
+         case .tool(let fromIndex, _):
+-            return (targetLayerIndex, max(0, fromIndex))
++            return (targetLayerPosition, Double(max(0, fromIndex)))
+         case .neutral:
+-            return (targetLayerIndex, targetColumnIndex)
++            return (targetLayerPosition, targetColumnPosition)
+         }
+     }
+ 
++    private enum SelectorAxis {
++        case horizontal
++        case vertical
++    }
++
++    private func magneticSelectorOffset(for position: Double, axis: SelectorAxis) -> CGFloat {
++        let snappedPosition = position.rounded()
++        let remainder = position - snappedPosition
++        let magnetizedRemainder = magnetizedRemainder(for: remainder, axis: axis)
++        return CGFloat(snappedPosition + magnetizedRemainder)
++    }
++
++    private func magnetizedRemainder(for value: Double, axis: SelectorAxis) -> Double {
++        guard minimap.selectorTracksFinger else {
++            return value
++        }
++
++        if axis == .vertical {
++            return value
++        }
++
++        let clampedValue = max(-0.98, min(0.98, value))
++        return clampedValue + ((pow(clampedValue, 3) - clampedValue) * 0.035)
++    }
++
++    private func clampedLayerIndex(for position: Double) -> Int {
++        let roundedPosition = Int(position.rounded())
++        guard !minimap.layers.isEmpty else {
++            return 0
++        }
++
++        return min(max(roundedPosition, 0), minimap.layers.count - 1)
++    }
++
+     private func color(for tone: HUDTone) -> Color {
+         switch tone {
+         case .success:
+diff --git a/Arpoon/UI/HUD/HUDWindowController.swift b/Arpoon/UI/HUD/HUDWindowController.swift
+index 2580f49..4756c9c 100644
+--- a/Arpoon/UI/HUD/HUDWindowController.swift
++++ b/Arpoon/UI/HUD/HUDWindowController.swift
+@@ -54,6 +54,15 @@ final class HUDWindowController {
+         present(model: model)
+     }
+ 
++    func update(model: HUDModel) {
++        guard visible else {
++            showPersistent(model: model)
++            return
++        }
++
++        updateVisibleModel(model)
++    }
++
+     func hide() {
+         cancelDismissal()
+         beginFadeOut()
+@@ -122,6 +131,20 @@ final class HUDWindowController {
+         if !visible {
+             viewModel.presentationID += 1
+         }
++        applyModel(model, allowWindowReordering: true)
++
++        if !visible {
++            panel.alphaValue = 1
++            panel.orderFrontRegardless()
++            visible = true
++        }
++    }
++
++    private func updateVisibleModel(_ model: HUDModel) {
++        applyModel(model, allowWindowReordering: false)
++    }
++
++    private func applyModel(_ model: HUDModel, allowWindowReordering: Bool) {
+         viewModel.model = model
+ 
+         let contentSize = NSSize(width: model.preferredWidth, height: model.preferredHeight)
+@@ -130,21 +153,25 @@ final class HUDWindowController {
+ 
+         if !visible {
+             panel.setFrame(targetFrame, display: true)
+-            panel.alphaValue = 1
+-            panel.orderFrontRegardless()
+-            visible = true
+-        } else {
+-            panel.alphaValue = 1
+-            panel.orderFrontRegardless()
+-            switch model {
+-            case .gridMinimap:
++            return
++        }
++
++        switch model {
++        case .gridMinimap:
++            if panel.frame.size != targetFrame.size {
+                 panel.setFrame(targetFrame, display: true)
+-            default:
++            }
++        default:
++            if allowWindowReordering {
++                panel.alphaValue = 1
++                panel.orderFrontRegardless()
+                 NSAnimationContext.runAnimationGroup { context in
+                     context.duration = 0.14
+                     context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                     panel.animator().setFrame(targetFrame, display: true)
+                 }
++            } else if panel.frame != targetFrame {
++                panel.setFrame(targetFrame, display: true)
+             }
+         }
+     }
+diff --git a/Arpoon/UI/Hotkeys/HotkeyController.swift b/Arpoon/UI/Hotkeys/HotkeyController.swift
+index 5164a67..1d763ff 100644
+--- a/Arpoon/UI/Hotkeys/HotkeyController.swift
++++ b/Arpoon/UI/Hotkeys/HotkeyController.swift
+@@ -23,6 +23,13 @@ protocol HotkeyControlling: AnyObject {
+     var onGridBindCurrent: (() -> Void)? { get set }
+     var onGridShowHUD: (() -> Void)? { get set }
+     var onGridStandaloneApp: ((String) -> Void)? { get set }
++    var onNiriFocusLeft: (() -> Void)? { get set }
++    var onNiriFocusRight: (() -> Void)? { get set }
++    var onNiriFocusUp: (() -> Void)? { get set }
++    var onNiriFocusDown: (() -> Void)? { get set }
++    var onNiriCreateWorkspaceBelow: (() -> Void)? { get set }
++    var onNiriRemoveCurrentWindow: (() -> Void)? { get set }
++    var onNiriShowHUD: (() -> Void)? { get set }
+ 
+     func apply(configuration: HotkeyConfiguration)
+     func suspend()
+@@ -51,6 +58,13 @@ final class HotkeyController: HotkeyControlling {
+     var onGridBindCurrent: (() -> Void)?
+     var onGridShowHUD: (() -> Void)?
+     var onGridStandaloneApp: ((String) -> Void)?
++    var onNiriFocusLeft: (() -> Void)?
++    var onNiriFocusRight: (() -> Void)?
++    var onNiriFocusUp: (() -> Void)?
++    var onNiriFocusDown: (() -> Void)?
++    var onNiriCreateWorkspaceBelow: (() -> Void)?
++    var onNiriRemoveCurrentWindow: (() -> Void)?
++    var onNiriShowHUD: (() -> Void)?
+ 
+     private let hotKeyCenter = GlobalHotKeyCenter.shared
+     private var configuration: HotkeyConfiguration?
+@@ -117,7 +131,7 @@ final class HotkeyController: HotkeyControlling {
+                     }
+                 }
+             }
+-        case .staticSlots:
++        case .staticSlots, .niri:
+             break
+         }
+     }
+@@ -186,6 +200,20 @@ final class HotkeyController: HotkeyControlling {
+             onGridBindCurrent?()
+         case .gridShowHUD:
+             onGridShowHUD?()
++        case .niriFocusLeft:
++            onNiriFocusLeft?()
++        case .niriFocusRight:
++            onNiriFocusRight?()
++        case .niriFocusUp:
++            onNiriFocusUp?()
++        case .niriFocusDown:
++            onNiriFocusDown?()
++        case .niriCreateWorkspaceBelow:
++            onNiriCreateWorkspaceBelow?()
++        case .niriRemoveCurrentWindow:
++            onNiriRemoveCurrentWindow?()
++        case .niriShowHUD:
++            onNiriShowHUD?()
+         }
+     }
+ }
+diff --git a/Arpoon/UI/Hotkeys/HotkeyModels.swift b/Arpoon/UI/Hotkeys/HotkeyModels.swift
+index b63b0b9..ebec24e 100644
+--- a/Arpoon/UI/Hotkeys/HotkeyModels.swift
++++ b/Arpoon/UI/Hotkeys/HotkeyModels.swift
+@@ -4,6 +4,7 @@ import Foundation
+ 
+ enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
+     case grid
++    case niri
+     case staticSlots
+     case dynamicWindows
+ 
+@@ -17,6 +18,8 @@ enum HotkeyScheme: String, CaseIterable, Codable, Identifiable {
+             return "Dynamic Windows"
+         case .grid:
+             return "The Grid"
++        case .niri:
++            return "Niri"
+         }
+     }
+ }
+@@ -198,6 +201,13 @@ enum HotkeyActionKind: String, Codable {
+     case gridRenameProject
+     case gridBindCurrent
+     case gridShowHUD
++    case niriFocusLeft
++    case niriFocusRight
++    case niriFocusUp
++    case niriFocusDown
++    case niriCreateWorkspaceBelow
++    case niriRemoveCurrentWindow
++    case niriShowHUD
+ }
+ 
+ struct HotkeyAction: Hashable, Codable, Identifiable {
+@@ -249,6 +259,20 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
+             return "grid-bind-current"
+         case .gridShowHUD:
+             return "grid-show-hud"
++        case .niriFocusLeft:
++            return "niri-focus-left"
++        case .niriFocusRight:
++            return "niri-focus-right"
++        case .niriFocusUp:
++            return "niri-focus-up"
++        case .niriFocusDown:
++            return "niri-focus-down"
++        case .niriCreateWorkspaceBelow:
++            return "niri-create-workspace-below"
++        case .niriRemoveCurrentWindow:
++            return "niri-remove-current-window"
++        case .niriShowHUD:
++            return "niri-show-hud"
+         }
+     }
+ 
+@@ -290,6 +314,20 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
+             return "The Grid Bind Focused Target"
+         case .gridShowHUD:
+             return "The Grid Show Minimap"
++        case .niriFocusLeft:
++            return "Niri Focus Left"
++        case .niriFocusRight:
++            return "Niri Focus Right"
++        case .niriFocusUp:
++            return "Niri Focus Up"
++        case .niriFocusDown:
++            return "Niri Focus Down"
++        case .niriCreateWorkspaceBelow:
++            return "Niri Create Workspace Below"
++        case .niriRemoveCurrentWindow:
++            return "Niri Remove Current Window"
++        case .niriShowHUD:
++            return "Niri Show HUD"
+         }
+     }
+ 
+@@ -382,6 +420,41 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
+                 keyCode: UInt32(kVK_Space),
+                 modifiers: UInt32(optionKey)
+             )
++        case .niriFocusLeft:
++            return HotkeyShortcut(
++                keyCode: UInt32(kVK_ANSI_H),
++                modifiers: UInt32(optionKey)
++            )
++        case .niriFocusRight:
++            return HotkeyShortcut(
++                keyCode: UInt32(kVK_ANSI_L),
++                modifiers: UInt32(optionKey)
++            )
++        case .niriFocusUp:
++            return HotkeyShortcut(
++                keyCode: UInt32(kVK_ANSI_K),
++                modifiers: UInt32(optionKey)
++            )
++        case .niriFocusDown:
++            return HotkeyShortcut(
++                keyCode: UInt32(kVK_ANSI_J),
++                modifiers: UInt32(optionKey)
++            )
++        case .niriCreateWorkspaceBelow:
++            return HotkeyShortcut(
++                keyCode: UInt32(kVK_ANSI_J),
++                modifiers: UInt32(optionKey | shiftKey)
++            )
++        case .niriRemoveCurrentWindow:
++            return HotkeyShortcut(
++                keyCode: UInt32(kVK_ANSI_X),
++                modifiers: UInt32(optionKey | shiftKey)
++            )
++        case .niriShowHUD:
++            return HotkeyShortcut(
++                keyCode: UInt32(kVK_Space),
++                modifiers: UInt32(optionKey)
++            )
+         }
+     }
+ 
+@@ -408,8 +481,17 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
+     static let gridDefaultColumnActions = GridToolColumn.defaults.map {
+         HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: $0.id)
+     }
++    static let niriActions = [
++        HotkeyAction(kind: .niriFocusLeft, slot: nil),
++        HotkeyAction(kind: .niriFocusRight, slot: nil),
++        HotkeyAction(kind: .niriFocusUp, slot: nil),
++        HotkeyAction(kind: .niriFocusDown, slot: nil),
++        HotkeyAction(kind: .niriCreateWorkspaceBelow, slot: nil),
++        HotkeyAction(kind: .niriRemoveCurrentWindow, slot: nil),
++        HotkeyAction(kind: .niriShowHUD, slot: nil)
++    ]
+     static let gridDefaultActions = gridNavigationActions(layerCount: 9) + gridToolActions(columns: GridToolColumn.defaults)
+-    static let allCases = jumpActions + bindActions + commonActions + dynamicActions + gridDefaultActions
++    static let allCases = jumpActions + bindActions + commonActions + dynamicActions + gridDefaultActions + niriActions
+ 
+     static func gridNavigationActions(layerCount: Int) -> [HotkeyAction] {
+         let baseActions = [
+@@ -448,6 +530,8 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
+             return dynamicActions + commonActions
+         case .grid:
+             return gridActions(columns: columns, layerCount: layerCount)
++        case .niri:
++            return niriActions
+         }
+     }
+ 
+@@ -487,6 +571,20 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
+             self = HotkeyAction(kind: .gridBindCurrent, slot: nil)
+         case "grid-show-hud":
+             self = HotkeyAction(kind: .gridShowHUD, slot: nil)
++        case "niri-focus-left":
++            self = HotkeyAction(kind: .niriFocusLeft, slot: nil)
++        case "niri-focus-right":
++            self = HotkeyAction(kind: .niriFocusRight, slot: nil)
++        case "niri-focus-up":
++            self = HotkeyAction(kind: .niriFocusUp, slot: nil)
++        case "niri-focus-down":
++            self = HotkeyAction(kind: .niriFocusDown, slot: nil)
++        case "niri-create-workspace-below":
++            self = HotkeyAction(kind: .niriCreateWorkspaceBelow, slot: nil)
++        case "niri-remove-current-window":
++            self = HotkeyAction(kind: .niriRemoveCurrentWindow, slot: nil)
++        case "niri-show-hud":
++            self = HotkeyAction(kind: .niriShowHUD, slot: nil)
+         default:
+             if id.hasPrefix("grid-jump-"),
+                let slot = Int(id.replacingOccurrences(of: "grid-jump-", with: "")) {
+diff --git a/Arpoon/UI/Settings/SettingsStore.swift b/Arpoon/UI/Settings/SettingsStore.swift
+index 29f5e7b..750dfbd 100644
+--- a/Arpoon/UI/Settings/SettingsStore.swift
++++ b/Arpoon/UI/Settings/SettingsStore.swift
+@@ -1,6 +1,25 @@
+ import Combine
+ import Foundation
+ 
++enum NiriGestureGateMode: String, CaseIterable, Codable, Identifiable {
++    case optionHold
++    case screenEdgeZones
++    case alwaysOn
++
++    var id: Self { self }
++
++    var title: String {
++        switch self {
++        case .optionHold:
++            return "Hold Option"
++        case .screenEdgeZones:
++            return "Screen Edge Zones"
++        case .alwaysOn:
++            return "Always On"
++        }
++    }
++}
++
+ enum AddPopupStyle: String, CaseIterable, Identifiable {
+     case full
+     case minimal
+@@ -66,6 +85,14 @@ final class SettingsStore: ObservableObject {
+         didSet { defaults.set(enableExperimentalGridExternalSync, forKey: Keys.enableExperimentalGridExternalSync) }
+     }
+ 
++    @Published var enableNiriTrackpadGestures: Bool {
++        didSet { defaults.set(enableNiriTrackpadGestures, forKey: Keys.enableNiriTrackpadGestures) }
++    }
++
++    @Published var niriGestureGateMode: NiriGestureGateMode {
++        didSet { defaults.set(niriGestureGateMode.rawValue, forKey: Keys.niriGestureGateMode) }
++    }
++
+     private let defaults: UserDefaults
+     private var gridColumns: [GridToolColumn] = GridToolColumn.defaults
+     private var gridLayerNames: [String] = (1 ... 3).map { "Project \($0)" }
+@@ -104,6 +131,10 @@ final class SettingsStore: ObservableObject {
+             showGridProjectsInHUD = defaults.object(forKey: Keys.showGridProjectNamesInHUD) as? Bool ?? true
+         }
+         enableExperimentalGridExternalSync = defaults.object(forKey: Keys.enableExperimentalGridExternalSync) as? Bool ?? true
++        enableNiriTrackpadGestures = defaults.object(forKey: Keys.enableNiriTrackpadGestures) as? Bool ?? true
++        niriGestureGateMode = NiriGestureGateMode(
++            rawValue: defaults.string(forKey: Keys.niriGestureGateMode) ?? ""
++        ) ?? .optionHold
+     }
+ 
+     func shortcut(for action: HotkeyAction) -> HotkeyShortcut? {
+@@ -262,6 +293,8 @@ private enum Keys {
+     static let showGridProjectsInHUD = "showGridProjectsInHUD"
+     static let showGridProjectNamesInHUD = "showGridProjectNamesInHUD"
+     static let enableExperimentalGridExternalSync = "enableExperimentalGridExternalSync"
++    static let enableNiriTrackpadGestures = "enableNiriTrackpadGestures"
++    static let niriGestureGateMode = "niriGestureGateMode"
+     static let showNotificationPopups = "showNotificationPopups"
+ }
+ 
+diff --git a/Arpoon/UI/Settings/SettingsView.swift b/Arpoon/UI/Settings/SettingsView.swift
+index 913645b..008b45d 100644
+--- a/Arpoon/UI/Settings/SettingsView.swift
++++ b/Arpoon/UI/Settings/SettingsView.swift
+@@ -31,6 +31,8 @@ struct SettingsView: View {
+     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
+     @ObservedObject var gridStore: GridStore
+     @ObservedObject var gridSession: GridSession
++    @ObservedObject var niriStore: NiriStore
++    @ObservedObject var niriSession: NiriSession
+     @ObservedObject var permissions: AccessibilityPermissionService
+     let availableWindowsProvider: @MainActor () -> [LiveWindow]
+     let commands: AppCommands
+@@ -84,6 +86,7 @@ struct SettingsView: View {
+                             settings: settings,
+                             dynamicHotkeys: dynamicHotkeys,
+                             gridStore: gridStore,
++                            niriStore: niriStore,
+                             permissions: permissions,
+                             commands: commands,
+                             activeRecorderID: $activeRecorderID
+@@ -121,6 +124,9 @@ struct SettingsView: View {
+         .onReceive(gridStore.$columns) { columns in
+             gridSession.sync(columns: columns, layers: gridStore.layers)
+         }
++        .onReceive(niriStore.$workspaces) { workspaces in
++            niriSession.sync(workspaces: workspaces)
++        }
+     }
+ }
+ 
+@@ -128,6 +134,7 @@ private struct GeneralSettingsPane: View {
+     @ObservedObject var settings: SettingsStore
+     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
+     @ObservedObject var gridStore: GridStore
++    @ObservedObject var niriStore: NiriStore
+     @ObservedObject var permissions: AccessibilityPermissionService
+     let commands: AppCommands
+     @Binding var activeRecorderID: String?
+@@ -171,6 +178,9 @@ private struct GeneralSettingsPane: View {
+                     shortcutGroup(title: "Dynamic Hotkeys", actions: HotkeyAction.dynamicActions)
+                     shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
+                     dynamicHotkeyGroup
++                case .niri:
++                    helperText("Niri auto-tracks the focused app or window into the active workspace. Left and right move within a workspace, up and down move between workspaces.")
++                    shortcutGroup(title: "Niri Navigation", actions: HotkeyAction.niriActions)
+                 case .grid:
+                     helperText("The Grid shortcuts follow your current projects and columns, so renaming or removing columns updates the available direct-focus shortcuts automatically.")
+                     shortcutGroup(
+@@ -199,6 +209,8 @@ private struct GeneralSettingsPane: View {
+                     title: "Defaults",
+                     description: settings.hotkeyScheme == .grid
+                         ? "Choose the preset used when resetting Grid shortcuts."
++                        : settings.hotkeyScheme == .niri
++                            ? "Reset Niri shortcuts back to the default navigation keys."
+                         : "Reset the current shortcut scheme back to its default values."
+                 ) {
+                     HStack(spacing: 10) {
+@@ -218,7 +230,7 @@ private struct GeneralSettingsPane: View {
+                             switch settings.hotkeyScheme {
+                             case .grid:
+                                 settings.applyGridShortcutPreset(selectedGridPreset)
+-                            case .staticSlots, .dynamicWindows:
++                            case .staticSlots, .dynamicWindows, .niri:
+                                 settings.resetHotkeysToDefaults()
+                             }
+                         }
+@@ -226,6 +238,59 @@ private struct GeneralSettingsPane: View {
+                 }
+             }
+ 
++            if settings.hotkeyScheme == .niri || settings.hotkeyScheme == .grid {
++                section(
++                    "Trackpad",
++                    description: settings.hotkeyScheme == .niri
++                        ? "Tune direct-manipulation scrolling for Niri workspaces and windows."
++                        : "Tune direct-manipulation scrolling for The Grid projects and columns."
++                ) {
++                    sectionCard {
++                        VStack(spacing: 0) {
++                            settingsToggle(
++                                "Enable trackpad gestures",
++                                description: settings.hotkeyScheme == .niri
++                                    ? "Use trackpad scrolling to move through Niri workspaces and windows."
++                                    : "Use trackpad scrolling to move through Grid projects and columns.",
++                                isOn: $settings.enableNiriTrackpadGestures
++                            )
++
++                            Divider()
++
++                            controlRow(
++                                title: "Gesture gate",
++                                description: settings.hotkeyScheme == .niri
++                                    ? "Choose when trackpad scrolling should count as Niri navigation."
++                                    : "Choose when trackpad scrolling should count as Grid navigation."
++                            ) {
++                                Picker("Gesture gate", selection: $settings.niriGestureGateMode) {
++                                    ForEach(NiriGestureGateMode.allCases) { mode in
++                                        Text(mode.title).tag(mode)
++                                    }
++                                }
++                                .pickerStyle(.menu)
++                                .labelsHidden()
++                                .frame(width: controlColumnWidth)
++                                .disabled(!settings.enableNiriTrackpadGestures)
++                            }
++
++                            if settings.hotkeyScheme == .niri {
++                                Divider()
++
++                                controlRow(
++                                    title: "Layout",
++                                    description: "Reset the tracked Niri workspaces back to a single empty workspace."
++                                ) {
++                                    Button("Reset Niri Layout") {
++                                        niriStore.reset()
++                                    }
++                                }
++                            }
++                        }
++                    }
++                }
++            }
++
+             section(
+                 "Capture",
+                 description: "Control how Arpoon records targets when you bind shortcuts."
+@@ -272,6 +337,8 @@ private struct GeneralSettingsPane: View {
+                             "Show jump popups",
+                             description: settings.hotkeyScheme == .grid
+                                 ? "Display the Grid minimap when Grid navigation succeeds."
++                                : settings.hotkeyScheme == .niri
++                                    ? "Display the Niri minimap when Niri navigation succeeds."
+                                 : "Display a HUD when a jump action succeeds.",
+                             isOn: $settings.showJumpPopups
+                         )
+@@ -314,26 +381,28 @@ private struct GeneralSettingsPane: View {
+                         Divider()
+ 
+                         settingsToggle(
+-                            "Animate The Grid minimap selection",
+-                            description: "Move the selected layer or column inside the minimap instead of shifting the HUD window.",
++                            "Animate minimap selection",
++                            description: "Move the selected workspace or item inside the minimap instead of shifting the HUD window.",
+                             isOn: $settings.animateGridMinimapSelection
+                         )
+ 
+-                        Divider()
++                        if settings.hotkeyScheme == .grid {
++                            Divider()
+ 
+-                        settingsToggle(
+-                            "Show projects in The Grid HUD",
+-                            description: "Display the full project lane down the left side of the Grid minimap HUD.",
+-                            isOn: $settings.showGridProjectsInHUD
+-                        )
++                            settingsToggle(
++                                "Show projects in The Grid HUD",
++                                description: "Display the full project lane down the left side of the Grid minimap HUD.",
++                                isOn: $settings.showGridProjectsInHUD
++                            )
+ 
+-                        Divider()
++                            Divider()
+ 
+-                        settingsToggle(
+-                            "Experimental external Grid sync",
+-                            description: "Update the active Grid cell when you switch windows outside Arpoon. Disabled by default because it still has edge-case weirdness.",
+-                            isOn: $settings.enableExperimentalGridExternalSync
+-                        )
++                            settingsToggle(
++                                "Experimental external Grid sync",
++                                description: "Update the active Grid cell when you switch windows outside Arpoon. Disabled by default because it still has edge-case weirdness.",
++                                isOn: $settings.enableExperimentalGridExternalSync
++                            )
++                        }
+ 
+                         Divider()
+ 
+@@ -360,9 +429,11 @@ private struct GeneralSettingsPane: View {
+                     }
+                 }
+ 
+-                Label("Experimental: external Grid sync can still behave unexpectedly with rapid changes or empty-slot navigation.", systemImage: "flask.fill")
+-                    .font(.system(size: 12, weight: .medium))
+-                    .foregroundStyle(.orange)
++                if settings.hotkeyScheme == .grid {
++                    Label("Experimental: external Grid sync can still behave unexpectedly with rapid changes or empty-slot navigation.", systemImage: "flask.fill")
++                        .font(.system(size: 12, weight: .medium))
++                        .foregroundStyle(.orange)
++                }
+             }
+ 
+             section(
+diff --git a/Arpoon/UI/Settings/SettingsWindowController.swift b/Arpoon/UI/Settings/SettingsWindowController.swift
+index 763f0b5..cff41f0 100644
+--- a/Arpoon/UI/Settings/SettingsWindowController.swift
++++ b/Arpoon/UI/Settings/SettingsWindowController.swift
+@@ -10,6 +10,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
+         dynamicHotkeys: DynamicHotkeyStore,
+         gridStore: GridStore,
+         gridSession: GridSession,
++        niriStore: NiriStore,
++        niriSession: NiriSession,
+         permissions: AccessibilityPermissionService,
+         availableWindowsProvider: @escaping @MainActor () -> [LiveWindow],
+         commands: AppCommands
+@@ -20,6 +22,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
+                 dynamicHotkeys: dynamicHotkeys,
+                 gridStore: gridStore,
+                 gridSession: gridSession,
++                niriStore: niriStore,
++                niriSession: niriSession,
+                 permissions: permissions,
+                 availableWindowsProvider: availableWindowsProvider,
+                 commands: commands
+diff --git a/Arpoon/UI/Shared/ControlPanelWindowController.swift b/Arpoon/UI/Shared/ControlPanelWindowController.swift
+index 82d6fa6..d6490cb 100644
+--- a/Arpoon/UI/Shared/ControlPanelWindowController.swift
++++ b/Arpoon/UI/Shared/ControlPanelWindowController.swift
+@@ -12,6 +12,8 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
+                 dynamicHotkeys: appModel.dynamicHotkeyStore,
+                 gridStore: appModel.gridStore,
+                 gridSession: appModel.gridSession,
++                niriStore: appModel.niriStore,
++                niriSession: appModel.niriSession,
+                 settings: appModel.settings,
+                 permissions: appModel.accessibilityPermissions
+             )
+diff --git a/Arpoon/UI/Shared/MenuBarView.swift b/Arpoon/UI/Shared/MenuBarView.swift
+index 3d7d7f3..9315e79 100644
+--- a/Arpoon/UI/Shared/MenuBarView.swift
++++ b/Arpoon/UI/Shared/MenuBarView.swift
+@@ -8,6 +8,8 @@ struct MenuBarView: View {
+     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
+     @ObservedObject var gridStore: GridStore
+     @ObservedObject var gridSession: GridSession
++    @ObservedObject var niriStore: NiriStore
++    @ObservedObject var niriSession: NiriSession
+     @ObservedObject var settings: SettingsStore
+     @ObservedObject var permissions: AccessibilityPermissionService
+ 
+@@ -40,6 +42,9 @@ struct MenuBarView: View {
+         .onReceive(gridStore.$columns) { columns in
+             gridSession.sync(columns: columns, layers: gridStore.layers)
+         }
++        .onReceive(niriStore.$workspaces) { workspaces in
++            niriSession.sync(workspaces: workspaces)
++        }
+     }
+ 
+     private var header: some View {
+@@ -114,6 +119,10 @@ struct MenuBarView: View {
+                         .font(.system(size: 12))
+                         .foregroundStyle(.secondary)
+                 }
++            case .niri:
++                Text("Focused windows join the active Niri workspace automatically. Use the workspace controls below or the Niri shortcuts to move through the strip.")
++                    .font(.system(size: 12))
++                    .foregroundStyle(.secondary)
+             case .grid:
+                 EmptyView()
+             }
+@@ -135,6 +144,8 @@ struct MenuBarView: View {
+                 staticAssignments
+             case .dynamicWindows:
+                 dynamicAssignments
++            case .niri:
++                niriAssignments
+             case .grid:
+                 gridAssignments
+             }
+@@ -350,9 +361,124 @@ struct MenuBarView: View {
+         }
+     }
+ 
++    @ViewBuilder
++    private var niriAssignments: some View {
++        VStack(alignment: .leading, spacing: 14) {
++            if let workspace = currentNiriWorkspace {
++                VStack(alignment: .leading, spacing: 8) {
++                    HStack(spacing: 8) {
++                        Text(workspace.name)
++                            .font(.system(size: 13, weight: .semibold))
++
++                        Spacer()
++
++                        Text(currentNiriItem?.label ?? "Empty")
++                            .font(.system(size: 11, weight: .medium))
++                            .foregroundStyle(.secondary)
++                            .lineLimit(1)
++                    }
++
++                    ScrollView(.horizontal, showsIndicators: false) {
++                        HStack(spacing: 8) {
++                            ForEach(workspace.items) { item in
++                                Button {
++                                    dismissPopover()
++                                    commands.focusNiriItem(workspace.id, item.id)
++                                } label: {
++                                    Text(item.label)
++                                        .lineLimit(1)
++                                }
++                                .controlSize(.small)
++                                .gridToolButtonStyle(item.id == niriSession.currentItemID)
++                            }
++                        }
++                    }
++
++                    HStack(spacing: 8) {
++                        Button("New Workspace") {
++                            dismissPopover()
++                            commands.createNiriWorkspaceBelow()
++                        }
++                        .controlSize(.small)
++                        .buttonStyle(.bordered)
++
++                        Button("Remove Current") {
++                            dismissPopover()
++                            commands.removeCurrentNiriItem()
++                        }
++                        .controlSize(.small)
++                        .buttonStyle(.bordered)
++                    }
++                }
++            }
++
++            if niriStore.workspaces.isEmpty {
++                emptyState("No Niri workspaces yet.")
++            } else {
++                VStack(spacing: 0) {
++                    ForEach(Array(niriStore.workspaces.enumerated()), id: \.element.id) { index, workspace in
++                        VStack(alignment: .leading, spacing: 8) {
++                            HStack(spacing: 10) {
++                                Text("\(index + 1)")
++                                    .font(.system(size: 11, weight: .bold, design: .rounded))
++                                    .frame(width: 22, height: 22)
++                                    .background(Circle().fill(Color.secondary.opacity(0.14)))
++
++                                VStack(alignment: .leading, spacing: 2) {
++                                    Text(workspace.name)
++                                        .font(.system(size: 12.5, weight: workspace.id == niriSession.currentWorkspaceID ? .semibold : .medium))
++
++                                    Text(niriSummary(for: workspace))
++                                        .font(.system(size: 11))
++                                        .foregroundStyle(.secondary)
++                                        .lineLimit(1)
++                                }
++
++                                Spacer()
++                            }
++
++                            if !workspace.items.isEmpty {
++                                ScrollView(.horizontal, showsIndicators: false) {
++                                    HStack(spacing: 6) {
++                                        ForEach(workspace.items) { item in
++                                            Button {
++                                                dismissPopover()
++                                                commands.focusNiriItem(workspace.id, item.id)
++                                            } label: {
++                                                Text(item.label)
++                                                    .font(.system(size: 11, weight: .medium))
++                                                    .padding(.horizontal, 8)
++                                                    .padding(.vertical, 4)
++                                                    .background(Capsule().fill(Color.secondary.opacity(0.14)))
++                                            }
++                                            .buttonStyle(.plain)
++                                        }
++                                    }
++                                }
++                            }
++                        }
++                        .contentShape(Rectangle())
++                        .padding(.vertical, 8)
++
++                        if index < niriStore.workspaces.count - 1 {
++                            Divider()
++                                .padding(.leading, 34)
++                        }
++                    }
++                }
++            }
++        }
++    }
++
+     private var footer: some View {
+         HStack {
+-            Text(settings.hotkeyScheme == .grid ? "The Grid reflects the current layer and tool." : "Jump with a row click.")
++            Text(
++                settings.hotkeyScheme == .grid
++                    ? "The Grid reflects the current layer and tool."
++                    : settings.hotkeyScheme == .niri
++                        ? "Niri tracks your active workspace and focused window."
++                        : "Jump with a row click."
++            )
+                 .font(.system(size: 11))
+                 .foregroundStyle(.secondary)
+ 
+@@ -373,6 +499,8 @@ struct MenuBarView: View {
+             return slotStore.assignments.count
+         case .dynamicWindows:
+             return dynamicHotkeys.assignments.count
++        case .niri:
++            return niriStore.workspaces.count
+         case .grid:
+             return gridStore.layers.count
+         }
+@@ -384,6 +512,8 @@ struct MenuBarView: View {
+             return "Binding"
+         case .dynamicWindows:
+             return "Dynamic Hotkeys"
++        case .niri:
++            return "Niri"
+         case .grid:
+             return "The Grid"
+         }
+@@ -399,6 +529,8 @@ struct MenuBarView: View {
+             return "Current Slots"
+         case .dynamicWindows:
+             return "Current Hotkeys"
++        case .niri:
++            return "Workspaces"
+         case .grid:
+             return "Project Layers"
+         }
+@@ -482,6 +614,36 @@ struct MenuBarView: View {
+     private func currentGridColumn(in layer: GridLayer) -> GridToolColumn? {
+         gridSession.currentTool(in: gridStore.columns)
+     }
++
++    private var currentNiriWorkspace: NiriWorkspace? {
++        if let workspaceID = niriSession.currentWorkspaceID,
++           let workspace = niriStore.workspace(id: workspaceID) {
++            return workspace
++        }
++
++        return niriStore.workspaces.first
++    }
++
++    private var currentNiriItem: NiriItem? {
++        guard let workspace = currentNiriWorkspace else {
++            return nil
++        }
++
++        if let itemID = niriSession.currentItemID,
++           let item = workspace.items.first(where: { $0.id == itemID }) {
++            return item
++        }
++
++        return workspace.items.first
++    }
++
++    private func niriSummary(for workspace: NiriWorkspace) -> String {
++        if workspace.items.isEmpty {
++            return "Empty workspace"
++        }
++
++        return workspace.items.map(\.label).joined(separator: " • ")
++    }
+ }
+ 
+ private extension View {
+diff --git a/Arpoon/UI/Shared/StatusItemController.swift b/Arpoon/UI/Shared/StatusItemController.swift
+index 388066a..605d79f 100644
+--- a/Arpoon/UI/Shared/StatusItemController.swift
++++ b/Arpoon/UI/Shared/StatusItemController.swift
+@@ -49,6 +49,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
+                 dynamicHotkeys: appModel.dynamicHotkeyStore,
+                 gridStore: appModel.gridStore,
+                 gridSession: appModel.gridSession,
++                niriStore: appModel.niriStore,
++                niriSession: appModel.niriSession,
+                 settings: appModel.settings,
+                 permissions: appModel.accessibilityPermissions
+             )
+diff --git a/Tests/ArpoonTests/AppRuntimeAndCommandCenterTests.swift b/Tests/ArpoonTests/AppRuntimeAndCommandCenterTests.swift
+index 6c35c93..28ea0d2 100644
+--- a/Tests/ArpoonTests/AppRuntimeAndCommandCenterTests.swift
++++ b/Tests/ArpoonTests/AppRuntimeAndCommandCenterTests.swift
+@@ -72,6 +72,46 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
+         XCTAssertTrue(gridActions.contains(HotkeyAction(kind: .focusVisibleAppDown, slot: nil)))
+     }
+ 
++    func testJumpTriggersHapticOnSuccessfulFocus() {
++        let slotStore = makeSlotStore()
++        let focus = FakeFocusService()
++        let hapticPerformer = FakeHapticPerformer()
++        let target = Target.app(AppTarget(bundleId: "com.example.notes", appName: "Notes"))
++
++        slotStore.bind(slot: 1, target: target)
++        focus.targetOutcome = .focused(label: "Notes", strategy: nil)
++
++        let commandCenter = makeCommandCenter(
++            slotStore: slotStore,
++            focusService: focus,
++            hapticPerformer: hapticPerformer
++        )
++
++        commandCenter.jump(to: 1)
++
++        XCTAssertEqual(hapticPerformer.focusConfirmationCount, 1)
++    }
++
++    func testJumpDoesNotTriggerHapticForUnavailableTarget() {
++        let slotStore = makeSlotStore()
++        let focus = FakeFocusService()
++        let hapticPerformer = FakeHapticPerformer()
++        let target = Target.app(AppTarget(bundleId: "com.example.notes", appName: "Notes"))
++
++        slotStore.bind(slot: 1, target: target)
++        focus.targetOutcome = .unavailable(reason: "No app")
++
++        let commandCenter = makeCommandCenter(
++            slotStore: slotStore,
++            focusService: focus,
++            hapticPerformer: hapticPerformer
++        )
++
++        commandCenter.jump(to: 1)
++
++        XCTAssertEqual(hapticPerformer.focusConfirmationCount, 0)
++    }
++
+     func testSlotAndDynamicJumpShareTargetFallbackPath() {
+         let slotStore = makeSlotStore()
+         let dynamicStore = makeDynamicHotkeyStore()
+@@ -552,6 +592,572 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
+         )
+     }
+ 
++    func testNiriSchemeUsesDedicatedActions() {
++        let settings = makeSettings()
++
++        let actions = settings.activeHotkeyActions(for: .niri)
++
++        XCTAssertEqual(actions, HotkeyAction.niriActions)
++        XCTAssertFalse(actions.contains(HotkeyAction(kind: .focusVisibleAppLeft, slot: nil)))
++    }
++
++    func testNiriDefaultShortcutsMatchNavigationPlan() {
++        XCTAssertEqual(
++            HotkeyAction(kind: .niriFocusLeft, slot: nil).defaultShortcut,
++            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_H), modifiers: UInt32(optionKey))
++        )
++        XCTAssertEqual(
++            HotkeyAction(kind: .niriCreateWorkspaceBelow, slot: nil).defaultShortcut,
++            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_J), modifiers: UInt32(optionKey | shiftKey))
++        )
++        XCTAssertEqual(
++            HotkeyAction(kind: .niriRemoveCurrentWindow, slot: nil).defaultShortcut,
++            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_X), modifiers: UInt32(optionKey | shiftKey))
++        )
++    }
++
++    func testNiriCreateWorkspaceBelowSelectsNewWorkspace() async {
++        let store = makeNiriStore()
++        let session = NiriSession()
++        await store.load()
++        session.sync(workspaces: store.workspaces)
++
++        let commandCenter = makeCommandCenter(
++            niriStore: store,
++            niriSession: session
++        )
++
++        commandCenter.createNiriWorkspaceBelow()
++
++        XCTAssertEqual(store.workspaces.count, 2)
++        XCTAssertEqual(store.workspaces[1].name, "Workspace 2")
++        XCTAssertEqual(session.currentWorkspaceID, store.workspaces[1].id)
++    }
++
++    func testNiriAutoEnrollmentAppendsFocusedTargetToCurrentWorkspace() async throws {
++        let settings = makeSettings()
++        settings.hotkeyScheme = .niri
++
++        let store = makeNiriStore()
++        let session = NiriSession()
++        await store.load()
++        session.sync(workspaces: store.workspaces)
++
++        let liveWindow = LiveWindow(
++            bundleId: "com.example.term",
++            appName: "Terminal",
++            pid: 77,
++            title: "Shell",
++            windowID: 123,
++            frame: WindowFrame(x: 10, y: 10, width: 500, height: 400),
++            isMain: true,
++            isFocused: true,
++            axElement: nil
++        )
++        let target = Target.window(
++            WindowTarget(
++                bundleId: liveWindow.bundleId,
++                appName: liveWindow.appName,
++                pid: liveWindow.pid,
++                windowTitle: liveWindow.title,
++                windowID: liveWindow.windowID,
++                frame: liveWindow.frame,
++                capturedAt: .now
++            )
++        )
++
++        let capture = FakeCaptureService()
++        capture.outcome = CaptureOutcome(target: target, source: .window, liveWindow: liveWindow)
++        let windowProvider = FakeWindowProvider()
++        windowProvider.focusedWindowValue = liveWindow
++
++        let commandCenter = makeCommandCenter(
++            settings: settings,
++            niriStore: store,
++            niriSession: session,
++            captureService: capture,
++            windowProvider: windowProvider
++        )
++
++        commandCenter.syncNiriSelectionToFocusedTargetIfNeeded()
++
++        let workspace = try XCTUnwrap(store.workspaces.first)
++        XCTAssertEqual(workspace.items.count, 1)
++        XCTAssertEqual(workspace.items.first?.target, target)
++        XCTAssertEqual(session.currentItemID, workspace.items.first?.id)
++    }
++
++    func testNiriAutoEnrollmentSelectsExistingTrackedItemInsteadOfDuplicating() async throws {
++        let settings = makeSettings()
++        settings.hotkeyScheme = .niri
++
++        let store = makeNiriStore()
++        let session = NiriSession()
++        await store.load()
++        let secondWorkspace = store.addWorkspace(below: store.workspaces.first?.id)
++        let liveWindow = LiveWindow(
++            bundleId: "com.example.browser",
++            appName: "Browser",
++            pid: 88,
++            title: "Docs",
++            windowID: 456,
++            frame: WindowFrame(x: 20, y: 20, width: 900, height: 700),
++            isMain: true,
++            isFocused: true,
++            axElement: nil
++        )
++        let target = Target.window(
++            WindowTarget(
++                bundleId: liveWindow.bundleId,
++                appName: liveWindow.appName,
++                pid: liveWindow.pid,
++                windowTitle: liveWindow.title,
++                windowID: liveWindow.windowID,
++                frame: liveWindow.frame,
++                capturedAt: .now
++            )
++        )
++        let existingItem = try XCTUnwrap(
++            store.appendItem(
++                target: target,
++                label: "Browser - Docs",
++                toWorkspaceID: secondWorkspace.id
++            )
++        )
++        session.sync(workspaces: store.workspaces)
++
++        let capture = FakeCaptureService()
++        capture.outcome = CaptureOutcome(target: target, source: .window, liveWindow: liveWindow)
++        let windowProvider = FakeWindowProvider()
++        windowProvider.focusedWindowValue = liveWindow
++
++        let commandCenter = makeCommandCenter(
++            settings: settings,
++            niriStore: store,
++            niriSession: session,
++            captureService: capture,
++            windowProvider: windowProvider
++        )
++
++        commandCenter.syncNiriSelectionToFocusedTargetIfNeeded()
++
++        XCTAssertEqual(store.workspaces[1].items.count, 1)
++        XCTAssertEqual(session.currentWorkspaceID, secondWorkspace.id)
++        XCTAssertEqual(session.currentItemID, existingItem.id)
++    }
++
++    func testNiriVerticalNavigationRestoresRememberedItem() async throws {
++        let store = makeNiriStore()
++        let session = NiriSession()
++        await store.load()
++        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
++        let secondWorkspace = store.addWorkspace(below: firstWorkspaceID)
++        let firstItem = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
++            label: "Terminal",
++            toWorkspaceID: firstWorkspaceID
++        ))
++        let secondItem = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.browser", appName: "Browser")),
++            label: "Browser",
++            toWorkspaceID: secondWorkspace.id
++        ))
++        session.sync(workspaces: store.workspaces)
++
++        let focus = FakeFocusService()
++        focus.targetOutcome = .focused(label: "Browser", strategy: nil)
++
++        let commandCenter = makeCommandCenter(
++            niriStore: store,
++            niriSession: session,
++            focusService: focus
++        )
++
++        commandCenter.focusNiriItem(workspaceID: secondWorkspace.id, itemID: secondItem.id)
++        commandCenter.moveNiriFocusUp()
++
++        XCTAssertEqual(session.currentWorkspaceID, firstWorkspaceID)
++        XCTAssertEqual(session.currentItemID, firstItem.id)
++        XCTAssertEqual(focus.focusedTargets.last, firstItem.target)
++    }
++
++    func testNiriHorizontalNavigationStopsAtWorkspaceEdges() async throws {
++        let store = makeNiriStore()
++        let session = NiriSession()
++        await store.load()
++        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
++        let firstItem = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
++            label: "Terminal",
++            toWorkspaceID: firstWorkspaceID
++        ))
++        let secondItem = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.browser", appName: "Browser")),
++            label: "Browser",
++            toWorkspaceID: firstWorkspaceID
++        ))
++        session.sync(workspaces: store.workspaces)
++
++        let focus = FakeFocusService()
++        focus.targetOutcome = .focused(label: "Browser", strategy: nil)
++
++        let commandCenter = makeCommandCenter(
++            niriStore: store,
++            niriSession: session,
++            focusService: focus
++        )
++
++        commandCenter.focusNiriItem(workspaceID: firstWorkspaceID, itemID: secondItem.id)
++        let focusCountAfterPositioningRight = focus.focusedTargets.count
++
++        commandCenter.moveNiriFocusRight()
++
++        XCTAssertEqual(session.currentItemID, secondItem.id)
++        XCTAssertEqual(focus.focusedTargets.count, focusCountAfterPositioningRight)
++
++        commandCenter.focusNiriItem(workspaceID: firstWorkspaceID, itemID: firstItem.id)
++        let focusCountAfterPositioningLeft = focus.focusedTargets.count
++
++        commandCenter.moveNiriFocusLeft()
++
++        XCTAssertEqual(session.currentItemID, firstItem.id)
++        XCTAssertEqual(focus.focusedTargets.count, focusCountAfterPositioningLeft)
++    }
++
++    func testNiriVerticalNavigationStopsAtWorkspaceEdges() async throws {
++        let store = makeNiriStore()
++        let session = NiriSession()
++        await store.load()
++        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
++        let secondWorkspace = store.addWorkspace(below: firstWorkspaceID)
++        let firstItem = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
++            label: "Terminal",
++            toWorkspaceID: firstWorkspaceID
++        ))
++        let secondItem = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.browser", appName: "Browser")),
++            label: "Browser",
++            toWorkspaceID: secondWorkspace.id
++        ))
++        session.sync(workspaces: store.workspaces)
++
++        let focus = FakeFocusService()
++        focus.targetOutcome = .focused(label: "Browser", strategy: nil)
++
++        let commandCenter = makeCommandCenter(
++            niriStore: store,
++            niriSession: session,
++            focusService: focus
++        )
++
++        commandCenter.focusNiriItem(workspaceID: secondWorkspace.id, itemID: secondItem.id)
++        let focusCountAtBottom = focus.focusedTargets.count
++
++        commandCenter.moveNiriFocusDown()
++
++        XCTAssertEqual(session.currentWorkspaceID, secondWorkspace.id)
++        XCTAssertEqual(focus.focusedTargets.count, focusCountAtBottom)
++
++        commandCenter.focusNiriItem(workspaceID: firstWorkspaceID, itemID: firstItem.id)
++        let focusCountAtTop = focus.focusedTargets.count
++
++        commandCenter.moveNiriFocusUp()
++
++        XCTAssertEqual(session.currentWorkspaceID, firstWorkspaceID)
++        XCTAssertEqual(focus.focusedTargets.count, focusCountAtTop)
++    }
++
++    func testNiriTrackpadGestureSnapsToClosestItem() async throws {
++        let store = makeNiriStore()
++        let session = NiriSession()
++        await store.load()
++        let workspaceID = try XCTUnwrap(store.workspaces.first?.id)
++        let firstItem = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
++            label: "Terminal",
++            toWorkspaceID: workspaceID
++        ))
++        _ = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.browser", appName: "Browser")),
++            label: "Browser",
++            toWorkspaceID: workspaceID
++        ))
++        let thirdItem = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.docs", appName: "Docs")),
++            label: "Docs",
++            toWorkspaceID: workspaceID
++        ))
++        session.sync(workspaces: store.workspaces)
++
++        let focus = FakeFocusService()
++        focus.targetOutcome = .focused(label: "Docs", strategy: nil)
++
++        let commandCenter = makeCommandCenter(
++            niriStore: store,
++            niriSession: session,
++            focusService: focus
++        )
++
++        commandCenter.focusNiriItem(workspaceID: workspaceID, itemID: firstItem.id)
++        commandCenter.setNiriGestureActive(true)
++        commandCenter.applyNiriGestureUpdate(
++            TrackpadGestureUpdate(
++                horizontalStepCount: 1,
++                verticalStepCount: 0,
++                horizontalFractionalOffset: 0.8,
++                verticalFractionalOffset: 0,
++                totalHorizontalOffset: 1.8,
++                totalVerticalOffset: 0
++            )
++        )
++
++        XCTAssertEqual(session.currentItemID, thirdItem.id)
++    }
++
++    func testNiriRemoveCurrentItemCollapsesEmptyWorkspace() async throws {
++        let store = makeNiriStore()
++        let session = NiriSession()
++        await store.load()
++        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
++        let secondWorkspace = store.addWorkspace(below: firstWorkspaceID)
++        _ = store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
++            label: "Terminal",
++            toWorkspaceID: firstWorkspaceID
++        )
++        let secondItem = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.docs", appName: "Docs")),
++            label: "Docs",
++            toWorkspaceID: secondWorkspace.id
++        ))
++        session.sync(workspaces: store.workspaces)
++
++        let commandCenter = makeCommandCenter(
++            niriStore: store,
++            niriSession: session
++        )
++        commandCenter.focusNiriItem(workspaceID: secondWorkspace.id, itemID: secondItem.id)
++
++        commandCenter.removeCurrentNiriItem()
++
++        XCTAssertEqual(store.workspaces.count, 1)
++        XCTAssertEqual(store.workspaces.first?.id, firstWorkspaceID)
++        XCTAssertEqual(session.currentWorkspaceID, firstWorkspaceID)
++    }
++
++    func testNiriPersistenceRoundTripsWorkspaceState() async throws {
++        let backingStore = InMemoryNiriWorkspaceStore()
++        let store = NiriStore(store: backingStore)
++        await store.load()
++        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
++        let secondWorkspace = store.addWorkspace(below: firstWorkspaceID)
++        let item = try XCTUnwrap(store.appendItem(
++            target: .app(AppTarget(bundleId: "com.example.music", appName: "Music")),
++            label: "Music",
++            toWorkspaceID: secondWorkspace.id
++        ))
++        store.rememberFocusedItem(workspaceID: secondWorkspace.id, itemID: item.id)
++        await store.flushPersistence()
++
++        let reloaded = NiriStore(store: backingStore)
++        await reloaded.load()
++
++        XCTAssertEqual(reloaded.workspaces.count, 2)
++        XCTAssertEqual(reloaded.workspaces[1].items.first?.label, "Music")
++        XCTAssertEqual(reloaded.workspaces[1].lastFocusedItemID, item.id)
++    }
++
++    func testTrackpadGestureControllerRequiresGateAndEmitsSingleDirection() {
++        let settings = makeSettings()
++        settings.hotkeyScheme = .niri
++        let controller = TrackpadGestureController(settings: settings)
++
++        let gatedMiss = controller.handleScroll(
++            deltaX: 30,
++            deltaY: 0,
++            phase: .began,
++            momentumPhase: [],
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [],
++            mouseLocation: .zero,
++            timestamp: 1
++        )
++        let gatedHit = controller.handleScroll(
++            deltaX: 80,
++            deltaY: 0,
++            phase: .changed,
++            momentumPhase: [],
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [.option],
++            mouseLocation: .zero,
++            timestamp: 2
++        )
++
++        XCTAssertNil(gatedMiss)
++        XCTAssertEqual(gatedHit?.horizontalStepCount, 1)
++        XCTAssertEqual(gatedHit?.verticalStepCount, 0)
++    }
++
++    func testTrackpadGestureControllerSupportsGridScheme() {
++        let settings = makeSettings()
++        settings.hotkeyScheme = .grid
++        let controller = TrackpadGestureController(settings: settings)
++
++        let update = controller.handleScroll(
++            deltaX: 80,
++            deltaY: 0,
++            phase: .began,
++            momentumPhase: [],
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [.option],
++            mouseLocation: .zero,
++            timestamp: 1
++        )
++
++        XCTAssertEqual(update?.horizontalStepCount, 1)
++        XCTAssertEqual(update?.verticalStepCount, 0)
++    }
++
++    func testTrackpadGestureControllerIgnoresMomentumAndDisabledState() {
++        let settings = makeSettings()
++        settings.hotkeyScheme = .niri
++        settings.enableNiriTrackpadGestures = false
++        let controller = TrackpadGestureController(settings: settings)
++
++        let disabled = controller.handleScroll(
++            deltaX: 0,
++            deltaY: -40,
++            phase: .began,
++            momentumPhase: [],
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [.option],
++            mouseLocation: .zero,
++            timestamp: 1
++        )
++        settings.enableNiriTrackpadGestures = true
++        let momentum = controller.handleScroll(
++            deltaX: 0,
++            deltaY: -40,
++            phase: .began,
++            momentumPhase: .began,
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [.option],
++            mouseLocation: .zero,
++            timestamp: 2
++        )
++
++        XCTAssertNil(disabled)
++        XCTAssertNil(momentum)
++    }
++
++    func testTrackpadGestureControllerReportsFractionalFingerProgress() {
++        let settings = makeSettings()
++        settings.hotkeyScheme = .niri
++        let controller = TrackpadGestureController(settings: settings)
++        var updates: [TrackpadGestureUpdate] = []
++        controller.onGestureUpdate = { updates.append($0) }
++
++        let action = controller.handleScroll(
++            deltaX: 37,
++            deltaY: 0,
++            phase: .began,
++            momentumPhase: [],
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [.option],
++            mouseLocation: .zero,
++            timestamp: 1
++        )
++
++        XCTAssertEqual(
++            action,
++            TrackpadGestureUpdate(
++                horizontalStepCount: 0,
++                verticalStepCount: 0,
++                horizontalFractionalOffset: 0.5,
++                verticalFractionalOffset: 0,
++                totalHorizontalOffset: 0.5,
++                totalVerticalOffset: 0
++            )
++        )
++        XCTAssertEqual(
++            updates.last,
++            TrackpadGestureUpdate(
++                horizontalStepCount: 0,
++                verticalStepCount: 0,
++                horizontalFractionalOffset: 0.5,
++                verticalFractionalOffset: 0,
++                totalHorizontalOffset: 0.5,
++                totalVerticalOffset: 0
++            )
++        )
++    }
++
++    func testTrackpadGestureControllerSoftensCrossAxisDriftDuringVerticalScroll() {
++        let settings = makeSettings()
++        settings.hotkeyScheme = .niri
++        let controller = TrackpadGestureController(settings: settings)
++
++        let update = controller.handleScroll(
++            deltaX: 12,
++            deltaY: 52,
++            phase: .began,
++            momentumPhase: [],
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [.option],
++            mouseLocation: .zero,
++            timestamp: 1
++        )
++
++        XCTAssertNotNil(update)
++        XCTAssertEqual(update?.verticalStepCount, 1)
++        XCTAssertLessThan(abs(update?.totalHorizontalOffset ?? 1), 0.15)
++        XCTAssertEqual(update?.totalVerticalOffset, 1)
++    }
++
++    func testTrackpadGestureControllerConsumesGatedScrollWithoutActivePhase() {
++        let settings = makeSettings()
++        settings.hotkeyScheme = .niri
++        let controller = TrackpadGestureController(settings: settings)
++
++        let shouldConsume = controller.shouldConsumeTrackpadScroll(
++            phase: [],
++            momentumPhase: [],
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [.option],
++            mouseLocation: .zero
++        )
++
++        XCTAssertTrue(shouldConsume)
++    }
++
++    func testTrackpadGestureControllerConsumesMomentumTailAfterGestureStarts() {
++        let settings = makeSettings()
++        settings.hotkeyScheme = .grid
++        let controller = TrackpadGestureController(settings: settings)
++
++        _ = controller.handleScroll(
++            deltaX: 80,
++            deltaY: 0,
++            phase: .began,
++            momentumPhase: [],
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [.option],
++            mouseLocation: .zero,
++            timestamp: 1
++        )
++
++        let shouldConsume = controller.shouldConsumeTrackpadScroll(
++            phase: [],
++            momentumPhase: .began,
++            hasPreciseScrollingDeltas: true,
++            modifierFlags: [],
++            mouseLocation: .zero
++        )
++
++        XCTAssertTrue(shouldConsume)
++    }
++
+     func testGridMinimapPreferredSizeExpandsWithRowsAndColumns() {
+         let compact = HUDModel.gridMinimap(
+             GridMinimapModel(
+@@ -572,7 +1178,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
+                 showsLayerPills: true,
+                 detailMode: .compact,
+                 selectedLayerIndex: 0,
+-                selectedColumnIndex: 0
++                selectedColumnIndex: 0,
++                selectorLayerPosition: 0,
++                selectorColumnPosition: 0,
++                selectorTracksFinger: false
+             )
+         )
+ 
+@@ -608,7 +1217,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
+                 showsLayerPills: true,
+                 detailMode: .expanded,
+                 selectedLayerIndex: 0,
+-                selectedColumnIndex: 1
++                selectedColumnIndex: 1,
++                selectorLayerPosition: 0,
++                selectorColumnPosition: 1,
++                selectorTracksFinger: false
+             )
+         )
+ 
+@@ -638,6 +1250,174 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
+         XCTAssertEqual(minimap.detailMode, .expanded)
+     }
+ 
++    func testShowGridHUDIncludesStandaloneAppsAsLastRow() async {
++        let gridStore = makeGridStore()
++        let gridSession = GridSession()
++        await gridStore.load()
++        _ = gridStore.createStandaloneApp(
++            target: .app(AppTarget(bundleId: "com.example.music", appName: "Music")),
++            iconSymbol: "music.note"
++        )
++        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
++        let hud = FakeHUDPresenter()
++
++        let commandCenter = makeCommandCenter(
++            gridStore: gridStore,
++            gridSession: gridSession,
++            hudPresenter: hud
++        )
++
++        commandCenter.showGridHUD()
++
++        guard case .gridMinimap(let minimap)? = hud.lastModel else {
++            return XCTFail("Expected grid minimap HUD")
++        }
++
++        XCTAssertEqual(minimap.layers.last?.name, "Standalone")
++        XCTAssertEqual(minimap.layers.last?.columns.first?.name, "Music")
++    }
++
++    func testShowGridHUDStartsFromSelectedStandaloneApp() async {
++        let gridStore = makeGridStore()
++        let gridSession = GridSession()
++        await gridStore.load()
++        let firstApp = gridStore.createStandaloneApp(
++            target: .app(AppTarget(bundleId: "com.example.music", appName: "Music")),
++            iconSymbol: "music.note"
++        )
++        let secondApp = gridStore.createStandaloneApp(
++            target: .app(AppTarget(bundleId: "com.example.chat", appName: "Chat")),
++            iconSymbol: "message.fill"
++        )
++        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
++
++        let focus = FakeFocusService()
++        focus.targetOutcome = .focused(label: "Chat", strategy: nil)
++        let hud = FakeHUDPresenter()
++
++        let commandCenter = makeCommandCenter(
++            gridStore: gridStore,
++            gridSession: gridSession,
++            focusService: focus,
++            hudPresenter: hud
++        )
++
++        commandCenter.jumpToGridStandaloneApp(secondApp.id)
++        commandCenter.showGridHUD()
++
++        guard case .gridMinimap(let minimap)? = hud.lastModel else {
++            return XCTFail("Expected grid minimap HUD")
++        }
++
++        XCTAssertEqual(minimap.selectedLayerIndex, gridStore.layers.count)
++        XCTAssertEqual(minimap.selectedColumnIndex, 1)
++        XCTAssertEqual(minimap.layers.last?.columns[minimap.selectedColumnIndex].id, secondApp.id)
++        XCTAssertNotEqual(minimap.layers.last?.columns[minimap.selectedColumnIndex].id, firstApp.id)
++    }
++
++    func testGridTrackpadGestureCanMoveLayerAndColumnTogether() async {
++        let gridStore = makeGridStore()
++        let gridSession = GridSession()
++        await gridStore.load()
++        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
++        let hud = FakeHUDPresenter()
++
++        let commandCenter = makeCommandCenter(
++            gridStore: gridStore,
++            gridSession: gridSession,
++            hudPresenter: hud
++        )
++
++        let initialLayerID = gridSession.currentLayerID
++        let initialColumnID = gridSession.currentColumnID
++
++        commandCenter.setGridGestureActive(true)
++        commandCenter.applyGridGestureUpdate(
++            TrackpadGestureUpdate(
++                horizontalStepCount: 1,
++                verticalStepCount: 1,
++                horizontalFractionalOffset: 0.2,
++                verticalFractionalOffset: 0.1,
++                totalHorizontalOffset: 1.2,
++                totalVerticalOffset: 1.1
++            )
++        )
++
++        XCTAssertNotEqual(gridSession.currentLayerID, initialLayerID)
++        XCTAssertNotEqual(gridSession.currentColumnID, initialColumnID)
++        guard case .gridMinimap? = hud.lastModel else {
++            return XCTFail("Expected grid minimap HUD")
++        }
++    }
++
++    func testGridTrackpadGestureSnapsToClosestCell() async {
++        let gridStore = makeGridStore()
++        let gridSession = GridSession()
++        await gridStore.load()
++        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
++
++        let commandCenter = makeCommandCenter(
++            gridStore: gridStore,
++            gridSession: gridSession
++        )
++
++        commandCenter.setGridGestureActive(true)
++        commandCenter.applyGridGestureUpdate(
++            TrackpadGestureUpdate(
++                horizontalStepCount: 1,
++                verticalStepCount: 0,
++                horizontalFractionalOffset: 0.8,
++                verticalFractionalOffset: 0,
++                totalHorizontalOffset: 1.8,
++                totalVerticalOffset: 0
++            )
++        )
++
++        XCTAssertEqual(gridSession.currentColumnID, gridStore.columns[2].id)
++    }
++
++    func testGridTrackpadGestureCanFocusStandaloneAppRow() async {
++        let gridStore = makeGridStore()
++        let gridSession = GridSession()
++        await gridStore.load()
++
++        _ = gridStore.createStandaloneApp(
++            target: .app(AppTarget(bundleId: "com.example.music", appName: "Music")),
++            iconSymbol: "music.note"
++        )
++        _ = gridStore.createStandaloneApp(
++            target: .app(AppTarget(bundleId: "com.example.chat", appName: "Chat")),
++            iconSymbol: "message.fill"
++        )
++        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
++
++        let focus = FakeFocusService()
++        focus.targetOutcome = .focused(label: "Chat", strategy: nil)
++
++        let commandCenter = makeCommandCenter(
++            gridStore: gridStore,
++            gridSession: gridSession,
++            focusService: focus
++        )
++
++        commandCenter.setGridGestureActive(true)
++        commandCenter.applyGridGestureUpdate(
++            TrackpadGestureUpdate(
++                horizontalStepCount: 1,
++                verticalStepCount: gridStore.layers.count,
++                horizontalFractionalOffset: 0,
++                verticalFractionalOffset: 0,
++                totalHorizontalOffset: 1,
++                totalVerticalOffset: Double(gridStore.layers.count)
++            )
++        )
++
++        XCTAssertEqual(
++            focus.focusedTargets.last,
++            .app(AppTarget(bundleId: "com.example.chat", appName: "Chat"))
++        )
++    }
++
+     func testSyncGridSelectionToFocusedWindowSelectsMatchingCell() async throws {
+         let gridStore = makeGridStore()
+         let gridSession = GridSession()
+@@ -800,11 +1580,14 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
+         dynamicStore: DynamicHotkeyStore? = nil,
+         gridStore: GridStore? = nil,
+         gridSession: GridSession? = nil,
++        niriStore: NiriStore? = nil,
++        niriSession: NiriSession? = nil,
+         captureService: FakeCaptureService = FakeCaptureService(),
+         resolutionService: FakeResolutionService = FakeResolutionService(),
+         focusService: FakeFocusService = FakeFocusService(),
+         appProvider: FakeAppProvider = FakeAppProvider(),
+         windowProvider: FakeWindowProvider = FakeWindowProvider(),
++        hapticPerformer: FakeHapticPerformer = FakeHapticPerformer(),
+         hudPresenter: FakeHUDPresenter = FakeHUDPresenter()
+     ) -> AppCommandCenter {
+         AppCommandCenter(
+@@ -814,12 +1597,15 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
+             dynamicHotkeyStore: dynamicStore ?? makeDynamicHotkeyStore(),
+             gridStore: gridStore ?? makeGridStore(),
+             gridSession: gridSession ?? GridSession(),
++            niriStore: niriStore ?? makeNiriStore(),
++            niriSession: niriSession ?? NiriSession(),
+             labelPolicy: TargetLabelPolicy(),
+             captureService: captureService,
+             resolutionService: resolutionService,
+             focusService: focusService,
+             appProvider: appProvider,
+             windowProvider: windowProvider,
++            hapticPerformer: hapticPerformer,
+             hudController: hudPresenter,
+             setHotkeyRecordingActive: { _ in }
+         )
+@@ -849,6 +1635,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
+             labelPolicy: TargetLabelPolicy()
+         )
+     }
++
++    private func makeNiriStore() -> NiriStore {
++        NiriStore(store: InMemoryNiriWorkspaceStore())
++    }
+ }
+ 
+ private final class InMemoryAssignmentStore: AssignmentStore {
+@@ -887,6 +1677,18 @@ private final class InMemoryGridLayerStore: GridLayerStore {
+     }
+ }
+ 
++private final class InMemoryNiriWorkspaceStore: NiriWorkspaceStore {
++    private var state = NiriWorkspaceState()
++
++    func loadState() async throws -> NiriWorkspaceState {
++        state
++    }
++
++    func saveState(_ state: NiriWorkspaceState) async throws {
++        self.state = state
++    }
++}
++
+ private final class FakePermissionService: AccessibilityPermissionMonitoring {
+     var isTrusted = true
+     private(set) var startMonitoringCount = 0
+@@ -922,6 +1724,13 @@ private final class FakeHotkeyController: HotkeyControlling {
+     var onGridBindCurrent: (() -> Void)?
+     var onGridShowHUD: (() -> Void)?
+     var onGridStandaloneApp: ((String) -> Void)?
++    var onNiriFocusLeft: (() -> Void)?
++    var onNiriFocusRight: (() -> Void)?
++    var onNiriFocusUp: (() -> Void)?
++    var onNiriFocusDown: (() -> Void)?
++    var onNiriCreateWorkspaceBelow: (() -> Void)?
++    var onNiriRemoveCurrentWindow: (() -> Void)?
++    var onNiriShowHUD: (() -> Void)?
+ 
+     private(set) var configurations: [HotkeyConfiguration] = []
+     private(set) var suspendCount = 0
+@@ -1018,9 +1827,21 @@ private final class FakeHUDPresenter: HUDPresenting {
+         lastModel = model
+     }
+ 
++    func update(model: HUDModel) {
++        lastModel = model
++    }
++
+     func hide() {}
+ }
+ 
++private final class FakeHapticPerformer: HapticFeedbackPerforming {
++    private(set) var focusConfirmationCount = 0
++
++    func performFocusConfirmation() {
++        focusConfirmationCount += 1
++    }
++}
++
+ private final class FakeGridBindingSelectionController: GridBindingSelectionPresenting {
+     var onMove: ((GridBindingSelectionMove) -> Void)?
+     var onConfirm: (() -> Void)?
+diff --git a/arpoon-grid-demo.mp4 b/arpoon-grid-demo.mp4
+new file mode 100644
+index 0000000..7b857fe
+Binary files /dev/null and b/arpoon-grid-demo.mp4 differ
+diff --git a/scripts/install-dev.sh b/scripts/install-dev.sh
+index 7b7d1a3..d6af305 100755
+--- a/scripts/install-dev.sh
++++ b/scripts/install-dev.sh
+@@ -5,6 +5,13 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ DERIVED_DATA_PATH="$ROOT_DIR/.deriveddata"
+ APP_PATH="$DERIVED_DATA_PATH/Build/Products/Debug/Arpoon.app"
+ 
++if ! command -v xcodegen >/dev/null 2>&1; then
++  echo "xcodegen is required to generate the Xcode project before building." >&2
++  exit 1
++fi
++
++xcodegen generate --spec "$ROOT_DIR/project.yml"
++
+ xcodebuild \
+   -project "$ROOT_DIR/Arpoon.xcodeproj" \
+   -scheme Arpoon \

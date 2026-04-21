@@ -11,6 +11,8 @@ struct ArpoonApp: App {
                 dynamicHotkeys: AppModel.shared.dynamicHotkeyStore,
                 gridStore: AppModel.shared.gridStore,
                 gridSession: AppModel.shared.gridSession,
+                niriStore: AppModel.shared.niriStore,
+                niriSession: AppModel.shared.niriSession,
                 permissions: AppModel.shared.accessibilityPermissions,
                 availableWindowsProvider: AppModel.shared.availableWindowsProvider,
                 commands: AppModel.shared.commands

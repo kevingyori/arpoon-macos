@@ -211,8 +211,8 @@ struct HUDView: View {
 private struct GridMinimapAnimatedView: View {
     let minimap: GridMinimapModel
 
-    @State private var displayedLayerIndex: Int = 0
-    @State private var displayedColumnIndex: Int = 0
+    @State private var displayedSelectorLayerPosition: Double = 0
+    @State private var displayedSelectorColumnPosition: Double = 0
     @State private var hasAppeared = false
     @State private var selectionPulse: CGFloat = 0
     @State private var selectorLeadX: CGFloat = 0
@@ -224,8 +224,8 @@ private struct GridMinimapAnimatedView: View {
         self.minimap = minimap
 
         let initialPosition = Self.initialSelectorPosition(for: minimap)
-        _displayedLayerIndex = State(initialValue: initialPosition.layerIndex)
-        _displayedColumnIndex = State(initialValue: initialPosition.columnIndex)
+        _displayedSelectorLayerPosition = State(initialValue: initialPosition.layerPosition)
+        _displayedSelectorColumnPosition = State(initialValue: initialPosition.columnPosition)
     }
 
     var body: some View {
@@ -271,6 +271,12 @@ private struct GridMinimapAnimatedView: View {
             animateSelectorToTarget()
         }
         .onChange(of: minimap.selectedColumnIndex) { _, _ in
+            animateSelectorToTarget()
+        }
+        .onChange(of: minimap.selectorLayerPosition) { _, _ in
+            animateSelectorToTarget()
+        }
+        .onChange(of: minimap.selectorColumnPosition) { _, _ in
             animateSelectorToTarget()
         }
     }
@@ -458,22 +464,28 @@ private struct GridMinimapAnimatedView: View {
     }
 
     private var selectorColor: Color {
-        guard displayedLayerIndex < minimap.layers.count else {
+        let layerIndex = clampedLayerIndex(for: displayedSelectorLayerPosition)
+        guard layerIndex < minimap.layers.count else {
             return Color.primary.opacity(0.24)
         }
 
-        return minimap.layers[displayedLayerIndex].color.swiftUIColor.opacity(0.45)
+        return minimap.layers[layerIndex].color.swiftUIColor.opacity(0.45)
     }
 
     private var selectorGlowColor: Color {
-        guard displayedLayerIndex < minimap.layers.count else {
+        let layerIndex = clampedLayerIndex(for: displayedSelectorLayerPosition)
+        guard layerIndex < minimap.layers.count else {
             return .clear
         }
 
-        return minimap.layers[displayedLayerIndex].color.swiftUIColor.opacity(0.62)
+        return minimap.layers[layerIndex].color.swiftUIColor.opacity(0.62)
     }
 
     private var selectedLayerPulse: CGFloat {
+        guard !minimap.selectorTracksFinger else {
+            return 0
+        }
+
         switch minimap.movement {
         case .layer:
             return selectionPulse
@@ -485,6 +497,10 @@ private struct GridMinimapAnimatedView: View {
     }
 
     private var selectedCellPulse: CGFloat {
+        guard !minimap.selectorTracksFinger else {
+            return 0
+        }
+
         switch minimap.movement {
         case .layer:
             return selectionPulse * 0.45
@@ -496,11 +512,11 @@ private struct GridMinimapAnimatedView: View {
     }
 
     private var selectorX: CGFloat {
-        rowLabelTotalWidth + leadingGridSpacing + CGFloat(displayedColumnIndex) * (cellTotalWidth + columnSpacing)
+        rowLabelTotalWidth + leadingGridSpacing + magneticSelectorOffset(for: displayedSelectorColumnPosition, axis: .horizontal) * (cellTotalWidth + columnSpacing)
     }
 
     private var selectorY: CGFloat {
-        CGFloat(displayedLayerIndex) * (rowHeight + rowSpacing)
+        magneticSelectorOffset(for: displayedSelectorLayerPosition, axis: .vertical) * (rowHeight + rowSpacing)
     }
 
     private var selectorAnimation: Animation {
@@ -512,24 +528,31 @@ private struct GridMinimapAnimatedView: View {
     }
 
     private func animateSelectorToTarget() {
-        let targetLayerIndex = minimap.selectedLayerIndex
-        let targetColumnIndex = minimap.selectedColumnIndex
+        let targetLayerPosition = minimap.selectorLayerPosition
+        let targetColumnPosition = minimap.selectorColumnPosition
 
         guard minimap.animateSelectionMotion else {
             resetSelectionMotion()
-            displayedLayerIndex = targetLayerIndex
-            displayedColumnIndex = targetColumnIndex
+            displayedSelectorLayerPosition = targetLayerPosition
+            displayedSelectorColumnPosition = targetColumnPosition
             return
         }
 
         guard hasAppeared else {
             resetSelectionMotion()
-            displayedLayerIndex = targetLayerIndex
-            displayedColumnIndex = targetColumnIndex
+            displayedSelectorLayerPosition = targetLayerPosition
+            displayedSelectorColumnPosition = targetColumnPosition
             return
         }
 
-        guard displayedLayerIndex != targetLayerIndex || displayedColumnIndex != targetColumnIndex else {
+        guard displayedSelectorLayerPosition != targetLayerPosition || displayedSelectorColumnPosition != targetColumnPosition else {
+            return
+        }
+
+        guard !minimap.selectorTracksFinger else {
+            resetSelectionMotion()
+            displayedSelectorLayerPosition = targetLayerPosition
+            displayedSelectorColumnPosition = targetColumnPosition
             return
         }
 
@@ -541,8 +564,8 @@ private struct GridMinimapAnimatedView: View {
         selectionPulse = 1
 
         withAnimation(selectorAnimation) {
-            displayedLayerIndex = targetLayerIndex
-            displayedColumnIndex = targetColumnIndex
+            displayedSelectorLayerPosition = targetLayerPosition
+            displayedSelectorColumnPosition = targetColumnPosition
             selectorLeadX = 0
             selectorLeadY = 0
             selectorStretchX = 1
@@ -580,22 +603,56 @@ private struct GridMinimapAnimatedView: View {
         selectorStretchY = 1
     }
 
-    private static func initialSelectorPosition(for minimap: GridMinimapModel) -> (layerIndex: Int, columnIndex: Int) {
-        let targetLayerIndex = minimap.selectedLayerIndex
-        let targetColumnIndex = minimap.selectedColumnIndex
+    private static func initialSelectorPosition(for minimap: GridMinimapModel) -> (layerPosition: Double, columnPosition: Double) {
+        let targetLayerPosition = minimap.selectorLayerPosition
+        let targetColumnPosition = minimap.selectorColumnPosition
 
         guard minimap.animateSelectionMotion else {
-            return (targetLayerIndex, targetColumnIndex)
+            return (targetLayerPosition, targetColumnPosition)
         }
 
         switch minimap.movement {
         case .layer(let step):
-            return (max(0, targetLayerIndex - step), targetColumnIndex)
+            return (Double(max(0, Int(round(targetLayerPosition)) - step)), targetColumnPosition)
         case .tool(let fromIndex, _):
-            return (targetLayerIndex, max(0, fromIndex))
+            return (targetLayerPosition, Double(max(0, fromIndex)))
         case .neutral:
-            return (targetLayerIndex, targetColumnIndex)
+            return (targetLayerPosition, targetColumnPosition)
         }
+    }
+
+    private enum SelectorAxis {
+        case horizontal
+        case vertical
+    }
+
+    private func magneticSelectorOffset(for position: Double, axis: SelectorAxis) -> CGFloat {
+        let snappedPosition = position.rounded()
+        let remainder = position - snappedPosition
+        let magnetizedRemainder = magnetizedRemainder(for: remainder, axis: axis)
+        return CGFloat(snappedPosition + magnetizedRemainder)
+    }
+
+    private func magnetizedRemainder(for value: Double, axis: SelectorAxis) -> Double {
+        guard minimap.selectorTracksFinger else {
+            return value
+        }
+
+        if axis == .vertical {
+            return value
+        }
+
+        let clampedValue = max(-0.98, min(0.98, value))
+        return clampedValue + ((pow(clampedValue, 3) - clampedValue) * 0.035)
+    }
+
+    private func clampedLayerIndex(for position: Double) -> Int {
+        let roundedPosition = Int(position.rounded())
+        guard !minimap.layers.isEmpty else {
+            return 0
+        }
+
+        return min(max(roundedPosition, 0), minimap.layers.count - 1)
     }
 
     private func color(for tone: HUDTone) -> Color {
