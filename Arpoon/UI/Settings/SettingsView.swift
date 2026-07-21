@@ -31,6 +31,8 @@ struct SettingsView: View {
     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
     @ObservedObject var gridStore: GridStore
     @ObservedObject var gridSession: GridSession
+    @ObservedObject var niriStore: NiriStore
+    @ObservedObject var niriSession: NiriSession
     @ObservedObject var permissions: AccessibilityPermissionService
     let availableWindowsProvider: @MainActor () -> [LiveWindow]
     let commands: AppCommands
@@ -84,6 +86,7 @@ struct SettingsView: View {
                             settings: settings,
                             dynamicHotkeys: dynamicHotkeys,
                             gridStore: gridStore,
+                            niriStore: niriStore,
                             permissions: permissions,
                             commands: commands,
                             activeRecorderID: $activeRecorderID
@@ -121,6 +124,9 @@ struct SettingsView: View {
         .onReceive(gridStore.$columns) { columns in
             gridSession.sync(columns: columns, layers: gridStore.layers)
         }
+        .onReceive(niriStore.$workspaces) { workspaces in
+            niriSession.sync(workspaces: workspaces)
+        }
     }
 }
 
@@ -128,6 +134,7 @@ private struct GeneralSettingsPane: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
     @ObservedObject var gridStore: GridStore
+    @ObservedObject var niriStore: NiriStore
     @ObservedObject var permissions: AccessibilityPermissionService
     let commands: AppCommands
     @Binding var activeRecorderID: String?
@@ -171,6 +178,9 @@ private struct GeneralSettingsPane: View {
                     shortcutGroup(title: "Dynamic Hotkeys", actions: HotkeyAction.dynamicActions)
                     shortcutGroup(title: "General", actions: HotkeyAction.commonActions)
                     dynamicHotkeyGroup
+                case .niri:
+                    helperText("Niri auto-tracks the focused app or window into the active workspace. Left and right move within a workspace, up and down move between workspaces.")
+                    shortcutGroup(title: "Niri Navigation", actions: HotkeyAction.niriActions)
                 case .grid:
                     helperText("The Grid shortcuts follow your current projects and columns, so renaming or removing columns updates the available direct-focus shortcuts automatically.")
                     shortcutGroup(
@@ -199,6 +209,8 @@ private struct GeneralSettingsPane: View {
                     title: "Defaults",
                     description: settings.hotkeyScheme == .grid
                         ? "Choose the preset used when resetting Grid shortcuts."
+                        : settings.hotkeyScheme == .niri
+                            ? "Reset Niri shortcuts back to the default navigation keys."
                         : "Reset the current shortcut scheme back to its default values."
                 ) {
                     HStack(spacing: 10) {
@@ -218,8 +230,61 @@ private struct GeneralSettingsPane: View {
                             switch settings.hotkeyScheme {
                             case .grid:
                                 settings.applyGridShortcutPreset(selectedGridPreset)
-                            case .staticSlots, .dynamicWindows:
+                            case .staticSlots, .dynamicWindows, .niri:
                                 settings.resetHotkeysToDefaults()
+                            }
+                        }
+                    }
+                }
+            }
+
+            if settings.hotkeyScheme == .niri || settings.hotkeyScheme == .grid {
+                section(
+                    "Trackpad",
+                    description: settings.hotkeyScheme == .niri
+                        ? "Tune direct-manipulation scrolling for Niri workspaces and windows."
+                        : "Tune direct-manipulation scrolling for The Grid projects and columns."
+                ) {
+                    sectionCard {
+                        VStack(spacing: 0) {
+                            settingsToggle(
+                                "Enable trackpad gestures",
+                                description: settings.hotkeyScheme == .niri
+                                    ? "Use trackpad scrolling to move through Niri workspaces and windows."
+                                    : "Use trackpad scrolling to move through Grid projects and columns.",
+                                isOn: $settings.enableNiriTrackpadGestures
+                            )
+
+                            Divider()
+
+                            controlRow(
+                                title: "Gesture modifier",
+                                description: settings.hotkeyScheme == .niri
+                                    ? "Hold this key while scrolling to navigate Niri workspaces and windows."
+                                    : "Hold this key while scrolling to navigate Grid projects and columns."
+                            ) {
+                                Picker("Gesture modifier", selection: $settings.trackpadGestureModifier) {
+                                    ForEach(TrackpadGestureModifier.allCases) { modifier in
+                                        Text(modifier.title).tag(modifier)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                .labelsHidden()
+                                .frame(width: controlColumnWidth)
+                                .disabled(!settings.enableNiriTrackpadGestures)
+                            }
+
+                            if settings.hotkeyScheme == .niri {
+                                Divider()
+
+                                controlRow(
+                                    title: "Layout",
+                                    description: "Reset the tracked Niri workspaces back to a single empty workspace."
+                                ) {
+                                    Button("Reset Niri Layout") {
+                                        niriStore.reset()
+                                    }
+                                }
                             }
                         }
                     }
@@ -272,6 +337,8 @@ private struct GeneralSettingsPane: View {
                             "Show jump popups",
                             description: settings.hotkeyScheme == .grid
                                 ? "Display the Grid minimap when Grid navigation succeeds."
+                                : settings.hotkeyScheme == .niri
+                                    ? "Display the Niri minimap when Niri navigation succeeds."
                                 : "Display a HUD when a jump action succeeds.",
                             isOn: $settings.showJumpPopups
                         )
@@ -314,26 +381,28 @@ private struct GeneralSettingsPane: View {
                         Divider()
 
                         settingsToggle(
-                            "Animate The Grid minimap selection",
-                            description: "Move the selected layer or column inside the minimap instead of shifting the HUD window.",
+                            "Animate minimap selection",
+                            description: "Move the selected workspace or item inside the minimap instead of shifting the HUD window.",
                             isOn: $settings.animateGridMinimapSelection
                         )
 
-                        Divider()
+                        if settings.hotkeyScheme == .grid {
+                            Divider()
 
-                        settingsToggle(
-                            "Show projects in The Grid HUD",
-                            description: "Display the full project lane down the left side of the Grid minimap HUD.",
-                            isOn: $settings.showGridProjectsInHUD
-                        )
+                            settingsToggle(
+                                "Show projects in The Grid HUD",
+                                description: "Display the full project lane down the left side of the Grid minimap HUD.",
+                                isOn: $settings.showGridProjectsInHUD
+                            )
 
-                        Divider()
+                            Divider()
 
-                        settingsToggle(
-                            "Experimental external Grid sync",
-                            description: "Update the active Grid cell when you switch windows outside Arpoon. Disabled by default because it still has edge-case weirdness.",
-                            isOn: $settings.enableExperimentalGridExternalSync
-                        )
+                            settingsToggle(
+                                "Experimental external Grid sync",
+                                description: "Update the active Grid cell when you switch windows outside Arpoon. Disabled by default because it still has edge-case weirdness.",
+                                isOn: $settings.enableExperimentalGridExternalSync
+                            )
+                        }
 
                         Divider()
 
@@ -360,9 +429,11 @@ private struct GeneralSettingsPane: View {
                     }
                 }
 
-                Label("Experimental: external Grid sync can still behave unexpectedly with rapid changes or empty-slot navigation.", systemImage: "flask.fill")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.orange)
+                if settings.hotkeyScheme == .grid {
+                    Label("Experimental: external Grid sync can still behave unexpectedly with rapid changes or empty-slot navigation.", systemImage: "flask.fill")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.orange)
+                }
             }
 
             section(

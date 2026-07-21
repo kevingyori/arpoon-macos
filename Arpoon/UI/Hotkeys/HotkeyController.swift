@@ -23,6 +23,13 @@ protocol HotkeyControlling: AnyObject {
     var onGridBindCurrent: (() -> Void)? { get set }
     var onGridShowHUD: (() -> Void)? { get set }
     var onGridStandaloneApp: ((String) -> Void)? { get set }
+    var onNiriFocusLeft: (() -> Void)? { get set }
+    var onNiriFocusRight: (() -> Void)? { get set }
+    var onNiriFocusUp: (() -> Void)? { get set }
+    var onNiriFocusDown: (() -> Void)? { get set }
+    var onNiriCreateWorkspaceBelow: (() -> Void)? { get set }
+    var onNiriRemoveCurrentWindow: (() -> Void)? { get set }
+    var onNiriShowHUD: (() -> Void)? { get set }
 
     func apply(configuration: HotkeyConfiguration)
     func suspend()
@@ -51,6 +58,13 @@ final class HotkeyController: HotkeyControlling {
     var onGridBindCurrent: (() -> Void)?
     var onGridShowHUD: (() -> Void)?
     var onGridStandaloneApp: ((String) -> Void)?
+    var onNiriFocusLeft: (() -> Void)?
+    var onNiriFocusRight: (() -> Void)?
+    var onNiriFocusUp: (() -> Void)?
+    var onNiriFocusDown: (() -> Void)?
+    var onNiriCreateWorkspaceBelow: (() -> Void)?
+    var onNiriRemoveCurrentWindow: (() -> Void)?
+    var onNiriShowHUD: (() -> Void)?
 
     private let hotKeyCenter = GlobalHotKeyCenter.shared
     private var configuration: HotkeyConfiguration?
@@ -117,7 +131,7 @@ final class HotkeyController: HotkeyControlling {
                     }
                 }
             }
-        case .staticSlots:
+        case .staticSlots, .niri:
             break
         }
     }
@@ -186,6 +200,20 @@ final class HotkeyController: HotkeyControlling {
             onGridBindCurrent?()
         case .gridShowHUD:
             onGridShowHUD?()
+        case .niriFocusLeft:
+            onNiriFocusLeft?()
+        case .niriFocusRight:
+            onNiriFocusRight?()
+        case .niriFocusUp:
+            onNiriFocusUp?()
+        case .niriFocusDown:
+            onNiriFocusDown?()
+        case .niriCreateWorkspaceBelow:
+            onNiriCreateWorkspaceBelow?()
+        case .niriRemoveCurrentWindow:
+            onNiriRemoveCurrentWindow?()
+        case .niriShowHUD:
+            onNiriShowHUD?()
         }
     }
 }

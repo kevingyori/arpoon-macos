@@ -12,6 +12,8 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
                 dynamicHotkeys: appModel.dynamicHotkeyStore,
                 gridStore: appModel.gridStore,
                 gridSession: appModel.gridSession,
+                niriStore: appModel.niriStore,
+                niriSession: appModel.niriSession,
                 settings: appModel.settings,
                 permissions: appModel.accessibilityPermissions
             )

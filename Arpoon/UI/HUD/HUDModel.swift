@@ -44,6 +44,9 @@ struct GridMinimapModel: Hashable {
     let detailMode: DetailMode
     let selectedLayerIndex: Int
     let selectedColumnIndex: Int
+    let selectorLayerPosition: Double
+    let selectorColumnPosition: Double
+    let selectorTracksFinger: Bool
 
     var maxColumnCount: Int {
         layers.map(\.columns.count).max() ?? 0

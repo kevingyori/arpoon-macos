@@ -72,6 +72,46 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertTrue(gridActions.contains(HotkeyAction(kind: .focusVisibleAppDown, slot: nil)))
     }
 
+    func testJumpTriggersHapticOnSuccessfulFocus() {
+        let slotStore = makeSlotStore()
+        let focus = FakeFocusService()
+        let hapticPerformer = FakeHapticPerformer()
+        let target = Target.app(AppTarget(bundleId: "com.example.notes", appName: "Notes"))
+
+        slotStore.bind(slot: 1, target: target)
+        focus.targetOutcome = .focused(label: "Notes", strategy: nil)
+
+        let commandCenter = makeCommandCenter(
+            slotStore: slotStore,
+            focusService: focus,
+            hapticPerformer: hapticPerformer
+        )
+
+        commandCenter.jump(to: 1)
+
+        XCTAssertEqual(hapticPerformer.focusConfirmationCount, 1)
+    }
+
+    func testJumpDoesNotTriggerHapticForUnavailableTarget() {
+        let slotStore = makeSlotStore()
+        let focus = FakeFocusService()
+        let hapticPerformer = FakeHapticPerformer()
+        let target = Target.app(AppTarget(bundleId: "com.example.notes", appName: "Notes"))
+
+        slotStore.bind(slot: 1, target: target)
+        focus.targetOutcome = .unavailable(reason: "No app")
+
+        let commandCenter = makeCommandCenter(
+            slotStore: slotStore,
+            focusService: focus,
+            hapticPerformer: hapticPerformer
+        )
+
+        commandCenter.jump(to: 1)
+
+        XCTAssertEqual(hapticPerformer.focusConfirmationCount, 0)
+    }
+
     func testSlotAndDynamicJumpShareTargetFallbackPath() {
         let slotStore = makeSlotStore()
         let dynamicStore = makeDynamicHotkeyStore()
@@ -552,6 +592,572 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
     }
 
+    func testNiriSchemeUsesDedicatedActions() {
+        let settings = makeSettings()
+
+        let actions = settings.activeHotkeyActions(for: .niri)
+
+        XCTAssertEqual(actions, HotkeyAction.niriActions)
+        XCTAssertFalse(actions.contains(HotkeyAction(kind: .focusVisibleAppLeft, slot: nil)))
+    }
+
+    func testNiriDefaultShortcutsMatchNavigationPlan() {
+        XCTAssertEqual(
+            HotkeyAction(kind: .niriFocusLeft, slot: nil).defaultShortcut,
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_H), modifiers: UInt32(optionKey))
+        )
+        XCTAssertEqual(
+            HotkeyAction(kind: .niriCreateWorkspaceBelow, slot: nil).defaultShortcut,
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_J), modifiers: UInt32(optionKey | shiftKey))
+        )
+        XCTAssertEqual(
+            HotkeyAction(kind: .niriRemoveCurrentWindow, slot: nil).defaultShortcut,
+            HotkeyShortcut(keyCode: UInt32(kVK_ANSI_X), modifiers: UInt32(optionKey | shiftKey))
+        )
+    }
+
+    func testNiriCreateWorkspaceBelowSelectsNewWorkspace() async {
+        let store = makeNiriStore()
+        let session = NiriSession()
+        await store.load()
+        session.sync(workspaces: store.workspaces)
+
+        let commandCenter = makeCommandCenter(
+            niriStore: store,
+            niriSession: session
+        )
+
+        commandCenter.createNiriWorkspaceBelow()
+
+        XCTAssertEqual(store.workspaces.count, 2)
+        XCTAssertEqual(store.workspaces[1].name, "Workspace 2")
+        XCTAssertEqual(session.currentWorkspaceID, store.workspaces[1].id)
+    }
+
+    func testNiriAutoEnrollmentAppendsFocusedTargetToCurrentWorkspace() async throws {
+        let settings = makeSettings()
+        settings.hotkeyScheme = .niri
+
+        let store = makeNiriStore()
+        let session = NiriSession()
+        await store.load()
+        session.sync(workspaces: store.workspaces)
+
+        let liveWindow = LiveWindow(
+            bundleId: "com.example.term",
+            appName: "Terminal",
+            pid: 77,
+            title: "Shell",
+            windowID: 123,
+            frame: WindowFrame(x: 10, y: 10, width: 500, height: 400),
+            isMain: true,
+            isFocused: true,
+            axElement: nil
+        )
+        let target = Target.window(
+            WindowTarget(
+                bundleId: liveWindow.bundleId,
+                appName: liveWindow.appName,
+                pid: liveWindow.pid,
+                windowTitle: liveWindow.title,
+                windowID: liveWindow.windowID,
+                frame: liveWindow.frame,
+                capturedAt: .now
+            )
+        )
+
+        let capture = FakeCaptureService()
+        capture.outcome = CaptureOutcome(target: target, source: .window, liveWindow: liveWindow)
+        let windowProvider = FakeWindowProvider()
+        windowProvider.focusedWindowValue = liveWindow
+
+        let commandCenter = makeCommandCenter(
+            settings: settings,
+            niriStore: store,
+            niriSession: session,
+            captureService: capture,
+            windowProvider: windowProvider
+        )
+
+        commandCenter.syncNiriSelectionToFocusedTargetIfNeeded()
+
+        let workspace = try XCTUnwrap(store.workspaces.first)
+        XCTAssertEqual(workspace.items.count, 1)
+        XCTAssertEqual(workspace.items.first?.target, target)
+        XCTAssertEqual(session.currentItemID, workspace.items.first?.id)
+    }
+
+    func testNiriAutoEnrollmentSelectsExistingTrackedItemInsteadOfDuplicating() async throws {
+        let settings = makeSettings()
+        settings.hotkeyScheme = .niri
+
+        let store = makeNiriStore()
+        let session = NiriSession()
+        await store.load()
+        let secondWorkspace = store.addWorkspace(below: store.workspaces.first?.id)
+        let liveWindow = LiveWindow(
+            bundleId: "com.example.browser",
+            appName: "Browser",
+            pid: 88,
+            title: "Docs",
+            windowID: 456,
+            frame: WindowFrame(x: 20, y: 20, width: 900, height: 700),
+            isMain: true,
+            isFocused: true,
+            axElement: nil
+        )
+        let target = Target.window(
+            WindowTarget(
+                bundleId: liveWindow.bundleId,
+                appName: liveWindow.appName,
+                pid: liveWindow.pid,
+                windowTitle: liveWindow.title,
+                windowID: liveWindow.windowID,
+                frame: liveWindow.frame,
+                capturedAt: .now
+            )
+        )
+        let existingItem = try XCTUnwrap(
+            store.appendItem(
+                target: target,
+                label: "Browser - Docs",
+                toWorkspaceID: secondWorkspace.id
+            )
+        )
+        session.sync(workspaces: store.workspaces)
+
+        let capture = FakeCaptureService()
+        capture.outcome = CaptureOutcome(target: target, source: .window, liveWindow: liveWindow)
+        let windowProvider = FakeWindowProvider()
+        windowProvider.focusedWindowValue = liveWindow
+
+        let commandCenter = makeCommandCenter(
+            settings: settings,
+            niriStore: store,
+            niriSession: session,
+            captureService: capture,
+            windowProvider: windowProvider
+        )
+
+        commandCenter.syncNiriSelectionToFocusedTargetIfNeeded()
+
+        XCTAssertEqual(store.workspaces[1].items.count, 1)
+        XCTAssertEqual(session.currentWorkspaceID, secondWorkspace.id)
+        XCTAssertEqual(session.currentItemID, existingItem.id)
+    }
+
+    func testNiriVerticalNavigationRestoresRememberedItem() async throws {
+        let store = makeNiriStore()
+        let session = NiriSession()
+        await store.load()
+        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
+        let secondWorkspace = store.addWorkspace(below: firstWorkspaceID)
+        let firstItem = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
+            label: "Terminal",
+            toWorkspaceID: firstWorkspaceID
+        ))
+        let secondItem = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.browser", appName: "Browser")),
+            label: "Browser",
+            toWorkspaceID: secondWorkspace.id
+        ))
+        session.sync(workspaces: store.workspaces)
+
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Browser", strategy: nil)
+
+        let commandCenter = makeCommandCenter(
+            niriStore: store,
+            niriSession: session,
+            focusService: focus
+        )
+
+        commandCenter.focusNiriItem(workspaceID: secondWorkspace.id, itemID: secondItem.id)
+        commandCenter.moveNiriFocusUp()
+
+        XCTAssertEqual(session.currentWorkspaceID, firstWorkspaceID)
+        XCTAssertEqual(session.currentItemID, firstItem.id)
+        XCTAssertEqual(focus.focusedTargets.last, firstItem.target)
+    }
+
+    func testNiriHorizontalNavigationStopsAtWorkspaceEdges() async throws {
+        let store = makeNiriStore()
+        let session = NiriSession()
+        await store.load()
+        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
+        let firstItem = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
+            label: "Terminal",
+            toWorkspaceID: firstWorkspaceID
+        ))
+        let secondItem = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.browser", appName: "Browser")),
+            label: "Browser",
+            toWorkspaceID: firstWorkspaceID
+        ))
+        session.sync(workspaces: store.workspaces)
+
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Browser", strategy: nil)
+
+        let commandCenter = makeCommandCenter(
+            niriStore: store,
+            niriSession: session,
+            focusService: focus
+        )
+
+        commandCenter.focusNiriItem(workspaceID: firstWorkspaceID, itemID: secondItem.id)
+        let focusCountAfterPositioningRight = focus.focusedTargets.count
+
+        commandCenter.moveNiriFocusRight()
+
+        XCTAssertEqual(session.currentItemID, secondItem.id)
+        XCTAssertEqual(focus.focusedTargets.count, focusCountAfterPositioningRight)
+
+        commandCenter.focusNiriItem(workspaceID: firstWorkspaceID, itemID: firstItem.id)
+        let focusCountAfterPositioningLeft = focus.focusedTargets.count
+
+        commandCenter.moveNiriFocusLeft()
+
+        XCTAssertEqual(session.currentItemID, firstItem.id)
+        XCTAssertEqual(focus.focusedTargets.count, focusCountAfterPositioningLeft)
+    }
+
+    func testNiriVerticalNavigationStopsAtWorkspaceEdges() async throws {
+        let store = makeNiriStore()
+        let session = NiriSession()
+        await store.load()
+        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
+        let secondWorkspace = store.addWorkspace(below: firstWorkspaceID)
+        let firstItem = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
+            label: "Terminal",
+            toWorkspaceID: firstWorkspaceID
+        ))
+        let secondItem = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.browser", appName: "Browser")),
+            label: "Browser",
+            toWorkspaceID: secondWorkspace.id
+        ))
+        session.sync(workspaces: store.workspaces)
+
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Browser", strategy: nil)
+
+        let commandCenter = makeCommandCenter(
+            niriStore: store,
+            niriSession: session,
+            focusService: focus
+        )
+
+        commandCenter.focusNiriItem(workspaceID: secondWorkspace.id, itemID: secondItem.id)
+        let focusCountAtBottom = focus.focusedTargets.count
+
+        commandCenter.moveNiriFocusDown()
+
+        XCTAssertEqual(session.currentWorkspaceID, secondWorkspace.id)
+        XCTAssertEqual(focus.focusedTargets.count, focusCountAtBottom)
+
+        commandCenter.focusNiriItem(workspaceID: firstWorkspaceID, itemID: firstItem.id)
+        let focusCountAtTop = focus.focusedTargets.count
+
+        commandCenter.moveNiriFocusUp()
+
+        XCTAssertEqual(session.currentWorkspaceID, firstWorkspaceID)
+        XCTAssertEqual(focus.focusedTargets.count, focusCountAtTop)
+    }
+
+    func testNiriTrackpadGestureSnapsToClosestItem() async throws {
+        let store = makeNiriStore()
+        let session = NiriSession()
+        await store.load()
+        let workspaceID = try XCTUnwrap(store.workspaces.first?.id)
+        let firstItem = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
+            label: "Terminal",
+            toWorkspaceID: workspaceID
+        ))
+        _ = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.browser", appName: "Browser")),
+            label: "Browser",
+            toWorkspaceID: workspaceID
+        ))
+        let thirdItem = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.docs", appName: "Docs")),
+            label: "Docs",
+            toWorkspaceID: workspaceID
+        ))
+        session.sync(workspaces: store.workspaces)
+
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Docs", strategy: nil)
+
+        let commandCenter = makeCommandCenter(
+            niriStore: store,
+            niriSession: session,
+            focusService: focus
+        )
+
+        commandCenter.focusNiriItem(workspaceID: workspaceID, itemID: firstItem.id)
+        commandCenter.setNiriGestureActive(true)
+        commandCenter.applyNiriGestureUpdate(
+            TrackpadGestureUpdate(
+                horizontalStepCount: 1,
+                verticalStepCount: 0,
+                horizontalFractionalOffset: 0.8,
+                verticalFractionalOffset: 0,
+                totalHorizontalOffset: 1.8,
+                totalVerticalOffset: 0
+            )
+        )
+
+        XCTAssertEqual(session.currentItemID, thirdItem.id)
+    }
+
+    func testNiriRemoveCurrentItemCollapsesEmptyWorkspace() async throws {
+        let store = makeNiriStore()
+        let session = NiriSession()
+        await store.load()
+        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
+        let secondWorkspace = store.addWorkspace(below: firstWorkspaceID)
+        _ = store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.term", appName: "Terminal")),
+            label: "Terminal",
+            toWorkspaceID: firstWorkspaceID
+        )
+        let secondItem = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.docs", appName: "Docs")),
+            label: "Docs",
+            toWorkspaceID: secondWorkspace.id
+        ))
+        session.sync(workspaces: store.workspaces)
+
+        let commandCenter = makeCommandCenter(
+            niriStore: store,
+            niriSession: session
+        )
+        commandCenter.focusNiriItem(workspaceID: secondWorkspace.id, itemID: secondItem.id)
+
+        commandCenter.removeCurrentNiriItem()
+
+        XCTAssertEqual(store.workspaces.count, 1)
+        XCTAssertEqual(store.workspaces.first?.id, firstWorkspaceID)
+        XCTAssertEqual(session.currentWorkspaceID, firstWorkspaceID)
+    }
+
+    func testNiriPersistenceRoundTripsWorkspaceState() async throws {
+        let backingStore = InMemoryNiriWorkspaceStore()
+        let store = NiriStore(store: backingStore)
+        await store.load()
+        let firstWorkspaceID = try XCTUnwrap(store.workspaces.first?.id)
+        let secondWorkspace = store.addWorkspace(below: firstWorkspaceID)
+        let item = try XCTUnwrap(store.appendItem(
+            target: .app(AppTarget(bundleId: "com.example.music", appName: "Music")),
+            label: "Music",
+            toWorkspaceID: secondWorkspace.id
+        ))
+        store.rememberFocusedItem(workspaceID: secondWorkspace.id, itemID: item.id)
+        await store.flushPersistence()
+
+        let reloaded = NiriStore(store: backingStore)
+        await reloaded.load()
+
+        XCTAssertEqual(reloaded.workspaces.count, 2)
+        XCTAssertEqual(reloaded.workspaces[1].items.first?.label, "Music")
+        XCTAssertEqual(reloaded.workspaces[1].lastFocusedItemID, item.id)
+    }
+
+    func testTrackpadGestureControllerRequiresGateAndEmitsSingleDirection() {
+        let settings = makeSettings()
+        settings.hotkeyScheme = .niri
+        let controller = TrackpadGestureController(settings: settings)
+
+        let gatedMiss = controller.handleScroll(
+            deltaX: 30,
+            deltaY: 0,
+            phase: .began,
+            momentumPhase: [],
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [],
+            mouseLocation: .zero,
+            timestamp: 1
+        )
+        let gatedHit = controller.handleScroll(
+            deltaX: 80,
+            deltaY: 0,
+            phase: .changed,
+            momentumPhase: [],
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [.option],
+            mouseLocation: .zero,
+            timestamp: 2
+        )
+
+        XCTAssertNil(gatedMiss)
+        XCTAssertEqual(gatedHit?.horizontalStepCount, 1)
+        XCTAssertEqual(gatedHit?.verticalStepCount, 0)
+    }
+
+    func testTrackpadGestureControllerSupportsGridScheme() {
+        let settings = makeSettings()
+        settings.hotkeyScheme = .grid
+        let controller = TrackpadGestureController(settings: settings)
+
+        let update = controller.handleScroll(
+            deltaX: 80,
+            deltaY: 0,
+            phase: .began,
+            momentumPhase: [],
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [.option],
+            mouseLocation: .zero,
+            timestamp: 1
+        )
+
+        XCTAssertEqual(update?.horizontalStepCount, 1)
+        XCTAssertEqual(update?.verticalStepCount, 0)
+    }
+
+    func testTrackpadGestureControllerIgnoresMomentumAndDisabledState() {
+        let settings = makeSettings()
+        settings.hotkeyScheme = .niri
+        settings.enableNiriTrackpadGestures = false
+        let controller = TrackpadGestureController(settings: settings)
+
+        let disabled = controller.handleScroll(
+            deltaX: 0,
+            deltaY: -40,
+            phase: .began,
+            momentumPhase: [],
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [.option],
+            mouseLocation: .zero,
+            timestamp: 1
+        )
+        settings.enableNiriTrackpadGestures = true
+        let momentum = controller.handleScroll(
+            deltaX: 0,
+            deltaY: -40,
+            phase: .began,
+            momentumPhase: .began,
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [.option],
+            mouseLocation: .zero,
+            timestamp: 2
+        )
+
+        XCTAssertNil(disabled)
+        XCTAssertNil(momentum)
+    }
+
+    func testTrackpadGestureControllerReportsFractionalFingerProgress() {
+        let settings = makeSettings()
+        settings.hotkeyScheme = .niri
+        let controller = TrackpadGestureController(settings: settings)
+        var updates: [TrackpadGestureUpdate] = []
+        controller.onGestureUpdate = { updates.append($0) }
+
+        let action = controller.handleScroll(
+            deltaX: 37,
+            deltaY: 0,
+            phase: .began,
+            momentumPhase: [],
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [.option],
+            mouseLocation: .zero,
+            timestamp: 1
+        )
+
+        XCTAssertEqual(
+            action,
+            TrackpadGestureUpdate(
+                horizontalStepCount: 0,
+                verticalStepCount: 0,
+                horizontalFractionalOffset: 0.5,
+                verticalFractionalOffset: 0,
+                totalHorizontalOffset: 0.5,
+                totalVerticalOffset: 0
+            )
+        )
+        XCTAssertEqual(
+            updates.last,
+            TrackpadGestureUpdate(
+                horizontalStepCount: 0,
+                verticalStepCount: 0,
+                horizontalFractionalOffset: 0.5,
+                verticalFractionalOffset: 0,
+                totalHorizontalOffset: 0.5,
+                totalVerticalOffset: 0
+            )
+        )
+    }
+
+    func testTrackpadGestureControllerSoftensCrossAxisDriftDuringVerticalScroll() {
+        let settings = makeSettings()
+        settings.hotkeyScheme = .niri
+        let controller = TrackpadGestureController(settings: settings)
+
+        let update = controller.handleScroll(
+            deltaX: 12,
+            deltaY: 52,
+            phase: .began,
+            momentumPhase: [],
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [.option],
+            mouseLocation: .zero,
+            timestamp: 1
+        )
+
+        XCTAssertNotNil(update)
+        XCTAssertEqual(update?.verticalStepCount, 1)
+        XCTAssertLessThan(abs(update?.totalHorizontalOffset ?? 1), 0.15)
+        XCTAssertEqual(update?.totalVerticalOffset, 1)
+    }
+
+    func testTrackpadGestureControllerConsumesGatedScrollWithoutActivePhase() {
+        let settings = makeSettings()
+        settings.hotkeyScheme = .niri
+        let controller = TrackpadGestureController(settings: settings)
+
+        let shouldConsume = controller.shouldConsumeTrackpadScroll(
+            phase: [],
+            momentumPhase: [],
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [.option],
+            mouseLocation: .zero
+        )
+
+        XCTAssertTrue(shouldConsume)
+    }
+
+    func testTrackpadGestureControllerConsumesMomentumTailAfterGestureStarts() {
+        let settings = makeSettings()
+        settings.hotkeyScheme = .grid
+        let controller = TrackpadGestureController(settings: settings)
+
+        _ = controller.handleScroll(
+            deltaX: 80,
+            deltaY: 0,
+            phase: .began,
+            momentumPhase: [],
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [.option],
+            mouseLocation: .zero,
+            timestamp: 1
+        )
+
+        let shouldConsume = controller.shouldConsumeTrackpadScroll(
+            phase: [],
+            momentumPhase: .began,
+            hasPreciseScrollingDeltas: true,
+            modifierFlags: [],
+            mouseLocation: .zero
+        )
+
+        XCTAssertTrue(shouldConsume)
+    }
+
     func testGridMinimapPreferredSizeExpandsWithRowsAndColumns() {
         let compact = HUDModel.gridMinimap(
             GridMinimapModel(
@@ -572,7 +1178,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
                 showsLayerPills: true,
                 detailMode: .compact,
                 selectedLayerIndex: 0,
-                selectedColumnIndex: 0
+                selectedColumnIndex: 0,
+                selectorLayerPosition: 0,
+                selectorColumnPosition: 0,
+                selectorTracksFinger: false
             )
         )
 
@@ -608,7 +1217,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
                 showsLayerPills: true,
                 detailMode: .expanded,
                 selectedLayerIndex: 0,
-                selectedColumnIndex: 1
+                selectedColumnIndex: 1,
+                selectorLayerPosition: 0,
+                selectorColumnPosition: 1,
+                selectorTracksFinger: false
             )
         )
 
@@ -636,6 +1248,174 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         }
 
         XCTAssertEqual(minimap.detailMode, .expanded)
+    }
+
+    func testShowGridHUDIncludesStandaloneAppsAsLastRow() async {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        _ = gridStore.createStandaloneApp(
+            target: .app(AppTarget(bundleId: "com.example.music", appName: "Music")),
+            iconSymbol: "music.note"
+        )
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+        let hud = FakeHUDPresenter()
+
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            hudPresenter: hud
+        )
+
+        commandCenter.showGridHUD()
+
+        guard case .gridMinimap(let minimap)? = hud.lastModel else {
+            return XCTFail("Expected grid minimap HUD")
+        }
+
+        XCTAssertEqual(minimap.layers.last?.name, "Standalone")
+        XCTAssertEqual(minimap.layers.last?.columns.first?.name, "Music")
+    }
+
+    func testShowGridHUDStartsFromSelectedStandaloneApp() async {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        let firstApp = gridStore.createStandaloneApp(
+            target: .app(AppTarget(bundleId: "com.example.music", appName: "Music")),
+            iconSymbol: "music.note"
+        )
+        let secondApp = gridStore.createStandaloneApp(
+            target: .app(AppTarget(bundleId: "com.example.chat", appName: "Chat")),
+            iconSymbol: "message.fill"
+        )
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Chat", strategy: nil)
+        let hud = FakeHUDPresenter()
+
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            focusService: focus,
+            hudPresenter: hud
+        )
+
+        commandCenter.jumpToGridStandaloneApp(secondApp.id)
+        commandCenter.showGridHUD()
+
+        guard case .gridMinimap(let minimap)? = hud.lastModel else {
+            return XCTFail("Expected grid minimap HUD")
+        }
+
+        XCTAssertEqual(minimap.selectedLayerIndex, gridStore.layers.count)
+        XCTAssertEqual(minimap.selectedColumnIndex, 1)
+        XCTAssertEqual(minimap.layers.last?.columns[minimap.selectedColumnIndex].id, secondApp.id)
+        XCTAssertNotEqual(minimap.layers.last?.columns[minimap.selectedColumnIndex].id, firstApp.id)
+    }
+
+    func testGridTrackpadGestureCanMoveLayerAndColumnTogether() async {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+        let hud = FakeHUDPresenter()
+
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            hudPresenter: hud
+        )
+
+        let initialLayerID = gridSession.currentLayerID
+        let initialColumnID = gridSession.currentColumnID
+
+        commandCenter.setGridGestureActive(true)
+        commandCenter.applyGridGestureUpdate(
+            TrackpadGestureUpdate(
+                horizontalStepCount: 1,
+                verticalStepCount: 1,
+                horizontalFractionalOffset: 0.2,
+                verticalFractionalOffset: 0.1,
+                totalHorizontalOffset: 1.2,
+                totalVerticalOffset: 1.1
+            )
+        )
+
+        XCTAssertNotEqual(gridSession.currentLayerID, initialLayerID)
+        XCTAssertNotEqual(gridSession.currentColumnID, initialColumnID)
+        guard case .gridMinimap? = hud.lastModel else {
+            return XCTFail("Expected grid minimap HUD")
+        }
+    }
+
+    func testGridTrackpadGestureSnapsToClosestCell() async {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession
+        )
+
+        commandCenter.setGridGestureActive(true)
+        commandCenter.applyGridGestureUpdate(
+            TrackpadGestureUpdate(
+                horizontalStepCount: 1,
+                verticalStepCount: 0,
+                horizontalFractionalOffset: 0.8,
+                verticalFractionalOffset: 0,
+                totalHorizontalOffset: 1.8,
+                totalVerticalOffset: 0
+            )
+        )
+
+        XCTAssertEqual(gridSession.currentColumnID, gridStore.columns[2].id)
+    }
+
+    func testGridTrackpadGestureCanFocusStandaloneAppRow() async {
+        let gridStore = makeGridStore()
+        let gridSession = GridSession()
+        await gridStore.load()
+
+        _ = gridStore.createStandaloneApp(
+            target: .app(AppTarget(bundleId: "com.example.music", appName: "Music")),
+            iconSymbol: "music.note"
+        )
+        _ = gridStore.createStandaloneApp(
+            target: .app(AppTarget(bundleId: "com.example.chat", appName: "Chat")),
+            iconSymbol: "message.fill"
+        )
+        gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+
+        let focus = FakeFocusService()
+        focus.targetOutcome = .focused(label: "Chat", strategy: nil)
+
+        let commandCenter = makeCommandCenter(
+            gridStore: gridStore,
+            gridSession: gridSession,
+            focusService: focus
+        )
+
+        commandCenter.setGridGestureActive(true)
+        commandCenter.applyGridGestureUpdate(
+            TrackpadGestureUpdate(
+                horizontalStepCount: 1,
+                verticalStepCount: gridStore.layers.count,
+                horizontalFractionalOffset: 0,
+                verticalFractionalOffset: 0,
+                totalHorizontalOffset: 1,
+                totalVerticalOffset: Double(gridStore.layers.count)
+            )
+        )
+
+        XCTAssertEqual(
+            focus.focusedTargets.last,
+            .app(AppTarget(bundleId: "com.example.chat", appName: "Chat"))
+        )
     }
 
     func testSyncGridSelectionToFocusedWindowSelectsMatchingCell() async throws {
@@ -800,11 +1580,14 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         dynamicStore: DynamicHotkeyStore? = nil,
         gridStore: GridStore? = nil,
         gridSession: GridSession? = nil,
+        niriStore: NiriStore? = nil,
+        niriSession: NiriSession? = nil,
         captureService: FakeCaptureService = FakeCaptureService(),
         resolutionService: FakeResolutionService = FakeResolutionService(),
         focusService: FakeFocusService = FakeFocusService(),
         appProvider: FakeAppProvider = FakeAppProvider(),
         windowProvider: FakeWindowProvider = FakeWindowProvider(),
+        hapticPerformer: FakeHapticPerformer = FakeHapticPerformer(),
         hudPresenter: FakeHUDPresenter = FakeHUDPresenter()
     ) -> AppCommandCenter {
         AppCommandCenter(
@@ -814,12 +1597,15 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             dynamicHotkeyStore: dynamicStore ?? makeDynamicHotkeyStore(),
             gridStore: gridStore ?? makeGridStore(),
             gridSession: gridSession ?? GridSession(),
+            niriStore: niriStore ?? makeNiriStore(),
+            niriSession: niriSession ?? NiriSession(),
             labelPolicy: TargetLabelPolicy(),
             captureService: captureService,
             resolutionService: resolutionService,
             focusService: focusService,
             appProvider: appProvider,
             windowProvider: windowProvider,
+            hapticPerformer: hapticPerformer,
             hudController: hudPresenter,
             setHotkeyRecordingActive: { _ in }
         )
@@ -848,6 +1634,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
             store: InMemoryGridLayerStore(),
             labelPolicy: TargetLabelPolicy()
         )
+    }
+
+    private func makeNiriStore() -> NiriStore {
+        NiriStore(store: InMemoryNiriWorkspaceStore())
     }
 }
 
@@ -887,6 +1677,18 @@ private final class InMemoryGridLayerStore: GridLayerStore {
     }
 }
 
+private final class InMemoryNiriWorkspaceStore: NiriWorkspaceStore {
+    private var state = NiriWorkspaceState()
+
+    func loadState() async throws -> NiriWorkspaceState {
+        state
+    }
+
+    func saveState(_ state: NiriWorkspaceState) async throws {
+        self.state = state
+    }
+}
+
 private final class FakePermissionService: AccessibilityPermissionMonitoring {
     var isTrusted = true
     private(set) var startMonitoringCount = 0
@@ -922,6 +1724,13 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onGridBindCurrent: (() -> Void)?
     var onGridShowHUD: (() -> Void)?
     var onGridStandaloneApp: ((String) -> Void)?
+    var onNiriFocusLeft: (() -> Void)?
+    var onNiriFocusRight: (() -> Void)?
+    var onNiriFocusUp: (() -> Void)?
+    var onNiriFocusDown: (() -> Void)?
+    var onNiriCreateWorkspaceBelow: (() -> Void)?
+    var onNiriRemoveCurrentWindow: (() -> Void)?
+    var onNiriShowHUD: (() -> Void)?
 
     private(set) var configurations: [HotkeyConfiguration] = []
     private(set) var suspendCount = 0
@@ -1018,7 +1827,19 @@ private final class FakeHUDPresenter: HUDPresenting {
         lastModel = model
     }
 
+    func update(model: HUDModel) {
+        lastModel = model
+    }
+
     func hide() {}
+}
+
+private final class FakeHapticPerformer: HapticFeedbackPerforming {
+    private(set) var focusConfirmationCount = 0
+
+    func performFocusConfirmation() {
+        focusConfirmationCount += 1
+    }
 }
 
 private final class FakeGridBindingSelectionController: GridBindingSelectionPresenting {

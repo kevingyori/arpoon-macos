@@ -11,22 +11,27 @@ final class AppModel: ObservableObject {
     let dynamicHotkeyStore: DynamicHotkeyStore
     let gridStore: GridStore
     let gridSession: GridSession
+    let niriStore: NiriStore
+    let niriSession: NiriSession
     let availableWindowsProvider: @MainActor () -> [LiveWindow]
     let commands: AppCommands
 
     private let commandCenter: AppCommandCenter
     private let runtimeCoordinator: AppRuntimeCoordinator
+    private let trackpadGestureController: TrackpadGestureController
     private lazy var settingsWindowController = SettingsWindowController(
         settings: settings,
         dynamicHotkeys: dynamicHotkeyStore,
         gridStore: gridStore,
         gridSession: gridSession,
+        niriStore: niriStore,
+        niriSession: niriSession,
         permissions: accessibilityPermissions,
         availableWindowsProvider: availableWindowsProvider,
         commands: commands
     )
     private var started = false
-    private var gridFocusSyncTask: Task<Void, Never>?
+    private var externalFocusSyncTask: Task<Void, Never>?
 
     private init() {
         settings = SettingsStore()
@@ -47,6 +52,9 @@ final class AppModel: ObservableObject {
         let gridLayerStore = JSONGridLayerStore()
         gridStore = GridStore(store: gridLayerStore, labelPolicy: labelPolicy)
         gridSession = GridSession()
+        let niriWorkspaceStore = JSONNiriWorkspaceStore()
+        niriStore = NiriStore(store: niriWorkspaceStore)
+        niriSession = NiriSession()
 
         let captureService = TargetCaptureService(
             appProvider: appProvider,
@@ -65,8 +73,10 @@ final class AppModel: ObservableObject {
             labelPolicy: labelPolicy
         )
         let hudController = HUDWindowController()
+        let hapticPerformer = MacOSHapticFeedbackPerformer()
         let optionHoldHUDController = OptionHoldHUDController(settings: settings)
         let hotkeyController = HotkeyController()
+        let trackpadGestureController = TrackpadGestureController(settings: settings)
 
         let runtimeCoordinator = AppRuntimeCoordinator(
             settings: settings,
@@ -83,20 +93,25 @@ final class AppModel: ObservableObject {
             dynamicHotkeyStore: dynamicHotkeyStore,
             gridStore: gridStore,
             gridSession: gridSession,
+            niriStore: niriStore,
+            niriSession: niriSession,
             labelPolicy: labelPolicy,
             captureService: captureService,
             resolutionService: resolutionService,
             focusService: focusService,
             appProvider: appProvider,
             windowProvider: windowProvider,
+            hapticPerformer: hapticPerformer,
             hudController: hudController,
             setHotkeyRecordingActive: { isActive in
                 runtimeCoordinator.setHotkeyRecordingActive(isActive)
+                trackpadGestureController.setSuppressed(isActive)
             }
         )
 
         self.runtimeCoordinator = runtimeCoordinator
         self.commandCenter = commandCenter
+        self.trackpadGestureController = trackpadGestureController
         commands = AppCommands(
             showHUD: {
                 commandCenter.showHUD()
@@ -137,8 +152,18 @@ final class AppModel: ObservableObject {
             captureGridStandaloneApp: { appID in
                 commandCenter.captureGridStandaloneApp(appID)
             },
+            focusNiriItem: { workspaceID, itemID in
+                commandCenter.focusNiriItem(workspaceID: workspaceID, itemID: itemID)
+            },
+            createNiriWorkspaceBelow: {
+                commandCenter.createNiriWorkspaceBelow()
+            },
+            removeCurrentNiriItem: {
+                commandCenter.removeCurrentNiriItem()
+            },
             setHotkeyRecordingActive: { isActive in
                 runtimeCoordinator.setHotkeyRecordingActive(isActive)
+                trackpadGestureController.setSuppressed(isActive)
             },
             registerSettingsWindow: { window in
                 commandCenter.registerSettingsWindow(window)
@@ -215,6 +240,60 @@ final class AppModel: ObservableObject {
         runtimeCoordinator.onGridStandaloneApp = { [weak commandCenter] appID in
             commandCenter?.jumpToGridStandaloneApp(appID)
         }
+        runtimeCoordinator.onNiriFocusLeft = { [weak commandCenter] in
+            commandCenter?.moveNiriFocusLeft()
+        }
+        runtimeCoordinator.onNiriFocusRight = { [weak commandCenter] in
+            commandCenter?.moveNiriFocusRight()
+        }
+        runtimeCoordinator.onNiriFocusUp = { [weak commandCenter] in
+            commandCenter?.moveNiriFocusUp()
+        }
+        runtimeCoordinator.onNiriFocusDown = { [weak commandCenter] in
+            commandCenter?.moveNiriFocusDown()
+        }
+        runtimeCoordinator.onNiriCreateWorkspaceBelow = { [weak commandCenter] in
+            commandCenter?.createNiriWorkspaceBelow()
+        }
+        runtimeCoordinator.onNiriRemoveCurrentWindow = { [weak commandCenter] in
+            commandCenter?.removeCurrentNiriItem()
+        }
+        runtimeCoordinator.onNiriShowHUD = { [weak commandCenter] in
+            commandCenter?.showNiriHUD()
+        }
+
+        trackpadGestureController.onGestureUpdate = { [weak commandCenter, weak settings] update in
+            switch settings?.hotkeyScheme {
+            case .grid:
+                commandCenter?.applyGridGestureUpdate(update)
+            case .niri:
+                commandCenter?.applyNiriGestureUpdate(update)
+            default:
+                break
+            }
+        }
+        trackpadGestureController.onGestureBegan = { [weak commandCenter, weak runtimeCoordinator, weak settings] in
+            runtimeCoordinator?.setOptionHoldHUDSuppressed(true)
+            switch settings?.hotkeyScheme {
+            case .grid:
+                commandCenter?.setGridGestureActive(true)
+            case .niri:
+                commandCenter?.setNiriGestureActive(true)
+            default:
+                break
+            }
+        }
+        trackpadGestureController.onGestureEnded = { [weak commandCenter, weak runtimeCoordinator, weak settings] in
+            switch settings?.hotkeyScheme {
+            case .grid:
+                commandCenter?.setGridGestureActive(false)
+            case .niri:
+                commandCenter?.setNiriGestureActive(false)
+            default:
+                break
+            }
+            runtimeCoordinator?.setOptionHoldHUDSuppressed(false)
+        }
 
         commandCenter.settingsWindowPresenterProvider = { [weak self] in
             self?.settingsWindowController
@@ -231,22 +310,32 @@ final class AppModel: ObservableObject {
             await slotStore.load()
             await dynamicHotkeyStore.load()
             await gridStore.load()
+            await niriStore.load()
             gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
+            niriSession.sync(workspaces: niriStore.workspaces)
             runtimeCoordinator.start()
-            startGridFocusSyncLoop()
+            trackpadGestureController.start()
+            startExternalFocusSyncLoop()
         }
     }
 
-    private func startGridFocusSyncLoop() {
-        gridFocusSyncTask?.cancel()
-        gridFocusSyncTask = Task { [weak self] in
+    private func startExternalFocusSyncLoop() {
+        externalFocusSyncTask?.cancel()
+        externalFocusSyncTask = Task { [weak self] in
             while let self, !Task.isCancelled {
                 await MainActor.run {
-                    guard self.settings.enableExperimentalGridExternalSync else {
-                        return
-                    }
+                    switch self.settings.hotkeyScheme {
+                    case .grid:
+                        guard self.settings.enableExperimentalGridExternalSync else {
+                            return
+                        }
 
-                    self.commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
+                        self.commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
+                    case .niri:
+                        self.commandCenter.syncNiriSelectionToFocusedTargetIfNeeded()
+                    case .staticSlots, .dynamicWindows:
+                        break
+                    }
                 }
 
                 try? await Task.sleep(nanoseconds: 350_000_000)
@@ -258,5 +347,6 @@ final class AppModel: ObservableObject {
         await slotStore.flushPersistence()
         await dynamicHotkeyStore.flushPersistence()
         await gridStore.flushPersistence()
+        await niriStore.flushPersistence()
     }
 }

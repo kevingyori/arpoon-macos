@@ -25,6 +25,13 @@ final class AppRuntimeCoordinator {
     var onGridBindCurrent: (() -> Void)?
     var onGridShowHUD: (() -> Void)?
     var onGridStandaloneApp: ((String) -> Void)?
+    var onNiriFocusLeft: (() -> Void)?
+    var onNiriFocusRight: (() -> Void)?
+    var onNiriFocusUp: (() -> Void)?
+    var onNiriFocusDown: (() -> Void)?
+    var onNiriCreateWorkspaceBelow: (() -> Void)?
+    var onNiriRemoveCurrentWindow: (() -> Void)?
+    var onNiriShowHUD: (() -> Void)?
 
     private let settings: SettingsStore
     private let accessibilityPermissions: any AccessibilityPermissionMonitoring
@@ -110,6 +117,27 @@ final class AppRuntimeCoordinator {
         hotkeyController.onGridStandaloneApp = { [weak self] id in
             self?.onGridStandaloneApp?(id)
         }
+        hotkeyController.onNiriFocusLeft = { [weak self] in
+            self?.onNiriFocusLeft?()
+        }
+        hotkeyController.onNiriFocusRight = { [weak self] in
+            self?.onNiriFocusRight?()
+        }
+        hotkeyController.onNiriFocusUp = { [weak self] in
+            self?.onNiriFocusUp?()
+        }
+        hotkeyController.onNiriFocusDown = { [weak self] in
+            self?.onNiriFocusDown?()
+        }
+        hotkeyController.onNiriCreateWorkspaceBelow = { [weak self] in
+            self?.onNiriCreateWorkspaceBelow?()
+        }
+        hotkeyController.onNiriRemoveCurrentWindow = { [weak self] in
+            self?.onNiriRemoveCurrentWindow?()
+        }
+        hotkeyController.onNiriShowHUD = { [weak self] in
+            self?.onNiriShowHUD?()
+        }
 
         optionHoldHUDController.onShow = { [weak self] in
             self?.onShowHeldHUD?()
@@ -180,5 +208,9 @@ final class AppRuntimeCoordinator {
         } else {
             hotkeyController.resume()
         }
+    }
+
+    func setOptionHoldHUDSuppressed(_ isSuppressed: Bool) {
+        optionHoldHUDController.setSuppressed(isSuppressed)
     }
 }

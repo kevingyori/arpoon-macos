@@ -54,6 +54,15 @@ final class HUDWindowController {
         present(model: model)
     }
 
+    func update(model: HUDModel) {
+        guard visible else {
+            showPersistent(model: model)
+            return
+        }
+
+        updateVisibleModel(model)
+    }
+
     func hide() {
         cancelDismissal()
         beginFadeOut()
@@ -122,6 +131,20 @@ final class HUDWindowController {
         if !visible {
             viewModel.presentationID += 1
         }
+        applyModel(model, allowWindowReordering: true)
+
+        if !visible {
+            panel.alphaValue = 1
+            panel.orderFrontRegardless()
+            visible = true
+        }
+    }
+
+    private func updateVisibleModel(_ model: HUDModel) {
+        applyModel(model, allowWindowReordering: false)
+    }
+
+    private func applyModel(_ model: HUDModel, allowWindowReordering: Bool) {
         viewModel.model = model
 
         let contentSize = NSSize(width: model.preferredWidth, height: model.preferredHeight)
@@ -130,21 +153,25 @@ final class HUDWindowController {
 
         if !visible {
             panel.setFrame(targetFrame, display: true)
-            panel.alphaValue = 1
-            panel.orderFrontRegardless()
-            visible = true
-        } else {
-            panel.alphaValue = 1
-            panel.orderFrontRegardless()
-            switch model {
-            case .gridMinimap:
+            return
+        }
+
+        switch model {
+        case .gridMinimap:
+            if panel.frame.size != targetFrame.size {
                 panel.setFrame(targetFrame, display: true)
-            default:
+            }
+        default:
+            if allowWindowReordering {
+                panel.alphaValue = 1
+                panel.orderFrontRegardless()
                 NSAnimationContext.runAnimationGroup { context in
                     context.duration = 0.14
                     context.timingFunction = CAMediaTimingFunction(name: .easeOut)
                     panel.animator().setFrame(targetFrame, display: true)
                 }
+            } else if panel.frame != targetFrame {
+                panel.setFrame(targetFrame, display: true)
             }
         }
     }
