@@ -41,27 +41,27 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popover.delegate = self
         popover.animates = true
         popover.contentSize = Self.popoverSize
+        popover.contentViewController = makePopoverContent()
     }
 
-    /// The popover content is built on open and released on close, so the SwiftUI tree isn't
-    /// re-rendering on every store change while the popover is hidden.
+    /// Built once and kept for the popover's lifetime. Swapping or detaching the popover's content
+    /// around close (e.g. to avoid hidden re-renders) leaves its window stranded on screen.
     private func makePopoverContent() -> NSViewController {
-        let hostingController = NSHostingController(
-            rootView: MenuBarView(
-                commands: appModel.commands,
-                dismissPopover: { [weak self] in
-                    self?.closePopover()
-                },
-                slotStore: appModel.slotStore,
-                dynamicHotkeys: appModel.dynamicHotkeyStore,
-                gridStore: appModel.gridStore,
-                gridSession: appModel.gridSession,
-                niriStore: appModel.niriStore,
-                niriSession: appModel.niriSession,
-                settings: appModel.settings,
-                permissions: appModel.accessibilityPermissions
-            )
+        let menu = MenuBarView(
+            commands: appModel.commands,
+            dismissPopover: { [weak self] in
+                self?.closePopover()
+            },
+            slotStore: appModel.slotStore,
+            dynamicHotkeys: appModel.dynamicHotkeyStore,
+            gridStore: appModel.gridStore,
+            gridSession: appModel.gridSession,
+            niriStore: appModel.niriStore,
+            niriSession: appModel.niriSession,
+            settings: appModel.settings,
+            permissions: appModel.accessibilityPermissions
         )
+        let hostingController = NSHostingController(rootView: menu)
         hostingController.sizingOptions = []
         return hostingController
     }
@@ -76,9 +76,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             closePopover()
         } else {
             NSApp.activate(ignoringOtherApps: true)
-            if popover.contentViewController == nil {
-                popover.contentViewController = makePopoverContent()
-            }
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             focusPopoverWindow()
         }
@@ -91,7 +88,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     func popoverDidClose(_ notification: Notification) {
         stopDismissMonitoring()
-        popover.contentViewController = nil
     }
 
     private func closePopover() {

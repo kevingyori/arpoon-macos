@@ -68,13 +68,16 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
             return
         }
 
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
 
         if window.isMiniaturized {
             window.deminiaturize(nil)
         }
 
         window.makeKeyAndOrderFront(nil)
+        // Activation can be declined (e.g. right after the activation-policy switch), so make
+        // sure the window still lands in front instead of opening behind the current app.
+        window.orderFrontRegardless()
     }
 
     func windowWillClose(_ notification: Notification) {
