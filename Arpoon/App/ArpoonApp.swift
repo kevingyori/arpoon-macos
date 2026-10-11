@@ -5,17 +5,19 @@ struct ArpoonApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
+        // Settings live in the AppKit-managed window (SettingsWindowController). This scene only
+        // exists to satisfy SwiftUI; route the standard Settings… command to the real window so
+        // ⌘, never opens a second, unmanaged copy.
         Settings {
-            SettingsView(
-                settings: AppModel.shared.settings,
-                dynamicHotkeys: AppModel.shared.dynamicHotkeyStore,
-                gridStore: AppModel.shared.gridStore,
-                niriStore: AppModel.shared.niriStore,
-                permissions: AppModel.shared.accessibilityPermissions,
-                availableWindowsProvider: AppModel.shared.availableWindowsProvider,
-                commands: AppModel.shared.commands
-            )
-            .preferredColorScheme(.dark)
+            EmptyView()
+        }
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings…") {
+                    AppModel.shared.commands.showSettings()
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
         }
     }
 }

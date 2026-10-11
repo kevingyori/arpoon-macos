@@ -12,6 +12,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemController = StatusItemController(appModel: AppModel.shared)
     }
 
+    /// Arpoon only has a Dock icon while Settings is open, so a Dock click means "show Settings"
+    /// (e.g. when the window is minimized).
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        AppModel.shared.commands.showSettings()
+        return false
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if isTerminating {
             return .terminateNow

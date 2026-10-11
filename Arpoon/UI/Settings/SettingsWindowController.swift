@@ -56,6 +56,9 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
 
     func show() {
         isPresented = true
+        // Arpoon normally runs as a menu bar accessory, which keeps it out of ⌘Tab and the Dock.
+        // Become a regular app while Settings is open so the window can't get lost.
+        NSApp.setActivationPolicy(.regular)
         showWindow(nil)
         bringToFront()
     }
@@ -77,5 +80,6 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         isPresented = false
         window?.orderOut(nil)
+        NSApp.setActivationPolicy(.accessory)
     }
 }
