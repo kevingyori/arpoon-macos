@@ -644,6 +644,18 @@ struct HotkeyAction: Hashable, Codable, Identifiable {
 }
 
 extension HotkeyAction {
+    /// Whether this action is part of `scheme`'s shortcut set. Grid column actions are keyed by
+    /// column ID, so any column action belongs to The Grid.
+    func belongs(to scheme: HotkeyScheme) -> Bool {
+        switch scheme {
+        case .grid:
+            return kind == .gridFocusColumn ||
+                HotkeyAction.activeActions(for: .grid, columns: [], layerCount: 9).contains(self)
+        case .staticSlots, .dynamicWindows, .niri:
+            return HotkeyAction.activeActions(for: scheme).contains(self)
+        }
+    }
+
     func title(columns: [GridToolColumn], layerNames: [String]) -> String {
         switch kind {
         case .gridJumpLayer:
@@ -780,7 +792,7 @@ struct HotkeyShortcut: Hashable, Codable {
 
 enum HotkeyUpdateResult {
     case updated
-    case duplicate(HotkeyAction)
+    case conflict(String)
     case requiresModifier
 }
 

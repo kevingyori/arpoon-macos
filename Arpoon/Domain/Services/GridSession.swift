@@ -16,8 +16,12 @@ final class GridSession: ObservableObject {
         let resolvedColumns = columns.isEmpty ? GridToolColumn.defaults : columns
 
         guard let firstLayer = layers.first else {
-            currentLayerID = nil
-            currentColumnID = GridToolColumn.terminal.id
+            if currentLayerID != nil {
+                currentLayerID = nil
+            }
+            if currentColumnID != GridToolColumn.terminal.id {
+                currentColumnID = GridToolColumn.terminal.id
+            }
             return
         }
 

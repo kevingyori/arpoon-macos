@@ -27,14 +27,14 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
 }
 
 struct SettingsView: View {
-    @ObservedObject var settings: SettingsStore
-    @ObservedObject var dynamicHotkeys: DynamicHotkeyStore
-    @ObservedObject var gridStore: GridStore
-    @ObservedObject var gridSession: GridSession
-    @ObservedObject var niriStore: NiriStore
-    @ObservedObject var niriSession: NiriSession
-    @ObservedObject var permissions: AccessibilityPermissionService
-    let availableWindowsProvider: @MainActor () -> [LiveWindow]
+    // Plain references: the panes observe the stores they render, so a store change doesn't
+    // re-render the whole settings window.
+    let settings: SettingsStore
+    let dynamicHotkeys: DynamicHotkeyStore
+    let gridStore: GridStore
+    let niriStore: NiriStore
+    let permissions: AccessibilityPermissionService
+    let availableWindowsProvider: @MainActor () async -> [LiveWindow]
     let commands: AppCommands
 
     @State private var activeRecorderID: String?
@@ -47,27 +47,9 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
                 ForEach(SettingsPane.allCases) { pane in
-                    Button {
+                    SettingsPaneTab(pane: pane, isSelected: selectedPane == pane) {
                         selectedPane = pane
-                    } label: {
-                        Label(pane.title, systemImage: pane.symbolName)
-                            .font(.system(size: 13, weight: selectedPane == pane ? .semibold : .medium))
-                            .foregroundStyle(selectedPane == pane ? .primary : .secondary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background {
-                                Capsule(style: .continuous)
-                                    .fill(selectedPane == pane ? Color.accentColor.opacity(0.16) : Color.clear)
-                            }
-                            .overlay {
-                                Capsule(style: .continuous)
-                                    .strokeBorder(
-                                        selectedPane == pane ? Color.accentColor.opacity(0.22) : Color.clear,
-                                        lineWidth: 1
-                                    )
-                            }
                     }
-                    .buttonStyle(.plain)
                 }
 
                 Spacer(minLength: 0)
@@ -93,13 +75,12 @@ struct SettingsView: View {
                         )
                     }
                     .padding(contentPadding)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity)
                 }
             case .grid:
                 GridSettingsPane(
                     settings: settings,
                     gridStore: gridStore,
-                    gridSession: gridSession,
                     availableWindowsProvider: availableWindowsProvider,
                     activeRecorderID: $activeRecorderID
                 )
@@ -118,15 +99,31 @@ struct SettingsView: View {
         .onDisappear {
             commands.setHotkeyRecordingActive(false)
         }
-        .onReceive(gridStore.$layers) { layers in
-            gridSession.sync(columns: gridStore.columns, layers: layers)
+    }
+}
+
+private struct SettingsPaneTab: View {
+    let pane: SettingsPane
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(pane.title, systemImage: pane.symbolName)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? .primary : .secondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background {
+                    Capsule(style: .continuous)
+                        .fill(isSelected ? Color.accentColor.opacity(0.16) : Color.clear)
+                }
+                .overlay {
+                    Capsule(style: .continuous)
+                        .strokeBorder(isSelected ? Color.accentColor.opacity(0.22) : Color.clear, lineWidth: 1)
+                }
         }
-        .onReceive(gridStore.$columns) { columns in
-            gridSession.sync(columns: columns, layers: gridStore.layers)
-        }
-        .onReceive(niriStore.$workspaces) { workspaces in
-            niriSession.sync(workspaces: workspaces)
-        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -138,8 +135,6 @@ private struct GeneralSettingsPane: View {
     @ObservedObject var permissions: AccessibilityPermissionService
     let commands: AppCommands
     @Binding var activeRecorderID: String?
-
-    @State private var selectedGridPreset: GridShortcutPreset = .gamer
 
     private let sectionSpacing: CGFloat = 28
     private let sectionHeaderSpacing: CGFloat = 10
@@ -185,23 +180,19 @@ private struct GeneralSettingsPane: View {
                     helperText("The Grid shortcuts follow your current projects and columns, so renaming or removing columns updates the available direct-focus shortcuts automatically.")
                     shortcutGroup(
                         title: "The Grid Projects",
-                        actions: HotkeyAction.gridNavigationActions(layerCount: gridStore.layers.count),
-                        gridPreset: selectedGridPreset
+                        actions: HotkeyAction.gridNavigationActions(layerCount: gridStore.layers.count)
                     )
                     shortcutGroup(
                         title: "The Grid Columns",
-                        actions: HotkeyAction.gridColumnActions(columns: gridStore.columns),
-                        gridPreset: selectedGridPreset
+                        actions: HotkeyAction.gridColumnActions(columns: gridStore.columns)
                     )
                     shortcutGroup(
                         title: "The Grid Controls",
-                        actions: HotkeyAction.gridControlActions,
-                        gridPreset: selectedGridPreset
+                        actions: HotkeyAction.gridControlActions
                     )
                     shortcutGroup(
                         title: "General",
-                        actions: HotkeyAction.commonActions,
-                        gridPreset: selectedGridPreset
+                        actions: HotkeyAction.commonActions
                     )
                 }
 
@@ -215,7 +206,7 @@ private struct GeneralSettingsPane: View {
                 ) {
                     HStack(spacing: 10) {
                         if settings.hotkeyScheme == .grid {
-                            Picker("Grid defaults", selection: $selectedGridPreset) {
+                            Picker("Grid defaults", selection: $settings.gridShortcutPreset) {
                                 ForEach(GridShortcutPreset.allCases) { preset in
                                     Text(preset.title.replacingOccurrences(of: "Reset to ", with: "")).tag(preset)
                                 }
@@ -229,7 +220,7 @@ private struct GeneralSettingsPane: View {
                             activeRecorderID = nil
                             switch settings.hotkeyScheme {
                             case .grid:
-                                settings.applyGridShortcutPreset(selectedGridPreset)
+                                settings.applyGridShortcutPreset(settings.gridShortcutPreset)
                             case .staticSlots, .dynamicWindows, .niri:
                                 settings.resetHotkeysToDefaults()
                             }
@@ -399,7 +390,7 @@ private struct GeneralSettingsPane: View {
 
                             settingsToggle(
                                 "Experimental external Grid sync",
-                                description: "Update the active Grid cell when you switch windows outside Arpoon. Disabled by default because it still has edge-case weirdness.",
+                                description: "Update the active Grid cell when you switch windows outside Arpoon. Still experimental, so expect some edge-case weirdness.",
                                 isOn: $settings.enableExperimentalGridExternalSync
                             )
                         }
@@ -489,7 +480,7 @@ private struct GeneralSettingsPane: View {
     }
 
     @ViewBuilder
-    private func shortcutGroup(title: String, actions: [HotkeyAction], gridPreset: GridShortcutPreset? = nil) -> some View {
+    private func shortcutGroup(title: String, actions: [HotkeyAction]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.system(size: 12, weight: .semibold))
@@ -502,7 +493,6 @@ private struct GeneralSettingsPane: View {
                         title: nil,
                         description: nil,
                         settings: settings,
-                        resetShortcut: resetShortcut(for: action, gridPreset: gridPreset),
                         activeRecorderID: $activeRecorderID
                     )
                     .padding(.horizontal, 14)
@@ -518,14 +508,6 @@ private struct GeneralSettingsPane: View {
                     .fill(Color(nsColor: .controlBackgroundColor))
             )
         }
-    }
-
-    private func resetShortcut(for action: HotkeyAction, gridPreset: GridShortcutPreset?) -> HotkeyShortcut? {
-        if let gridPreset, settings.activeHotkeyActions(for: .grid).contains(action) {
-            return gridPreset.shortcuts(columns: gridStore.columns, layerCount: gridStore.layers.count)[action] ?? action.defaultShortcut
-        }
-
-        return action.defaultShortcut
     }
 
     @ViewBuilder

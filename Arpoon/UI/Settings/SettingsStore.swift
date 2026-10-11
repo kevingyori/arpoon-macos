@@ -32,9 +32,18 @@ enum AddPopupStyle: String, CaseIterable, Identifiable {
 
 @MainActor
 final class SettingsStore: ObservableObject {
-    @Published private(set) var hotkeys: [HotkeyAction: HotkeyShortcut] {
+    @Published private(set) var hotkeyProfiles: [HotkeyScheme: [HotkeyAction: HotkeyShortcut]] {
         didSet { persistHotkeys() }
     }
+
+    /// The Grid preset used for Grid defaults and per-shortcut resets.
+    @Published var gridShortcutPreset: GridShortcutPreset {
+        didSet { defaults.set(gridShortcutPreset.rawValue, forKey: Keys.gridShortcutPreset) }
+    }
+
+    /// Shortcuts owned by app-level bindings (Grid standalone apps, dynamic hotkeys) in a
+    /// scheme. Set by the app so action shortcuts can't silently collide with them.
+    var appShortcutOwners: ((HotkeyScheme) -> [(shortcut: HotkeyShortcut, name: String)])?
 
     @Published var preferWindowTargets: Bool {
         didSet { defaults.set(preferWindowTargets, forKey: Keys.preferWindowTargets) }
@@ -102,7 +111,9 @@ final class SettingsStore: ObservableObject {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        hotkeys = Self.loadHotkeys(from: defaults)
+        let gridShortcutPreset = GridShortcutPreset(rawValue: defaults.string(forKey: Keys.gridShortcutPreset) ?? "") ?? .gamer
+        self.gridShortcutPreset = gridShortcutPreset
+        hotkeyProfiles = Self.loadHotkeyProfiles(from: defaults, gridPreset: gridShortcutPreset)
 
         preferWindowTargets = defaults.object(forKey: Keys.preferWindowTargets) as? Bool ?? true
         launchAppsOnJump = defaults.object(forKey: Keys.launchAppsOnJump) as? Bool ?? true
@@ -140,8 +151,14 @@ final class SettingsStore: ObservableObject {
         ) ?? .option
     }
 
-    func shortcut(for action: HotkeyAction) -> HotkeyShortcut? {
-        hotkeys[action]
+    func shortcut(for action: HotkeyAction, in scheme: HotkeyScheme? = nil) -> HotkeyShortcut? {
+        hotkeyProfiles[scheme ?? hotkeyScheme]?[action]
+    }
+
+    /// The shortcuts a scheme registers. Each scheme owns its own profile, so editing one
+    /// never changes, or conflicts with, another.
+    func hotkeys(for scheme: HotkeyScheme) -> [HotkeyAction: HotkeyShortcut] {
+        hotkeyProfiles[scheme] ?? [:]
     }
 
     func title(for action: HotkeyAction) -> String {
@@ -160,128 +177,204 @@ final class SettingsStore: ObservableObject {
         )
     }
 
+    func defaultShortcut(for action: HotkeyAction, in scheme: HotkeyScheme? = nil) -> HotkeyShortcut? {
+        Self.defaultProfile(for: scheme ?? hotkeyScheme, gridPreset: gridShortcutPreset, gridColumns: gridColumns)[action]
+    }
+
+    /// Describes what already uses `shortcut` within `scheme`, if anything. Only that scheme's
+    /// active actions and its own app shortcuts (standalone apps, dynamic hotkeys) count, since
+    /// those are the only things registered alongside it.
+    func conflictDescription(
+        for shortcut: HotkeyShortcut,
+        in scheme: HotkeyScheme? = nil,
+        excluding excludedAction: HotkeyAction? = nil,
+        includeAppShortcuts: Bool = true
+    ) -> String? {
+        let scheme = scheme ?? hotkeyScheme
+        let profile = hotkeys(for: scheme)
+
+        if let action = activeHotkeyActions(for: scheme).first(where: { $0 != excludedAction && profile[$0] == shortcut }) {
+            return "Already assigned to \(title(for: action))."
+        }
+
+        if includeAppShortcuts,
+           let owner = appShortcutOwners?(scheme).first(where: { $0.shortcut == shortcut }) {
+            return "Already assigned to \(owner.name)."
+        }
+
+        return nil
+    }
+
     @discardableResult
-    func setShortcut(_ shortcut: HotkeyShortcut, for action: HotkeyAction) -> HotkeyUpdateResult {
+    func setShortcut(_ shortcut: HotkeyShortcut, for action: HotkeyAction, in scheme: HotkeyScheme? = nil) -> HotkeyUpdateResult {
         guard shortcut.modifiers != 0 else {
             return .requiresModifier
         }
 
-        if let duplicate = hotkeys.first(where: { $0.key != action && $0.value == shortcut })?.key {
-            return .duplicate(duplicate)
+        let scheme = scheme ?? hotkeyScheme
+        if let conflict = conflictDescription(for: shortcut, in: scheme, excluding: action) {
+            return .conflict(conflict)
         }
 
-        hotkeys[action] = shortcut
+        hotkeyProfiles[scheme, default: [:]][action] = shortcut
         return .updated
     }
 
-    func clearShortcut(for action: HotkeyAction) {
-        hotkeys.removeValue(forKey: action)
+    func clearShortcut(for action: HotkeyAction, in scheme: HotkeyScheme? = nil) {
+        hotkeyProfiles[scheme ?? hotkeyScheme]?.removeValue(forKey: action)
     }
 
+    /// Restores the current scheme's defaults. Other schemes keep their shortcuts.
     func resetHotkeysToDefaults() {
-        hotkeys = normalizedHotkeysForCurrentGrid(Self.defaultHotkeys())
+        hotkeyProfiles[hotkeyScheme] = resolvingInternalConflicts(
+            Self.defaultProfile(for: hotkeyScheme, gridPreset: gridShortcutPreset, gridColumns: gridColumns),
+            scheme: hotkeyScheme
+        )
     }
 
     func applyGridShortcutPreset(_ preset: GridShortcutPreset) {
-        for action in activeHotkeyActions(for: .grid) {
-            hotkeys.removeValue(forKey: action)
-        }
-
-        for (action, shortcut) in preset.shortcuts(columns: gridColumns, layerCount: gridLayerNames.count) {
-            hotkeys[action] = shortcut
-        }
+        gridShortcutPreset = preset
+        hotkeyProfiles[.grid] = resolvingInternalConflicts(
+            Self.defaultProfile(for: .grid, gridPreset: preset, gridColumns: gridColumns),
+            scheme: .grid
+        )
     }
 
     func syncGridHotkeys(columns: [GridToolColumn], layers: [GridLayer]) {
         gridColumns = columns.isEmpty ? GridToolColumn.defaults : columns
         gridLayerNames = layers.isEmpty ? ["Project 1"] : layers.map(\.name)
 
-        let activeGridActions = Set(
-            HotkeyAction.activeActions(
-                for: .grid,
-                columns: gridColumns,
-                layerCount: gridLayerNames.count
-            )
-        )
+        var profile = hotkeys(for: .grid)
 
-        let normalizedHotkeys = normalizedHotkeysForCurrentGrid(hotkeys, activeGridActions: activeGridActions)
-        if hotkeys != normalizedHotkeys {
-            hotkeys = normalizedHotkeys
+        // Column IDs of deleted columns never come back, so drop their shortcuts. Project jump
+        // shortcuts are kept for all nine positions, so removing and re-adding a project
+        // restores its shortcut instead of losing it.
+        let columnIDs = Set(gridColumns.map(\.id))
+        for action in profile.keys where action.kind == .gridFocusColumn && !columnIDs.contains(action.referenceID ?? "") {
+            profile.removeValue(forKey: action)
+        }
+
+        profile = resolvingInternalConflicts(profile, scheme: .grid)
+
+        if profile != hotkeys(for: .grid) {
+            hotkeyProfiles[.grid] = profile
         }
     }
 
-    private func normalizedHotkeysForCurrentGrid(
-        _ source: [HotkeyAction: HotkeyShortcut],
-        activeGridActions: Set<HotkeyAction>? = nil
+    /// Removes shortcuts that would collide once registered together. When a project's jump
+    /// shortcut collides with another action (e.g. a column bound to ⌥9 before a ninth project
+    /// existed), the explicit assignment wins. `preferred` actions win any other collision.
+    private func resolvingInternalConflicts(
+        _ profile: [HotkeyAction: HotkeyShortcut],
+        scheme: HotkeyScheme,
+        preferred: Set<HotkeyAction> = []
     ) -> [HotkeyAction: HotkeyShortcut] {
-        let activeGridActions = activeGridActions ?? Set(
-            HotkeyAction.activeActions(
-                for: .grid,
-                columns: gridColumns,
-                layerCount: gridLayerNames.count
-            )
-        )
+        let active = activeHotkeyActions(for: scheme)
+        let ordered = active.filter(preferred.contains) +
+            active.filter { !preferred.contains($0) && $0.kind != .gridJumpLayer } +
+            active.filter { !preferred.contains($0) && $0.kind == .gridJumpLayer }
 
-        var normalizedHotkeys: [HotkeyAction: HotkeyShortcut] = [:]
-        for (action, shortcut) in source {
-            if action.kind == .gridFocusColumn && !activeGridActions.contains(action) {
+        var resolved = profile
+        var claimed = Set<HotkeyShortcut>()
+        for action in ordered {
+            guard let shortcut = resolved[action] else {
                 continue
             }
 
-            if action.kind == .gridJumpLayer,
-               let slot = action.slot,
-               slot > gridLayerNames.count {
-                continue
+            if !claimed.insert(shortcut).inserted {
+                resolved.removeValue(forKey: action)
             }
-
-            normalizedHotkeys[action] = shortcut
         }
 
-        return normalizedHotkeys
+        return resolved
     }
 
     private func persistHotkeys() {
-        let payload = hotkeys
-            .sorted { $0.key.id < $1.key.id }
-            .map { PersistedHotkeyBinding(actionID: $0.key.id, shortcut: $0.value) }
+        // Every action the scheme knows about is written, including cleared ones (as nil), so a
+        // cleared shortcut stays cleared instead of being refilled from defaults on next launch.
+        let payload = HotkeyScheme.allCases.map { scheme in
+            let profile = hotkeys(for: scheme)
+            let defaultActions = Self.defaultProfile(for: scheme, gridPreset: gridShortcutPreset, gridColumns: gridColumns).keys
+            let actions = Set(profile.keys).union(defaultActions)
+
+            return PersistedHotkeyProfile(
+                scheme: scheme,
+                bindings: actions
+                    .sorted { $0.id < $1.id }
+                    .map { PersistedHotkeyBinding(actionID: $0.id, shortcut: profile[$0]) }
+            )
+        }
 
         if let encoded = try? JSONEncoder().encode(payload) {
-            defaults.set(encoded, forKey: Keys.hotkeys)
+            defaults.set(encoded, forKey: Keys.hotkeyProfiles)
         }
     }
 
-    private static func loadHotkeys(from defaults: UserDefaults) -> [HotkeyAction: HotkeyShortcut] {
-        guard let data = defaults.data(forKey: Keys.hotkeys),
-              let payload = try? JSONDecoder().decode([PersistedHotkeyBinding].self, from: data) else {
-            return defaultHotkeys()
+    private static func loadHotkeyProfiles(
+        from defaults: UserDefaults,
+        gridPreset: GridShortcutPreset
+    ) -> [HotkeyScheme: [HotkeyAction: HotkeyShortcut]] {
+        let savedProfiles: [HotkeyScheme: [PersistedHotkeyBinding]]
+        if let data = defaults.data(forKey: Keys.hotkeyProfiles),
+           let payload = try? JSONDecoder().decode([PersistedHotkeyProfile].self, from: data) {
+            savedProfiles = Dictionary(payload.map { ($0.scheme, $0.bindings) }, uniquingKeysWith: { first, _ in first })
+        } else if let data = defaults.data(forKey: Keys.legacyHotkeys),
+                  let legacy = try? JSONDecoder().decode([PersistedHotkeyBinding].self, from: data) {
+            // Older versions kept one map shared by every scheme. Give each scheme its own copy
+            // of the entries that belong to it.
+            savedProfiles = Dictionary(uniqueKeysWithValues: HotkeyScheme.allCases.map { scheme in
+                (scheme, legacy.filter { binding in
+                    HotkeyAction(id: binding.actionID).map { $0.belongs(to: scheme) } ?? false
+                })
+            })
+        } else {
+            savedProfiles = [:]
         }
 
-        let decoded = payload.reduce(into: [HotkeyAction: HotkeyShortcut]()) { result, item in
-            guard let action = HotkeyAction(id: item.actionID) else {
-                return
+        return Dictionary(uniqueKeysWithValues: HotkeyScheme.allCases.map { scheme in
+            var profile = defaultProfile(for: scheme, gridPreset: gridPreset, gridColumns: GridToolColumn.defaults)
+            var savedActions = Set<HotkeyAction>()
+
+            for binding in savedProfiles[scheme] ?? [] {
+                guard let action = HotkeyAction(id: binding.actionID), action.belongs(to: scheme) else {
+                    continue
+                }
+
+                savedActions.insert(action)
+                profile[action] = binding.shortcut
             }
 
-            result[action] = item.shortcut
-        }
+            // A default filled in for an action the user never saved must not steal a shortcut
+            // the user picked explicitly.
+            let savedShortcuts = Set(savedActions.compactMap { profile[$0] })
+            for (action, shortcut) in profile where !savedActions.contains(action) && savedShortcuts.contains(shortcut) {
+                profile.removeValue(forKey: action)
+            }
 
-        return decoded.isEmpty ? defaultHotkeys() : defaultHotkeys().merging(decoded) { _, loaded in loaded }
+            return (scheme, profile)
+        })
     }
 
-    private static func defaultHotkeys() -> [HotkeyAction: HotkeyShortcut] {
-        var hotkeys = Dictionary(uniqueKeysWithValues: HotkeyAction.allCases.compactMap { action in
-            action.defaultShortcut.map { (action, $0) }
-        })
-
-        for (action, shortcut) in GridShortcutPreset.gamer.shortcuts(columns: GridToolColumn.defaults, layerCount: 9) {
-            hotkeys[action] = shortcut
+    private static func defaultProfile(
+        for scheme: HotkeyScheme,
+        gridPreset: GridShortcutPreset,
+        gridColumns: [GridToolColumn]
+    ) -> [HotkeyAction: HotkeyShortcut] {
+        switch scheme {
+        case .grid:
+            return gridPreset.shortcuts(columns: gridColumns, layerCount: 9)
+        case .staticSlots, .dynamicWindows, .niri:
+            return Dictionary(uniqueKeysWithValues: HotkeyAction.activeActions(for: scheme).compactMap { action in
+                action.defaultShortcut.map { (action, $0) }
+            })
         }
-
-        return hotkeys
     }
 }
 
 private enum Keys {
-    static let hotkeys = "hotkeys"
+    static let hotkeyProfiles = "hotkeyProfiles"
+    static let legacyHotkeys = "hotkeys"
+    static let gridShortcutPreset = "gridShortcutPreset"
     static let preferWindowTargets = "preferWindowTargets"
     static let launchAppsOnJump = "launchAppsOnJump"
     static let fallbackToAppOnJump = "fallbackToAppOnJump"
@@ -303,5 +396,10 @@ private enum Keys {
 
 private struct PersistedHotkeyBinding: Codable {
     let actionID: String
-    let shortcut: HotkeyShortcut
+    let shortcut: HotkeyShortcut?
+}
+
+private struct PersistedHotkeyProfile: Codable {
+    let scheme: HotkeyScheme
+    let bindings: [PersistedHotkeyBinding]
 }

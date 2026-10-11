@@ -6,7 +6,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let statusItem: NSStatusItem
     private let popover: NSPopover
     private let appModel: AppModel
-    private let popoverSize = NSSize(width: 372, height: 500)
+    static let popoverSize = NSSize(width: 372, height: 500)
     private var globalClickMonitor: Any?
     private var localEventMonitor: Any?
 
@@ -38,8 +38,13 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popover.behavior = .applicationDefined
         popover.delegate = self
         popover.animates = true
-        popover.contentSize = popoverSize
-        popover.contentViewController = NSHostingController(
+        popover.contentSize = Self.popoverSize
+    }
+
+    /// The popover content is built on open and released on close, so the SwiftUI tree isn't
+    /// re-rendering on every store change while the popover is hidden.
+    private func makePopoverContent() -> NSViewController {
+        let hostingController = NSHostingController(
             rootView: MenuBarView(
                 commands: appModel.commands,
                 dismissPopover: { [weak self] in
@@ -55,6 +60,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 permissions: appModel.accessibilityPermissions
             )
         )
+        hostingController.sizingOptions = []
+        return hostingController
     }
 
     @objc
@@ -67,6 +74,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             closePopover()
         } else {
             NSApp.activate(ignoringOtherApps: true)
+            if popover.contentViewController == nil {
+                popover.contentViewController = makePopoverContent()
+            }
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             focusPopoverWindow()
         }
@@ -79,6 +89,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     func popoverDidClose(_ notification: Notification) {
         stopDismissMonitoring()
+        popover.contentViewController = nil
     }
 
     private func closePopover() {

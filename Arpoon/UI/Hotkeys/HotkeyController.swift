@@ -30,6 +30,8 @@ protocol HotkeyControlling: AnyObject {
     var onNiriCreateWorkspaceBelow: (() -> Void)? { get set }
     var onNiriRemoveCurrentWindow: (() -> Void)? { get set }
     var onNiriShowHUD: (() -> Void)? { get set }
+    /// Fires before any registered shortcut's own handler.
+    var onHotkeyTriggered: (() -> Void)? { get set }
 
     func apply(configuration: HotkeyConfiguration)
     func suspend()
@@ -65,6 +67,7 @@ final class HotkeyController: HotkeyControlling {
     var onNiriCreateWorkspaceBelow: (() -> Void)?
     var onNiriRemoveCurrentWindow: (() -> Void)?
     var onNiriShowHUD: (() -> Void)?
+    var onHotkeyTriggered: (() -> Void)?
 
     private let hotKeyCenter = GlobalHotKeyCenter.shared
     private var configuration: HotkeyConfiguration?
@@ -114,6 +117,7 @@ final class HotkeyController: HotkeyControlling {
 
                 hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
                     Task { @MainActor in
+                        self?.onHotkeyTriggered?()
                         self?.onDynamicHotkey?(shortcut)
                     }
                 }
@@ -127,6 +131,7 @@ final class HotkeyController: HotkeyControlling {
 
                 hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
                     Task { @MainActor in
+                        self?.onHotkeyTriggered?()
                         self?.onGridStandaloneApp?(binding.appID)
                     }
                 }
@@ -155,6 +160,8 @@ final class HotkeyController: HotkeyControlling {
     }
 
     private func dispatch(_ action: HotkeyAction) {
+        onHotkeyTriggered?()
+
         switch action.kind {
         case .jumpSlot:
             if let slot = action.slot {

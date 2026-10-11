@@ -11,17 +11,29 @@ private enum GridInspectorSelection: Hashable {
     case newStandaloneApp
 }
 
+private extension GridInspectorSelection {
+    var showsWindowPicker: Bool {
+        switch self {
+        case .layerSlot, .standaloneApp, .newStandaloneApp:
+            return true
+        case .project, .column:
+            return false
+        }
+    }
+}
+
 struct GridSettingsPane: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var gridStore: GridStore
-    @ObservedObject var gridSession: GridSession
-    let availableWindowsProvider: @MainActor () -> [LiveWindow]
+    let availableWindowsProvider: @MainActor () async -> [LiveWindow]
     @Binding var activeRecorderID: String?
 
     @State private var inspectorSelection: GridInspectorSelection?
     @State private var draggedLayerID: String?
     @State private var draggedColumnID: String?
     @State private var availableWindows: [LiveWindow] = []
+    @State private var availableWindowsLoadedAt: Date?
+    @State private var availableWindowsTask: Task<Void, Never>?
     @State private var drawerKeyMonitor: Any?
     private let windowMatchPolicy = WindowTargetMatchPolicy()
 
@@ -32,6 +44,7 @@ struct GridSettingsPane: View {
     private let boardSpacing: CGFloat = 12
     private let drawerWidth: CGFloat = 360
     private let cardHorizontalInset: CGFloat = 14
+    private let availableWindowsMaxAge: TimeInterval = 3
 
     var body: some View {
         ZStack(alignment: .trailing) {
@@ -48,45 +61,49 @@ struct GridSettingsPane: View {
         }
         .animation(.easeOut(duration: 0.18), value: inspectorSelection)
         .onAppear {
-            refreshAvailableWindows()
             syncInspectorSelection()
             updateDrawerMonitor()
         }
         .onReceive(gridStore.$layers) { _ in
-            gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
             syncInspectorSelection()
         }
         .onReceive(gridStore.$columns) { _ in
-            gridSession.sync(columns: gridStore.columns, layers: gridStore.layers)
             syncInspectorSelection()
         }
         .onReceive(gridStore.$standaloneApps) { _ in
             syncInspectorSelection()
         }
         .onChange(of: inspectorSelection) { _, _ in
-            refreshAvailableWindows()
+            if inspectorSelection?.showsWindowPicker == true {
+                refreshAvailableWindows()
+            }
             updateDrawerMonitor()
         }
         .onDisappear {
             stopDrawerMonitor()
+            availableWindowsTask?.cancel()
         }
     }
 
     private var boardPanel: some View {
-        ScrollView([.horizontal, .vertical]) {
-            VStack(alignment: .leading, spacing: boardSpacing) {
-                reorderHint
-                gridHeaderRow
+        // A ScrollView centers content smaller than its viewport; pin the board to the top-left
+        // by making the content at least as large as the viewport.
+        GeometryReader { proxy in
+            ScrollView([.horizontal, .vertical]) {
+                VStack(alignment: .leading, spacing: boardSpacing) {
+                    reorderHint
+                    gridHeaderRow
 
-                ForEach(gridStore.layers) { layer in
-                    layerRow(layer)
+                    ForEach(gridStore.layers) { layer in
+                        layerRow(layer)
+                    }
+
+                    addProjectRow
+                    standaloneAppsRow
                 }
-
-                addProjectRow
-                standaloneAppsRow
+                .padding(24)
+                .frame(minWidth: proxy.size.width, minHeight: proxy.size.height, alignment: .topLeading)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -513,7 +530,7 @@ struct GridSettingsPane: View {
                     usageTags: { window in
                         usageTags(for: window)
                     },
-                    onRefresh: refreshAvailableWindows,
+                    onRefresh: forceRefreshAvailableWindows,
                     onSelect: { window in
                         let app = gridStore.createStandaloneApp(
                             target: .app(
@@ -549,14 +566,10 @@ struct GridSettingsPane: View {
             drawerTitle(layer.name, subtitle: "Project")
 
             GridSettingsFieldSection(title: "Project") {
-                TextField(
-                    "Project name",
-                    text: Binding(
-                        get: { layer.name },
-                        set: { gridStore.renameLayer(id: layer.id, name: $0) }
-                    )
-                )
-                .textFieldStyle(.roundedBorder)
+                CommitTextField("Project name", value: layer.name) {
+                    gridStore.renameLayer(id: layer.id, name: $0)
+                }
+                .id(layer.id)
                 .fieldResetButton {
                     gridStore.renameLayer(id: layer.id, name: defaultLayerName(for: layer))
                 }
@@ -609,14 +622,10 @@ struct GridSettingsPane: View {
             drawerTitle(column.title, subtitle: column.kind == .custom ? "Shared Custom Column" : "Shared Default Column")
 
             GridSettingsFieldSection(title: "Column") {
-                TextField(
-                    "Column name",
-                    text: Binding(
-                        get: { column.title },
-                        set: { gridStore.renameColumn(columnID: column.id, name: $0) }
-                    )
-                )
-                .textFieldStyle(.roundedBorder)
+                CommitTextField("Column name", value: column.title) {
+                    gridStore.renameColumn(columnID: column.id, name: $0)
+                }
+                .id(column.id)
                 .fieldResetButton {
                     gridStore.renameColumn(columnID: column.id, name: defaultColumnName(for: column))
                 }
@@ -666,14 +675,10 @@ struct GridSettingsPane: View {
 
             GridSettingsFieldSection(title: "Slot") {
                 if let binding {
-                    TextField(
-                        "Label",
-                        text: Binding(
-                            get: { binding.label },
-                            set: { gridStore.renameBinding(layerID: layer.id, tool: column, bindingID: binding.id, label: $0) }
-                        )
-                    )
-                    .textFieldStyle(.roundedBorder)
+                    CommitTextField("Label", value: binding.label) {
+                        gridStore.renameBinding(layerID: layer.id, tool: column, bindingID: binding.id, label: $0)
+                    }
+                    .id(binding.id)
                     .fieldResetButton {
                         gridStore.renameBinding(layerID: layer.id, tool: column, bindingID: binding.id, label: defaultBindingLabel(for: binding))
                     }
@@ -694,7 +699,7 @@ struct GridSettingsPane: View {
                     usageTags: { window in
                         usageTags(for: window, excludingSlot: (layer.id, column.id))
                     },
-                    onRefresh: refreshAvailableWindows,
+                    onRefresh: forceRefreshAvailableWindows,
                     onSelect: { window in
                         _ = gridStore.replaceBinding(
                             layerID: layer.id,
@@ -725,7 +730,7 @@ struct GridSettingsPane: View {
             settings: settings,
             gridStore: gridStore,
             availableWindows: availableWindows,
-            refreshAvailableWindows: refreshAvailableWindows,
+            refreshAvailableWindows: forceRefreshAvailableWindows,
             activeRecorderID: $activeRecorderID
         )
     }
@@ -797,8 +802,29 @@ struct GridSettingsPane: View {
         }
     }
 
-    private func refreshAvailableWindows() {
-        availableWindows = availableWindowsProvider()
+    /// Loads live windows off the main thread. Recent results are reused so hopping between
+    /// cells doesn't rescan every app; the picker's refresh button forces a new scan.
+    private func refreshAvailableWindows(force: Bool = false) {
+        if !force,
+           let availableWindowsLoadedAt,
+           Date.now.timeIntervalSince(availableWindowsLoadedAt) < availableWindowsMaxAge {
+            return
+        }
+
+        availableWindowsTask?.cancel()
+        availableWindowsTask = Task {
+            let windows = await availableWindowsProvider()
+            guard !Task.isCancelled else {
+                return
+            }
+
+            availableWindows = windows
+            availableWindowsLoadedAt = .now
+        }
+    }
+
+    private func forceRefreshAvailableWindows() {
+        refreshAvailableWindows(force: true)
     }
 
     private func updateDrawerMonitor() {
@@ -918,10 +944,10 @@ struct GridSettingsPane: View {
         VStack(alignment: .leading, spacing: 0) {
             ShortcutRecorderRow(
                 action: action,
+                scheme: .grid,
                 title: title,
                 description: description,
                 settings: settings,
-                resetShortcut: action.defaultShortcut,
                 activeRecorderID: $activeRecorderID
             )
             .padding(.horizontal, 14)
@@ -1076,6 +1102,48 @@ private struct GridInspectorDrawer<Content: View>: View {
     }
 }
 
+/// Edits a local draft and only writes back on submit or when focus leaves, so each keystroke
+/// doesn't hit the store (and its persistence/hotkey pipeline) or get normalized mid-typing.
+private struct CommitTextField: View {
+    let title: String
+    let value: String
+    let onCommit: (String) -> Void
+
+    @State private var draft: String
+    @FocusState private var isFocused: Bool
+
+    init(_ title: String, value: String, onCommit: @escaping (String) -> Void) {
+        self.title = title
+        self.value = value
+        self.onCommit = onCommit
+        _draft = State(initialValue: value)
+    }
+
+    var body: some View {
+        TextField(title, text: $draft)
+            .textFieldStyle(.roundedBorder)
+            .focused($isFocused)
+            .onSubmit(commit)
+            .onChange(of: isFocused) { _, focused in
+                if !focused {
+                    commit()
+                }
+            }
+            .onChange(of: value) { _, newValue in
+                draft = newValue
+            }
+            .onDisappear(perform: commit)
+    }
+
+    private func commit() {
+        guard draft != value else {
+            return
+        }
+
+        onCommit(draft)
+    }
+}
+
 private struct GridSettingsFieldSection<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
@@ -1185,10 +1253,8 @@ private struct GridStandaloneAppInspector: View {
                         resetButtonHelp: "Reset shortcut",
                         activeRecorderID: $activeRecorderID,
                         applyShortcut: { shortcut in
-                            if let duplicateAction = settings.activeHotkeyActions(for: .grid).first(where: { action in
-                                settings.shortcut(for: action) == shortcut
-                            }) {
-                                return "Already assigned to \(settings.title(for: duplicateAction))."
+                            if let conflict = settings.conflictDescription(for: shortcut, in: .grid, includeAppShortcuts: false) {
+                                return conflict
                             }
 
                             if let duplicateApp = gridStore.standaloneApps.first(where: {
@@ -1272,6 +1338,13 @@ private struct GridAvailableWindowPicker: View {
     private let labelPolicy = TargetLabelPolicy()
 
     var body: some View {
+        // Matching a window against every bound target is relatively costly, so compute each
+        // window's tags once per render.
+        let tagsByWindowID = Dictionary(
+            windows.map { ($0.id, usageTags($0)) },
+            uniquingKeysWith: { first, _ in first }
+        )
+
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Available Windows")
@@ -1311,7 +1384,7 @@ private struct GridAvailableWindowPicker: View {
                         .tag("")
 
                     ForEach(windows) { window in
-                        windowOption(window)
+                        windowOption(window, tags: tagsByWindowID[window.id] ?? [])
                             .tag(window.id)
                     }
                 }
@@ -1326,16 +1399,15 @@ private struct GridAvailableWindowPicker: View {
         }
     }
 
-    @ViewBuilder
-    private func windowOption(_ window: LiveWindow) -> some View {
+    private func windowOption(_ window: LiveWindow, tags: [String]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(labelPolicy.label(for: window))
                 .font(.system(size: 12, weight: .medium))
                 .lineLimit(1)
 
-            if !usageTags(window).isEmpty {
+            if !tags.isEmpty {
                 HStack(spacing: 4) {
-                    ForEach(Array(usageTags(window).prefix(2)), id: \.self) { tag in
+                    ForEach(Array(tags.prefix(2)), id: \.self) { tag in
                         Text(tag)
                             .font(.system(size: 9.5, weight: .medium))
                             .padding(.horizontal, 6)
@@ -1343,8 +1415,8 @@ private struct GridAvailableWindowPicker: View {
                             .background(Capsule().fill(Color.secondary.opacity(0.12)))
                     }
 
-                    if usageTags(window).count > 2 {
-                        Text("+\(usageTags(window).count - 2)")
+                    if tags.count > 2 {
+                        Text("+\(tags.count - 2)")
                             .font(.system(size: 9.5, weight: .medium))
                             .foregroundStyle(.secondary)
                     }

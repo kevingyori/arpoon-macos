@@ -29,22 +29,13 @@ struct MenuBarView: View {
                 }
                 .padding(16)
             }
-            .frame(maxHeight: 360)
+            .frame(maxHeight: .infinity)
 
             Divider()
 
             footer
         }
-        .frame(width: 372)
-        .onReceive(gridStore.$layers) { layers in
-            gridSession.sync(columns: gridStore.columns, layers: layers)
-        }
-        .onReceive(gridStore.$columns) { columns in
-            gridSession.sync(columns: columns, layers: gridStore.layers)
-        }
-        .onReceive(niriStore.$workspaces) { workspaces in
-            niriSession.sync(workspaces: workspaces)
-        }
+        .frame(width: StatusItemController.popoverSize.width, height: StatusItemController.popoverSize.height)
     }
 
     private var header: some View {
@@ -110,7 +101,7 @@ struct MenuBarView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             case .dynamicWindows:
-                if let shortcut = settings.shortcut(for: HotkeyAction(kind: .addDynamicHotkey, slot: nil)) {
+                if let shortcut = settings.shortcut(for: HotkeyAction(kind: .addDynamicHotkey, slot: nil), in: .dynamicWindows) {
                     Text("Press \(shortcut.displayString) while the target is focused, then press the shortcut you want to assign.")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)

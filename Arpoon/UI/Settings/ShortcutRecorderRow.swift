@@ -10,7 +10,7 @@ struct ShortcutRecorderRow: View {
     let resetButtonHelp: String?
     let applyShortcutHandler: (HotkeyShortcut) -> String?
     let clearShortcutHandler: () -> Void
-    let resetShortcutHandler: (() -> Void)?
+    let resetShortcutHandler: (() -> String?)?
     @Binding var activeRecorderID: String?
 
     @State private var eventMonitor: Any?
@@ -18,39 +18,50 @@ struct ShortcutRecorderRow: View {
 
     private let shortcutFieldWidth: CGFloat = 156
 
+    /// - Parameter scheme: The scheme whose shortcut this row edits. Defaults to the current
+    ///   scheme; pass one explicitly for rows that always edit a specific scheme (e.g. The Grid).
     init(
         action: HotkeyAction,
+        scheme: HotkeyScheme? = nil,
         title: String? = nil,
         description: String? = nil,
         settings: SettingsStore,
-        resetShortcut: HotkeyShortcut?,
         activeRecorderID: Binding<String?>
     ) {
-        recorderID = action.id
+        let scheme = scheme ?? settings.hotkeyScheme
+        let currentShortcut = settings.shortcut(for: action, in: scheme)
+        let defaultShortcut = settings.defaultShortcut(for: action, in: scheme)
+
+        recorderID = "\(scheme.rawValue)-\(action.id)"
         self.title = title ?? settings.title(for: action)
-        self.description = description ?? (settings.shortcut(for: action) == nil ? "No shortcut assigned." : "Global shortcut is active.")
-        currentShortcut = settings.shortcut(for: action)
-        resetButtonHelp = resetShortcut.map { "Reset to \($0.displayString)" }
-        applyShortcutHandler = { shortcut in
-            switch settings.setShortcut(shortcut, for: action) {
+        if let description {
+            self.description = description
+        } else if currentShortcut == nil {
+            self.description = "No shortcut assigned."
+        } else if scheme != settings.hotkeyScheme {
+            self.description = "Active when \(scheme.title) is the hotkey scheme."
+        } else {
+            self.description = "Global shortcut is active."
+        }
+        self.currentShortcut = currentShortcut
+        resetButtonHelp = defaultShortcut.map { "Reset to \($0.displayString)" }
+
+        let apply: (HotkeyShortcut) -> String? = { shortcut in
+            switch settings.setShortcut(shortcut, for: action, in: scheme) {
             case .updated:
                 return nil
-            case .duplicate(let duplicate):
-                return "Already assigned to \(settings.title(for: duplicate))."
+            case .conflict(let message):
+                return message
             case .requiresModifier:
                 return "Use at least one modifier key."
             }
         }
+        applyShortcutHandler = apply
         clearShortcutHandler = {
-            settings.clearShortcut(for: action)
+            settings.clearShortcut(for: action, in: scheme)
         }
-        resetShortcutHandler = resetShortcut.map { shortcut in
-            {
-                switch settings.setShortcut(shortcut, for: action) {
-                case .updated, .duplicate, .requiresModifier:
-                    break
-                }
-            }
+        resetShortcutHandler = defaultShortcut.map { shortcut in
+            { apply(shortcut) }
         }
         _activeRecorderID = activeRecorderID
     }
@@ -73,7 +84,12 @@ struct ShortcutRecorderRow: View {
         self.resetButtonHelp = resetButtonHelp
         applyShortcutHandler = applyShortcut
         clearShortcutHandler = clearShortcut
-        resetShortcutHandler = resetShortcut
+        resetShortcutHandler = resetShortcut.map { reset in
+            {
+                reset()
+                return nil
+            }
+        }
         _activeRecorderID = activeRecorderID
     }
 
@@ -110,8 +126,7 @@ struct ShortcutRecorderRow: View {
 
                 if let resetButtonHelp, let resetShortcutHandler {
                     Button {
-                        errorMessage = nil
-                        resetShortcutHandler()
+                        errorMessage = resetShortcutHandler()
                         activeRecorderID = nil
                     } label: {
                         Image(systemName: "arrow.counterclockwise")

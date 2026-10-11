@@ -592,6 +592,105 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
     }
 
+    func testSchemesKeepIndependentShortcutProfiles() {
+        let settings = makeSettings()
+        let optionH = HotkeyShortcut(keyCode: UInt32(kVK_ANSI_H), modifiers: UInt32(optionKey))
+        let column = HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.terminal.id)
+        let visibleUp = HotkeyAction(kind: .focusVisibleAppUp, slot: nil)
+
+        // Niri owns ⌥H by default, but that must not block The Grid from using it.
+        XCTAssertEqual(settings.shortcut(for: HotkeyAction(kind: .niriFocusLeft, slot: nil), in: .niri), optionH)
+        guard case .updated = settings.setShortcut(optionH, for: column, in: .grid) else {
+            return XCTFail("Expected ⌥H to be assignable in The Grid")
+        }
+
+        // Applying a Grid preset only changes The Grid's copy of shared actions.
+        let staticVisibleUp = settings.shortcut(for: visibleUp, in: .staticSlots)
+        settings.applyGridShortcutPreset(.vim)
+        XCTAssertEqual(settings.shortcut(for: visibleUp, in: .staticSlots), staticVisibleUp)
+        XCTAssertEqual(settings.gridShortcutPreset, .vim)
+    }
+
+    func testSettingShortcutRejectsConflictsWithinSchemeIncludingAppShortcuts() {
+        let settings = makeSettings()
+        let standalone = HotkeyShortcut(keyCode: UInt32(kVK_ANSI_Y), modifiers: UInt32(optionKey))
+        settings.appShortcutOwners = { scheme in
+            scheme == .grid ? [(shortcut: standalone, name: "Music")] : []
+        }
+        let gridFocusLeft = HotkeyAction(kind: .gridFocusLeft, slot: nil)
+        let gridFocusRight = HotkeyAction(kind: .gridFocusRight, slot: nil)
+
+        guard case .conflict(let appMessage) = settings.setShortcut(standalone, for: gridFocusLeft, in: .grid) else {
+            return XCTFail("Expected a conflict with the standalone app")
+        }
+        XCTAssertEqual(appMessage, "Already assigned to Music.")
+
+        let rightShortcut = settings.shortcut(for: gridFocusRight, in: .grid)!
+        guard case .conflict = settings.setShortcut(rightShortcut, for: gridFocusLeft, in: .grid) else {
+            return XCTFail("Expected a conflict with Grid Focus Right")
+        }
+    }
+
+    func testClearedShortcutStaysClearedAfterReload() {
+        let suiteName = "ArpoonTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let action = HotkeyAction(kind: .gridShowHUD, slot: nil)
+
+        let settings = SettingsStore(defaults: defaults)
+        XCTAssertNotNil(settings.shortcut(for: action, in: .grid))
+        settings.clearShortcut(for: action, in: .grid)
+
+        let reloaded = SettingsStore(defaults: defaults)
+        XCTAssertNil(reloaded.shortcut(for: action, in: .grid))
+    }
+
+    func testRemovingAndReaddingProjectRestoresItsJumpShortcut() {
+        let settings = makeSettings()
+        let jumpThree = HotkeyAction(kind: .gridJumpLayer, slot: 3)
+        let original = settings.shortcut(for: jumpThree, in: .grid)
+        XCTAssertNotNil(original)
+
+        settings.syncGridHotkeys(columns: GridToolColumn.defaults, layers: makeLayers(count: 2))
+        XCTAssertFalse(settings.activeHotkeyActions(for: .grid).contains(jumpThree))
+        settings.syncGridHotkeys(columns: GridToolColumn.defaults, layers: makeLayers(count: 3))
+
+        XCTAssertEqual(settings.shortcut(for: jumpThree, in: .grid), original)
+    }
+
+    func testExplicitShortcutWinsOverProjectJumpWhenProjectIsAdded() {
+        let settings = makeSettings()
+        let jumpThree = HotkeyAction(kind: .gridJumpLayer, slot: 3)
+        let column = HotkeyAction(kind: .gridFocusColumn, slot: nil, referenceID: GridToolColumn.browser.id)
+        let optionThree = settings.shortcut(for: jumpThree, in: .grid)!
+
+        settings.syncGridHotkeys(columns: GridToolColumn.defaults, layers: makeLayers(count: 2))
+        guard case .updated = settings.setShortcut(optionThree, for: column, in: .grid) else {
+            return XCTFail("⌥3 is unused while there are only two projects")
+        }
+
+        settings.syncGridHotkeys(columns: GridToolColumn.defaults, layers: makeLayers(count: 3))
+        XCTAssertEqual(settings.shortcut(for: column, in: .grid), optionThree)
+        XCTAssertNil(settings.shortcut(for: jumpThree, in: .grid))
+    }
+
+    func testLegacySharedHotkeysMigrateIntoPerSchemeProfiles() throws {
+        let suiteName = "ArpoonTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let optionZ = HotkeyShortcut(keyCode: UInt32(kVK_ANSI_Z), modifiers: UInt32(optionKey))
+        let legacy = [["actionID": "focus-visible-app-left", "shortcut": ["keyCode": optionZ.keyCode, "modifiers": optionZ.modifiers]]]
+        defaults.set(try JSONSerialization.data(withJSONObject: legacy), forKey: "hotkeys")
+
+        let settings = SettingsStore(defaults: defaults)
+        let visibleLeft = HotkeyAction(kind: .focusVisibleAppLeft, slot: nil)
+
+        // Shared actions are copied into every scheme that uses them; Niri doesn't.
+        XCTAssertEqual(settings.shortcut(for: visibleLeft, in: .grid), optionZ)
+        XCTAssertEqual(settings.shortcut(for: visibleLeft, in: .staticSlots), optionZ)
+        XCTAssertNil(settings.shortcut(for: visibleLeft, in: .niri))
+    }
+
     func testNiriSchemeUsesDedicatedActions() {
         let settings = makeSettings()
 
@@ -1629,6 +1728,10 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         )
     }
 
+    private func makeLayers(count: Int) -> [GridLayer] {
+        (1 ... count).map { GridLayer(name: "Project \($0)", color: GridLayerColor.allCases[($0 - 1) % GridLayerColor.allCases.count]) }
+    }
+
     private func makeGridStore() -> GridStore {
         GridStore(
             store: InMemoryGridLayerStore(),
@@ -1731,6 +1834,7 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onNiriCreateWorkspaceBelow: (() -> Void)?
     var onNiriRemoveCurrentWindow: (() -> Void)?
     var onNiriShowHUD: (() -> Void)?
+    var onHotkeyTriggered: (() -> Void)?
 
     private(set) var configurations: [HotkeyConfiguration] = []
     private(set) var suspendCount = 0
@@ -1762,6 +1866,9 @@ private final class FakeOptionHoldHUDController: OptionHoldHUDControlling {
 
     func setSuppressed(_ isSuppressed: Bool) {
         suppressedStates.append(isSuppressed)
+    }
+
+    func noteShortcutTriggered() {
     }
 }
 

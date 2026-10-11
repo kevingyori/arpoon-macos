@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Foundation
 
 @MainActor
@@ -13,7 +14,7 @@ final class AppModel: ObservableObject {
     let gridSession: GridSession
     let niriStore: NiriStore
     let niriSession: NiriSession
-    let availableWindowsProvider: @MainActor () -> [LiveWindow]
+    let availableWindowsProvider: @MainActor () async -> [LiveWindow]
     let commands: AppCommands
 
     private let commandCenter: AppCommandCenter
@@ -23,15 +24,14 @@ final class AppModel: ObservableObject {
         settings: settings,
         dynamicHotkeys: dynamicHotkeyStore,
         gridStore: gridStore,
-        gridSession: gridSession,
         niriStore: niriStore,
-        niriSession: niriSession,
         permissions: accessibilityPermissions,
         availableWindowsProvider: availableWindowsProvider,
         commands: commands
     )
+    private let focusChangeMonitor: FocusChangeMonitor
     private var started = false
-    private var externalFocusSyncTask: Task<Void, Never>?
+    private var cancellables = Set<AnyCancellable>()
 
     private init() {
         settings = SettingsStore()
@@ -41,8 +41,9 @@ final class AppModel: ObservableObject {
         let appProvider = RunningAppProvider()
         let windowProvider = AccessibilityWindowProvider(permissionService: accessibilityPermissions)
         availableWindowsProvider = {
-            windowProvider.allWindows()
+            await windowProvider.loadAllWindows()
         }
+        focusChangeMonitor = FocusChangeMonitor(permissionService: accessibilityPermissions)
         let focusController = MacOSFocusController(permissionService: accessibilityPermissions)
 
         let assignmentStore = JSONAssignmentStore()
@@ -306,6 +307,8 @@ final class AppModel: ObservableObject {
         }
 
         started = true
+        AccessibilityWindowProvider.configureMessagingTimeout()
+        bindSessionsToStores()
         Task {
             await slotStore.load()
             await dynamicHotkeyStore.load()
@@ -315,32 +318,47 @@ final class AppModel: ObservableObject {
             niriSession.sync(workspaces: niriStore.workspaces)
             runtimeCoordinator.start()
             trackpadGestureController.start()
-            startExternalFocusSyncLoop()
+            startExternalFocusSync()
         }
     }
 
-    private func startExternalFocusSyncLoop() {
-        externalFocusSyncTask?.cancel()
-        externalFocusSyncTask = Task { [weak self] in
-            while let self, !Task.isCancelled {
-                await MainActor.run {
-                    switch self.settings.hotkeyScheme {
-                    case .grid:
-                        guard self.settings.enableExperimentalGridExternalSync else {
-                            return
-                        }
+    /// Keeps the sessions' current selection valid as the stores change, independent of which
+    /// views happen to be on screen.
+    private func bindSessionsToStores() {
+        gridStore.$columns
+            .combineLatest(gridStore.$layers)
+            .sink { [weak gridSession] columns, layers in
+                gridSession?.sync(columns: columns, layers: layers)
+            }
+            .store(in: &cancellables)
 
-                        self.commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
-                    case .niri:
-                        self.commandCenter.syncNiriSelectionToFocusedTargetIfNeeded()
-                    case .staticSlots, .dynamicWindows:
-                        break
-                    }
+        niriStore.$workspaces
+            .sink { [weak niriSession] workspaces in
+                niriSession?.sync(workspaces: workspaces)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func startExternalFocusSync() {
+        focusChangeMonitor.onChange = { [weak self] in
+            guard let self else {
+                return
+            }
+
+            switch settings.hotkeyScheme {
+            case .grid:
+                guard settings.enableExperimentalGridExternalSync else {
+                    return
                 }
 
-                try? await Task.sleep(nanoseconds: 350_000_000)
+                commandCenter.syncGridSelectionToFocusedTargetIfNeeded()
+            case .niri:
+                commandCenter.syncNiriSelectionToFocusedTargetIfNeeded()
+            case .staticSlots, .dynamicWindows:
+                break
             }
         }
+        focusChangeMonitor.start()
     }
 
     func flushPersistence() async {

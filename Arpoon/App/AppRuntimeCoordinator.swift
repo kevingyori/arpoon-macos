@@ -139,6 +139,23 @@ final class AppRuntimeCoordinator {
             self?.onNiriShowHUD?()
         }
 
+        hotkeyController.onHotkeyTriggered = { [weak optionHoldHUDController] in
+            optionHoldHUDController?.noteShortcutTriggered()
+        }
+
+        settings.appShortcutOwners = { [weak gridStore, weak dynamicHotkeyStore] scheme in
+            switch scheme {
+            case .grid:
+                return gridStore?.standaloneApps.compactMap { app in
+                    app.shortcut.map { (shortcut: $0, name: app.name) }
+                } ?? []
+            case .dynamicWindows:
+                return dynamicHotkeyStore?.assignments.map { (shortcut: $0.shortcut, name: $0.label) } ?? []
+            case .staticSlots, .niri:
+                return []
+            }
+        }
+
         optionHoldHUDController.onShow = { [weak self] in
             self?.onShowHeldHUD?()
         }
@@ -156,9 +173,18 @@ final class AppRuntimeCoordinator {
         accessibilityPermissions.startMonitoring()
         optionHoldHUDController.start()
 
+        // Sync Grid shortcuts with the current columns/projects before building the registered
+        // configuration, so it never registers a stale profile.
+        gridStore.$columns
+            .combineLatest(gridStore.$layers)
+            .sink { [weak self] columns, layers in
+                self?.settings.syncGridHotkeys(columns: columns, layers: layers)
+            }
+            .store(in: &cancellables)
+
         Publishers.CombineLatest4(
             settings.$hotkeyScheme,
-            settings.$hotkeys,
+            settings.$hotkeyProfiles,
             dynamicHotkeyStore.$assignments.map { assignments in
                 assignments.map(\.shortcut)
             },
@@ -172,7 +198,7 @@ final class AppRuntimeCoordinator {
                 }
             )
             .map { state, gridStandaloneBindings in
-                let (scheme, hotkeys, dynamicShortcuts, gridState) = state
+                let (scheme, profiles, dynamicShortcuts, gridState) = state
                 let (columns, layers) = gridState
                 return HotkeyConfiguration(
                     scheme: scheme,
@@ -181,7 +207,7 @@ final class AppRuntimeCoordinator {
                         columns: columns,
                         layerCount: layers.count
                     ),
-                    hotkeys: hotkeys,
+                    hotkeys: profiles[scheme] ?? [:],
                     dynamicShortcuts: dynamicShortcuts,
                     gridStandaloneBindings: gridStandaloneBindings
                 )
@@ -189,13 +215,6 @@ final class AppRuntimeCoordinator {
             .removeDuplicates()
             .sink { [weak self] configuration in
                 self?.hotkeyController.apply(configuration: configuration)
-            }
-            .store(in: &cancellables)
-
-        gridStore.$columns
-            .combineLatest(gridStore.$layers)
-            .sink { [weak self] columns, layers in
-                self?.settings.syncGridHotkeys(columns: columns, layers: layers)
             }
             .store(in: &cancellables)
     }

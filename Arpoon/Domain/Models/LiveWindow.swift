@@ -38,3 +38,7 @@ extension LiveWindow: Hashable {
         hasher.combine(isFocused)
     }
 }
+
+// `AXUIElement` is an immutable CF reference that the Accessibility API allows using from any
+// thread, which lets window scans run off the main actor.
+extension LiveWindow: @unchecked Sendable {}

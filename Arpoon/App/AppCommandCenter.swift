@@ -935,32 +935,13 @@ final class AppCommandCenter {
     }
 
     func validationErrorForDynamicShortcut(_ shortcut: HotkeyShortcut) -> String? {
-        for action in HotkeyAction.activeActions(for: .dynamicWindows) {
-            guard let configuredShortcut = settings.shortcut(for: action) else {
-                continue
-            }
-
-            if configuredShortcut == shortcut {
-                return "Already assigned to \(action.title)."
-            }
-        }
-
-        return nil
+        // Re-binding an existing dynamic hotkey replaces it, so only actions count as conflicts.
+        settings.conflictDescription(for: shortcut, in: .dynamicWindows, includeAppShortcuts: false)
     }
 
     func validationErrorForGridStandaloneShortcut(_ shortcut: HotkeyShortcut) -> String? {
-        for action in settings.activeHotkeyActions(
-            for: .grid,
-            columns: gridStore.columns,
-            layerCount: gridStore.layers.count
-        ) {
-            guard let configuredShortcut = settings.shortcut(for: action) else {
-                continue
-            }
-
-            if configuredShortcut == shortcut {
-                return "Already assigned to \(action.title)."
-            }
+        if let conflict = settings.conflictDescription(for: shortcut, in: .grid, includeAppShortcuts: false) {
+            return conflict
         }
 
         if let app = gridStore.standaloneApps.first(where: { $0.shortcut == shortcut }) {

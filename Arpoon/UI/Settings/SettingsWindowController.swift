@@ -9,11 +9,9 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         settings: SettingsStore,
         dynamicHotkeys: DynamicHotkeyStore,
         gridStore: GridStore,
-        gridSession: GridSession,
         niriStore: NiriStore,
-        niriSession: NiriSession,
         permissions: AccessibilityPermissionService,
-        availableWindowsProvider: @escaping @MainActor () -> [LiveWindow],
+        availableWindowsProvider: @escaping @MainActor () async -> [LiveWindow],
         commands: AppCommands
     ) {
         let hostingController = NSHostingController(
@@ -21,9 +19,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
                 settings: settings,
                 dynamicHotkeys: dynamicHotkeys,
                 gridStore: gridStore,
-                gridSession: gridSession,
                 niriStore: niriStore,
-                niriSession: niriSession,
                 permissions: permissions,
                 availableWindowsProvider: availableWindowsProvider,
                 commands: commands
@@ -31,7 +27,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         )
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 720, height: 760),
+            contentRect: NSRect(x: 0, y: 0, width: 1100, height: 760),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
@@ -41,7 +37,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         window.identifier = NSUserInterfaceItemIdentifier("ArpoonSettingsWindow")
         window.isReleasedWhenClosed = false
         window.center()
-        window.contentMinSize = NSSize(width: 680, height: 620)
+        window.contentMinSize = NSSize(width: 860, height: 700)
         window.setFrameAutosaveName("ArpoonSettingsWindowFrame")
         window.contentViewController = hostingController
 
