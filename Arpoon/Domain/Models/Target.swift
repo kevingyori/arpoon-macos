@@ -34,6 +34,26 @@ enum Target: Hashable {
     case window(WindowTarget)
 }
 
+extension Target {
+    var bundleId: String {
+        switch self {
+        case .app(let target):
+            return target.bundleId
+        case .window(let target):
+            return target.bundleId
+        }
+    }
+
+    var appName: String {
+        switch self {
+        case .app(let target):
+            return target.appName
+        case .window(let target):
+            return target.appName
+        }
+    }
+}
+
 extension Target: Codable {
     private enum CodingKeys: String, CodingKey {
         case kind

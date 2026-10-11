@@ -389,9 +389,9 @@ private struct GeneralSettingsPane: View {
                             Divider()
 
                             settingsToggle(
-                                "Experimental external Grid sync",
-                                description: "Update the active Grid cell when you switch windows outside Arpoon. Still experimental, so expect some edge-case weirdness.",
-                                isOn: $settings.enableExperimentalGridExternalSync
+                                "Follow focus outside Arpoon",
+                                description: "Move the active Grid cell to match when you switch to a bound window without using Arpoon.",
+                                isOn: $settings.enableGridExternalSync
                             )
                         }
 
@@ -418,12 +418,6 @@ private struct GeneralSettingsPane: View {
                             valueText: hudTimeoutText(settings.hudTimeout)
                         )
                     }
-                }
-
-                if settings.hotkeyScheme == .grid {
-                    Label("Experimental: external Grid sync can still behave unexpectedly with rapid changes or empty-slot navigation.", systemImage: "flask.fill")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.orange)
                 }
             }
 

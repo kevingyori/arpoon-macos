@@ -18,6 +18,24 @@ struct TargetLabelPolicy {
         label(appName: window.appName, title: window.title)
     }
 
+    /// How a saved binding should read in lists. Auto-generated labels embed the window title
+    /// from when the binding was captured, which goes stale for browsers and terminals, so they
+    /// lead with the app name and demote the title to detail. Labels the user renamed are kept
+    /// as the title.
+    func displayLabel(label: String, target: Target) -> DisplayLabel {
+        let appName = target.appName
+        guard label == self.label(for: target) else {
+            return DisplayLabel(title: label, detail: label == appName ? nil : appName)
+        }
+
+        switch target {
+        case .app:
+            return DisplayLabel(title: appName, detail: nil)
+        case .window(let window):
+            return DisplayLabel(title: appName, detail: cleanedTitle(window.windowTitle, appName: appName))
+        }
+    }
+
     private func label(appName: String, title: String?) -> String {
         let cleaned = cleanedTitle(title, appName: appName)
         guard let cleaned, !cleaned.isEmpty else {
@@ -45,5 +63,19 @@ struct TargetLabelPolicy {
         }
 
         return rawTitle
+    }
+}
+
+struct DisplayLabel: Hashable {
+    let title: String
+    let detail: String?
+
+    /// Single-line form, e.g. "Google Chrome · Inbox".
+    var inline: String {
+        guard let detail, !detail.isEmpty else {
+            return title
+        }
+
+        return "\(title) · \(detail)"
     }
 }

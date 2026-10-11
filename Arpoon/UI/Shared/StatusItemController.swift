@@ -35,6 +35,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     private func configurePopover() {
+        // NSPopover doesn't inherit NSApp.appearance, so match the rest of the app explicitly.
+        popover.appearance = NSAppearance(named: .darkAqua)
         popover.behavior = .applicationDefined
         popover.delegate = self
         popover.animates = true

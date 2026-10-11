@@ -347,7 +347,7 @@ final class AppModel: ObservableObject {
 
             switch settings.hotkeyScheme {
             case .grid:
-                guard settings.enableExperimentalGridExternalSync else {
+                guard settings.enableGridExternalSync else {
                     return
                 }
 

@@ -13,6 +13,8 @@ struct MenuBarView: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var permissions: AccessibilityPermissionService
 
+    private let labelPolicy = TargetLabelPolicy()
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -320,13 +322,18 @@ struct MenuBarView: View {
                                 commands.jumpToGridStandaloneApp(app.id)
                             } label: {
                                 HStack(spacing: 10) {
-                                    Image(systemName: app.iconSymbol)
-                                        .font(.system(size: 12, weight: .medium))
-                                        .frame(width: 22, height: 22)
-                                        .background(Circle().fill(Color.secondary.opacity(0.14)))
+                                    if let binding = app.binding {
+                                        AppIconView(bundleId: binding.target.bundleId)
+                                            .frame(width: 22, height: 22)
+                                    } else {
+                                        Image(systemName: "app.dashed")
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundStyle(.secondary)
+                                            .frame(width: 22, height: 22)
+                                    }
 
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(app.binding?.label ?? "Empty")
+                                        Text(app.binding.map { labelPolicy.displayLabel(label: $0.label, target: $0.target).title } ?? "No app chosen")
                                             .font(.system(size: 12.5, weight: .medium))
 
                                         Text(app.shortcut?.displayString ?? "No shortcut")
@@ -335,11 +342,6 @@ struct MenuBarView: View {
                                     }
 
                                     Spacer()
-
-                                    Text(app.binding?.target.kindDescription ?? "No target")
-                                        .font(.system(size: 11))
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
                                 }
                                 .contentShape(Rectangle())
                                 .padding(.vertical, 6)
@@ -596,7 +598,9 @@ struct MenuBarView: View {
 
     private func gridSummary(for layer: GridLayer) -> String {
         gridStore.columns.map { tool in
-            let label = layer.group(for: tool).activeBinding?.label ?? "empty"
+            let label = layer.group(for: tool).activeBinding.map {
+                labelPolicy.displayLabel(label: $0.label, target: $0.target).title
+            } ?? "empty"
             return "\(tool.title): \(label)"
         }
         .joined(separator: " • ")

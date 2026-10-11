@@ -506,7 +506,7 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
     func testDefaultSettingsEnableExperimentalGridExternalSync() {
         let settings = makeSettings()
 
-        XCTAssertTrue(settings.enableExperimentalGridExternalSync)
+        XCTAssertTrue(settings.enableGridExternalSync)
     }
 
     func testDefaultSettingsSeedGridWithGamerPreset() {
@@ -1835,6 +1835,7 @@ private final class FakeHotkeyController: HotkeyControlling {
     var onNiriRemoveCurrentWindow: (() -> Void)?
     var onNiriShowHUD: (() -> Void)?
     var onHotkeyTriggered: (() -> Void)?
+    var onRegistrationFailures: ((Set<HotkeyShortcut>) -> Void)?
 
     private(set) var configurations: [HotkeyConfiguration] = []
     private(set) var suspendCount = 0

@@ -6,6 +6,7 @@ struct ShortcutRecorderRow: View {
     let recorderID: String
     let title: String
     let description: String
+    let isDescriptionWarning: Bool
     let currentShortcut: HotkeyShortcut?
     let resetButtonHelp: String?
     let applyShortcutHandler: (HotkeyShortcut) -> String?
@@ -34,7 +35,12 @@ struct ShortcutRecorderRow: View {
 
         recorderID = "\(scheme.rawValue)-\(action.id)"
         self.title = title ?? settings.title(for: action)
-        if let description {
+        let isUnregistered = scheme == settings.hotkeyScheme &&
+            currentShortcut.map(settings.unregisteredShortcuts.contains) == true
+        isDescriptionWarning = isUnregistered
+        if isUnregistered {
+            self.description = ShortcutRecorderRow.unregisteredDescription
+        } else if let description {
             self.description = description
         } else if currentShortcut == nil {
             self.description = "No shortcut assigned."
@@ -72,6 +78,7 @@ struct ShortcutRecorderRow: View {
         description: String,
         currentShortcut: HotkeyShortcut?,
         resetButtonHelp: String? = nil,
+        isUnregistered: Bool = false,
         activeRecorderID: Binding<String?>,
         applyShortcut: @escaping (HotkeyShortcut) -> String?,
         clearShortcut: @escaping () -> Void,
@@ -79,7 +86,8 @@ struct ShortcutRecorderRow: View {
     ) {
         self.recorderID = recorderID
         self.title = title
-        self.description = description
+        self.description = isUnregistered ? Self.unregisteredDescription : description
+        isDescriptionWarning = isUnregistered
         self.currentShortcut = currentShortcut
         self.resetButtonHelp = resetButtonHelp
         applyShortcutHandler = applyShortcut
@@ -92,6 +100,8 @@ struct ShortcutRecorderRow: View {
         }
         _activeRecorderID = activeRecorderID
     }
+
+    static let unregisteredDescription = "Couldn't register. Another app or macOS may already use this shortcut."
 
     private var isRecording: Bool {
         activeRecorderID == recorderID
@@ -117,7 +127,7 @@ struct ShortcutRecorderRow: View {
                         .font(.system(size: 13, weight: .medium))
                     Text(description)
                         .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(isDescriptionWarning ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
                 }
 
                 Spacer()

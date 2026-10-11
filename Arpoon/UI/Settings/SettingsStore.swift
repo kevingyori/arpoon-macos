@@ -41,6 +41,10 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(gridShortcutPreset.rawValue, forKey: Keys.gridShortcutPreset) }
     }
 
+    /// Active-scheme shortcuts that failed to register, typically because another app or macOS
+    /// already uses them.
+    @Published var unregisteredShortcuts: Set<HotkeyShortcut> = []
+
     /// Shortcuts owned by app-level bindings (Grid standalone apps, dynamic hotkeys) in a
     /// scheme. Set by the app so action shortcuts can't silently collide with them.
     var appShortcutOwners: ((HotkeyScheme) -> [(shortcut: HotkeyShortcut, name: String)])?
@@ -93,8 +97,8 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(showGridProjectsInHUD, forKey: Keys.showGridProjectsInHUD) }
     }
 
-    @Published var enableExperimentalGridExternalSync: Bool {
-        didSet { defaults.set(enableExperimentalGridExternalSync, forKey: Keys.enableExperimentalGridExternalSync) }
+    @Published var enableGridExternalSync: Bool {
+        didSet { defaults.set(enableGridExternalSync, forKey: Keys.enableExperimentalGridExternalSync) }
     }
 
     @Published var enableNiriTrackpadGestures: Bool {
@@ -144,7 +148,7 @@ final class SettingsStore: ObservableObject {
         } else {
             showGridProjectsInHUD = defaults.object(forKey: Keys.showGridProjectNamesInHUD) as? Bool ?? true
         }
-        enableExperimentalGridExternalSync = defaults.object(forKey: Keys.enableExperimentalGridExternalSync) as? Bool ?? true
+        enableGridExternalSync = defaults.object(forKey: Keys.enableExperimentalGridExternalSync) as? Bool ?? true
         enableNiriTrackpadGestures = defaults.object(forKey: Keys.enableNiriTrackpadGestures) as? Bool ?? true
         trackpadGestureModifier = TrackpadGestureModifier(
             rawValue: defaults.string(forKey: Keys.trackpadGestureModifier) ?? ""
@@ -388,6 +392,7 @@ private enum Keys {
     static let animateGridMinimapSelection = "animateGridMinimapSelection"
     static let showGridProjectsInHUD = "showGridProjectsInHUD"
     static let showGridProjectNamesInHUD = "showGridProjectNamesInHUD"
+    // Stored under the original key so existing preferences carry over.
     static let enableExperimentalGridExternalSync = "enableExperimentalGridExternalSync"
     static let enableNiriTrackpadGestures = "enableNiriTrackpadGestures"
     static let trackpadGestureModifier = "trackpadGestureModifier"

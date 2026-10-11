@@ -34,8 +34,10 @@ struct GridSettingsPane: View {
     @State private var availableWindows: [LiveWindow] = []
     @State private var availableWindowsLoadedAt: Date?
     @State private var availableWindowsTask: Task<Void, Never>?
+    @State private var isLoadingWindows = false
     @State private var drawerKeyMonitor: Any?
     private let windowMatchPolicy = WindowTargetMatchPolicy()
+    private let labelPolicy = TargetLabelPolicy()
 
     private let rowLabelWidth: CGFloat = 196
     private let cellWidth: CGFloat = 188
@@ -261,19 +263,23 @@ struct GridSettingsPane: View {
             } label: {
                 VStack(alignment: .leading, spacing: 12) {
                     if let binding {
+                        let display = labelPolicy.displayLabel(label: binding.label, target: binding.target)
+
                         HStack(alignment: .center, spacing: 10) {
                             AppIconView(bundleId: bundleID(for: binding))
 
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(binding.label)
+                                Text(display.title)
                                     .font(.system(size: 13, weight: .medium))
                                     .lineLimit(1)
 
-                                Text(binding.target.kindDescription)
+                                Text(display.detail ?? binding.target.kindDescription)
                                     .font(.system(size: 11))
                                     .foregroundStyle(.secondary)
+                                    .lineLimit(1)
                             }
                         }
+                        .help(binding.label)
                     } else {
                         VStack(spacing: 8) {
                             Image(systemName: "plus")
@@ -401,27 +407,30 @@ struct GridSettingsPane: View {
                             AppIconView(bundleId: bundleID(for: binding))
 
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(binding.label)
+                                Text(labelPolicy.displayLabel(label: binding.label, target: binding.target).title)
                                     .font(.system(size: 13, weight: .medium))
                                     .lineLimit(1)
 
-                                Text(app.shortcut?.displayString ?? "No shortcut")
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.secondary)
+                                standaloneShortcutText(for: app)
                             }
                         }
                     } else {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 16, weight: .bold))
+                        // A shortcut without an app: say what's missing and what clicking does.
+                        HStack(alignment: .center, spacing: 10) {
+                            Image(systemName: "app.dashed")
+                                .font(.system(size: 18, weight: .regular))
                                 .foregroundStyle(.secondary)
+                                .frame(width: 20, height: 20)
 
-                            Text("Bind App")
-                                .font(.system(size: 12, weight: .medium))
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(app.shortcut.map { "\($0.displayString) has no app" } ?? "No app chosen")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .lineLimit(1)
 
-                            Text(app.shortcut?.displayString ?? "No shortcut")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
+                                Text("Click to choose one")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -436,11 +445,7 @@ struct GridSettingsPane: View {
             .buttonStyle(.plain)
 
             Button {
-                if app.binding != nil {
-                    gridStore.clearStandaloneAppBinding(id: app.id)
-                } else {
-                    gridStore.removeStandaloneApp(id: app.id)
-                }
+                gridStore.removeStandaloneApp(id: app.id)
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 15, weight: .semibold))
@@ -448,7 +453,23 @@ struct GridSettingsPane: View {
                     .padding(10)
             }
             .buttonStyle(.plain)
-            .help(app.binding != nil ? "Clear binding" : "Remove standalone app")
+            .help("Remove standalone app")
+        }
+    }
+
+    @ViewBuilder
+    private func standaloneShortcutText(for app: GridStandaloneApp) -> some View {
+        if let shortcut = app.shortcut,
+           settings.hotkeyScheme == .grid,
+           settings.unregisteredShortcuts.contains(shortcut) {
+            Label("\(shortcut.displayString) unavailable", systemImage: "exclamationmark.triangle.fill")
+                .font(.system(size: 11))
+                .foregroundStyle(.orange)
+                .help(ShortcutRecorderRow.unregisteredDescription)
+        } else {
+            Text(app.shortcut?.displayString ?? "No shortcut")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -525,8 +546,8 @@ struct GridSettingsPane: View {
 
                 GridAvailableWindowPicker(
                     windows: availableWindows,
-                    selectedWindowID: nil,
-                    currentTargetDescription: nil,
+                    mode: .app(selectedBundleID: nil),
+                    isLoading: isLoadingWindows,
                     usageTags: { window in
                         usageTags(for: window)
                     },
@@ -694,8 +715,8 @@ struct GridSettingsPane: View {
 
                 GridAvailableWindowPicker(
                     windows: availableWindows,
-                    selectedWindowID: selectedWindowID(for: binding?.target),
-                    currentTargetDescription: nil,
+                    mode: .window(selectedID: selectedWindowID(for: binding?.target)),
+                    isLoading: isLoadingWindows,
                     usageTags: { window in
                         usageTags(for: window, excludingSlot: (layer.id, column.id))
                     },
@@ -730,6 +751,7 @@ struct GridSettingsPane: View {
             settings: settings,
             gridStore: gridStore,
             availableWindows: availableWindows,
+            isLoadingWindows: isLoadingWindows,
             refreshAvailableWindows: forceRefreshAvailableWindows,
             activeRecorderID: $activeRecorderID
         )
@@ -812,6 +834,7 @@ struct GridSettingsPane: View {
         }
 
         availableWindowsTask?.cancel()
+        isLoadingWindows = true
         availableWindowsTask = Task {
             let windows = await availableWindowsProvider()
             guard !Task.isCancelled else {
@@ -820,6 +843,7 @@ struct GridSettingsPane: View {
 
             availableWindows = windows
             availableWindowsLoadedAt = .now
+            isLoadingWindows = false
         }
     }
 
@@ -1170,6 +1194,7 @@ private struct GridStandaloneAppInspector: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var gridStore: GridStore
     let availableWindows: [LiveWindow]
+    let isLoadingWindows: Bool
     let refreshAvailableWindows: @MainActor () -> Void
     @Binding var activeRecorderID: String?
     private let windowMatchPolicy = WindowTargetMatchPolicy()
@@ -1251,6 +1276,8 @@ private struct GridStandaloneAppInspector: View {
                         description: "Triggers this standalone app shortcut from anywhere.",
                         currentShortcut: app.shortcut,
                         resetButtonHelp: "Reset shortcut",
+                        isUnregistered: settings.hotkeyScheme == .grid &&
+                            app.shortcut.map(settings.unregisteredShortcuts.contains) == true,
                         activeRecorderID: $activeRecorderID,
                         applyShortcut: { shortcut in
                             if let conflict = settings.conflictDescription(for: shortcut, in: .grid, includeAppShortcuts: false) {
@@ -1289,8 +1316,8 @@ private struct GridStandaloneAppInspector: View {
 
                 GridAvailableWindowPicker(
                     windows: availableWindows,
-                    selectedWindowID: nil,
-                    currentTargetDescription: nil,
+                    mode: .app(selectedBundleID: app.binding?.target.bundleId),
+                    isLoading: isLoadingWindows,
                     usageTags: { window in
                         usageTags(for: window, excludingStandaloneAppID: app.id)
                     },
@@ -1327,15 +1354,30 @@ private struct GridStandaloneAppInspector: View {
     }
 }
 
+/// Searchable list of live windows grouped by app. In `.app` mode (standalone apps bind to an
+/// app, not a window) each app is a single row.
 private struct GridAvailableWindowPicker: View {
+    enum Mode {
+        case window(selectedID: String?)
+        case app(selectedBundleID: String?)
+    }
+
     let windows: [LiveWindow]
-    let selectedWindowID: String?
-    let currentTargetDescription: String?
+    let mode: Mode
+    let isLoading: Bool
     let usageTags: (LiveWindow) -> [String]
     let onRefresh: @MainActor () -> Void
     let onSelect: (LiveWindow) -> Void
 
-    private let labelPolicy = TargetLabelPolicy()
+    @State private var query = ""
+
+    private struct AppGroup: Identifiable {
+        let bundleId: String
+        let appName: String
+        let windows: [LiveWindow]
+
+        var id: String { bundleId }
+    }
 
     var body: some View {
         // Matching a window against every bound target is relatively costly, so compute each
@@ -1344,14 +1386,20 @@ private struct GridAvailableWindowPicker: View {
             windows.map { ($0.id, usageTags($0)) },
             uniquingKeysWith: { first, _ in first }
         )
+        let groups = filteredGroups
 
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Available Windows")
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Text(isAppMode ? "Running Apps" : "Available Windows")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
 
                 Spacer()
+
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                }
 
                 Button {
                     onRefresh()
@@ -1359,70 +1407,188 @@ private struct GridAvailableWindowPicker: View {
                     Image(systemName: "arrow.clockwise")
                 }
                 .buttonStyle(.borderless)
-                .help("Refresh available windows")
+                .help(isAppMode ? "Refresh running apps" : "Refresh available windows")
+                .disabled(isLoading)
             }
 
-            if windows.isEmpty {
-                Text("No live windows are available right now.")
+            TextField(isAppMode ? "Search apps" : "Search apps and windows", text: $query)
+                .textFieldStyle(.roundedBorder)
+
+            if groups.isEmpty {
+                Text(emptyMessage)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
+                    .padding(.vertical, 6)
             } else {
-                Picker(
-                    "Available Windows",
-                    selection: Binding(
-                        get: { selectedWindowID ?? "" },
-                        set: { newValue in
-                            guard let window = windows.first(where: { $0.id == newValue }) else {
-                                return
-                            }
-
-                            onSelect(window)
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(groups) { group in
+                        if isAppMode {
+                            appRow(group, tags: Self.uniqueTags(group.windows.flatMap { tagsByWindowID[$0.id] ?? [] }))
+                        } else {
+                            windowGroup(group, tagsByWindowID: tagsByWindowID)
                         }
-                    )
-                ) {
-                    Text("Select a window")
-                        .tag("")
-
-                    ForEach(windows) { window in
-                        windowOption(window, tags: tagsByWindowID[window.id] ?? [])
-                            .tag(window.id)
                     }
                 }
-                .pickerStyle(.menu)
-            }
-
-            if let currentTargetDescription, !currentTargetDescription.isEmpty {
-                Text(currentTargetDescription)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
             }
         }
     }
 
-    private func windowOption(_ window: LiveWindow, tags: [String]) -> some View {
+    private var isAppMode: Bool {
+        if case .app = mode {
+            return true
+        }
+        return false
+    }
+
+    private var emptyMessage: String {
+        if !query.isEmpty {
+            return "Nothing matches “\(query)”."
+        }
+        if isLoading {
+            return "Looking for windows…"
+        }
+        return isAppMode ? "No running apps with windows right now." : "No live windows are available right now."
+    }
+
+    private var filteredGroups: [AppGroup] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let grouped = Dictionary(grouping: windows, by: \.bundleId)
+
+        return grouped.compactMap { bundleId, appWindows -> AppGroup? in
+            guard let appName = appWindows.first?.appName else {
+                return nil
+            }
+
+            let appMatches = needle.isEmpty || appName.localizedCaseInsensitiveContains(needle)
+            let matchingWindows = appMatches
+                ? appWindows
+                : appWindows.filter { ($0.title ?? "").localizedCaseInsensitiveContains(needle) }
+
+            guard !matchingWindows.isEmpty else {
+                return nil
+            }
+
+            return AppGroup(bundleId: bundleId, appName: appName, windows: matchingWindows)
+        }
+        .sorted { $0.appName.localizedCaseInsensitiveCompare($1.appName) == .orderedAscending }
+    }
+
+    private func windowGroup(_ group: AppGroup, tagsByWindowID: [String: [String]]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(labelPolicy.label(for: window))
-                .font(.system(size: 12, weight: .medium))
-                .lineLimit(1)
+            HStack(spacing: 8) {
+                AppIconView(bundleId: group.bundleId)
+                Text(group.appName)
+                    .font(.system(size: 12, weight: .semibold))
+            }
 
-            if !tags.isEmpty {
-                HStack(spacing: 4) {
-                    ForEach(Array(tags.prefix(2)), id: \.self) { tag in
-                        Text(tag)
-                            .font(.system(size: 9.5, weight: .medium))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(Capsule().fill(Color.secondary.opacity(0.12)))
-                    }
-
-                    if tags.count > 2 {
-                        Text("+\(tags.count - 2)")
-                            .font(.system(size: 9.5, weight: .medium))
-                            .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(group.windows) { window in
+                    pickerRow(
+                        title: window.title?.isEmpty == false ? window.title! : "Untitled window",
+                        tags: tagsByWindowID[window.id] ?? [],
+                        isSelected: isSelected(window),
+                        indent: 28
+                    ) {
+                        onSelect(window)
                     }
                 }
             }
         }
+    }
+
+    private func appRow(_ group: AppGroup, tags: [String]) -> some View {
+        pickerRow(
+            title: group.appName,
+            tags: tags,
+            isSelected: isSelected(group),
+            indent: 0,
+            icon: group.bundleId
+        ) {
+            if let window = group.windows.first {
+                onSelect(window)
+            }
+        }
+    }
+
+    private func pickerRow(
+        title: String,
+        tags: [String],
+        isSelected: Bool,
+        indent: CGFloat,
+        icon: String? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(alignment: .center, spacing: 8) {
+                if let icon {
+                    AppIconView(bundleId: icon)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+
+                    if !tags.isEmpty {
+                        HStack(spacing: 4) {
+                            ForEach(Array(tags.prefix(2)), id: \.self) { tag in
+                                Text(tag)
+                                    .font(.system(size: 9.5, weight: .medium))
+                                    .lineLimit(1)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Capsule().fill(Color.secondary.opacity(0.14)))
+                            }
+
+                            if tags.count > 2 {
+                                Text("+\(tags.count - 2)")
+                                    .font(.system(size: 9.5, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(minLength: 4)
+
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.accentColor)
+                }
+            }
+            .padding(.leading, indent + 8)
+            .padding(.trailing, 8)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .cardBackground(
+                fill: isSelected ? Color.accentColor.opacity(0.14) : Color.clear,
+                cornerRadius: 8
+            )
+        }
+        .buttonStyle(.plain)
+        .help(tags.isEmpty ? title : "\(title)\nUsed by: \(tags.joined(separator: ", "))")
+    }
+
+    private func isSelected(_ window: LiveWindow) -> Bool {
+        if case .window(let selectedID) = mode {
+            return selectedID == window.id
+        }
+        return false
+    }
+
+    private func isSelected(_ group: AppGroup) -> Bool {
+        if case .app(let selectedBundleID) = mode {
+            return selectedBundleID == group.bundleId
+        }
+        return false
+    }
+
+    private static func uniqueTags(_ tags: [String]) -> [String] {
+        var seen = Set<String>()
+        return tags.filter { seen.insert($0).inserted }
     }
 }
 

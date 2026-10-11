@@ -139,6 +139,11 @@ final class AppRuntimeCoordinator {
             self?.onNiriShowHUD?()
         }
 
+        hotkeyController.onRegistrationFailures = { [weak settings] failures in
+            if settings?.unregisteredShortcuts != failures {
+                settings?.unregisteredShortcuts = failures
+            }
+        }
         hotkeyController.onHotkeyTriggered = { [weak optionHoldHUDController] in
             optionHoldHUDController?.noteShortcutTriggered()
         }

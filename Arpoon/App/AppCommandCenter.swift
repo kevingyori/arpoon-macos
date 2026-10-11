@@ -2318,17 +2318,6 @@ private extension GridBinding {
     }
 }
 
-private extension Target {
-    var bundleId: String {
-        switch self {
-        case .app(let target):
-            return target.bundleId
-        case .window(let target):
-            return target.bundleId
-        }
-    }
-}
-
 private extension NiriItem {
     var bundleId: String {
         switch target {

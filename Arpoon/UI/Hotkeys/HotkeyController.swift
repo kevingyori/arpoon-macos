@@ -32,6 +32,9 @@ protocol HotkeyControlling: AnyObject {
     var onNiriShowHUD: (() -> Void)? { get set }
     /// Fires before any registered shortcut's own handler.
     var onHotkeyTriggered: (() -> Void)? { get set }
+    /// Reports the configured shortcuts that couldn't be registered (usually because another
+    /// app or macOS already owns them) after each registration pass.
+    var onRegistrationFailures: ((Set<HotkeyShortcut>) -> Void)? { get set }
 
     func apply(configuration: HotkeyConfiguration)
     func suspend()
@@ -68,6 +71,7 @@ final class HotkeyController: HotkeyControlling {
     var onNiriRemoveCurrentWindow: (() -> Void)?
     var onNiriShowHUD: (() -> Void)?
     var onHotkeyTriggered: (() -> Void)?
+    var onRegistrationFailures: ((Set<HotkeyShortcut>) -> Void)?
 
     private let hotKeyCenter = GlobalHotKeyCenter.shared
     private var configuration: HotkeyConfiguration?
@@ -93,15 +97,23 @@ final class HotkeyController: HotkeyControlling {
 
         hotKeyCenter.unregisterAll()
         var registeredShortcuts = Set<HotkeyShortcut>()
+        var failedShortcuts = Set<HotkeyShortcut>()
+
+        func register(_ shortcut: HotkeyShortcut, handler: @escaping () -> Void) {
+            if !hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers, handler: handler) {
+                failedShortcuts.insert(shortcut)
+            }
+        }
 
         for binding in configuration.actionBindings {
             let action = binding.action
             let shortcut = binding.shortcut
             guard registeredShortcuts.insert(shortcut).inserted else {
+                failedShortcuts.insert(shortcut)
                 continue
             }
 
-            hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
+            register(shortcut) { [weak self] in
                 Task { @MainActor in
                     self?.dispatch(action)
                 }
@@ -112,10 +124,11 @@ final class HotkeyController: HotkeyControlling {
         case .dynamicWindows:
             for shortcut in configuration.dynamicShortcuts {
                 guard registeredShortcuts.insert(shortcut).inserted else {
+                    failedShortcuts.insert(shortcut)
                     continue
                 }
 
-                hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
+                register(shortcut) { [weak self] in
                     Task { @MainActor in
                         self?.onHotkeyTriggered?()
                         self?.onDynamicHotkey?(shortcut)
@@ -126,10 +139,11 @@ final class HotkeyController: HotkeyControlling {
             for binding in configuration.gridStandaloneBindings {
                 let shortcut = binding.shortcut
                 guard registeredShortcuts.insert(shortcut).inserted else {
+                    failedShortcuts.insert(shortcut)
                     continue
                 }
 
-                hotKeyCenter.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers) { [weak self] in
+                register(shortcut) { [weak self] in
                     Task { @MainActor in
                         self?.onHotkeyTriggered?()
                         self?.onGridStandaloneApp?(binding.appID)
@@ -139,6 +153,8 @@ final class HotkeyController: HotkeyControlling {
         case .staticSlots, .niri:
             break
         }
+
+        onRegistrationFailures?(failedShortcuts)
     }
 
     func suspend() {
