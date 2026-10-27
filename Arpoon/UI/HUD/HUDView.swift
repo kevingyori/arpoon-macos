@@ -4,6 +4,8 @@ import SwiftUI
 final class HUDViewModel: ObservableObject {
     @Published var model: HUDModel
     @Published var presentationID: Int = 0
+    @Published var isGridDragActive = false
+    var gridActions: GridHUDActions?
 
     init(model: HUDModel) {
         self.model = model
@@ -152,7 +154,11 @@ struct HUDView: View {
 
     @ViewBuilder
     private func gridMinimapView(_ minimap: GridMinimapModel) -> some View {
-        GridMinimapAnimatedView(minimap: minimap)
+        GridMinimapAnimatedView(
+            minimap: minimap,
+            actions: minimap.isEditable ? viewModel.gridActions : nil,
+            onDragActiveChange: { viewModel.isGridDragActive = $0 }
+        )
     }
 
     private var containerPadding: CGFloat {
@@ -210,6 +216,24 @@ struct HUDView: View {
 
 private struct GridMinimapAnimatedView: View {
     let minimap: GridMinimapModel
+    let actions: GridHUDActions?
+    let onDragActiveChange: (Bool) -> Void
+
+    private struct SlotPosition: Hashable {
+        let row: Int
+        let column: Int
+    }
+
+    private struct SlotDrag {
+        let source: SlotPosition
+        let bundleId: String
+        let grabOffset: CGSize
+        var location: CGPoint
+    }
+
+    @State private var slotDrag: SlotDrag?
+    @GestureState private var isSlotGestureActive = false
+    private let gridBodyCoordinateSpace = "gridMinimapBody"
 
     @State private var displayedSelectorLayerPosition: Double = 0
     @State private var displayedSelectorColumnPosition: Double = 0
@@ -220,8 +244,10 @@ private struct GridMinimapAnimatedView: View {
     @State private var selectorStretchX: CGFloat = 1
     @State private var selectorStretchY: CGFloat = 1
 
-    init(minimap: GridMinimapModel) {
+    init(minimap: GridMinimapModel, actions: GridHUDActions? = nil, onDragActiveChange: @escaping (Bool) -> Void = { _ in }) {
         self.minimap = minimap
+        self.actions = actions
+        self.onDragActiveChange = onDragActiveChange
 
         let initialPosition = Self.initialSelectorPosition(for: minimap)
         _displayedSelectorLayerPosition = State(initialValue: initialPosition.layerPosition)
@@ -240,6 +266,20 @@ private struct GridMinimapAnimatedView: View {
                 }
             }
             .frame(width: gridBodyWidth, height: gridBodyHeight, alignment: .topLeading)
+            .coordinateSpace(name: gridBodyCoordinateSpace)
+            .overlay(alignment: .topLeading) {
+                if let slotDrag {
+                    liftedSlotView(bundleId: slotDrag.bundleId)
+                        .position(
+                            x: slotDrag.location.x - slotDrag.grabOffset.width,
+                            y: slotDrag.location.y - slotDrag.grabOffset.height
+                        )
+                        .allowsHitTesting(false)
+                        .transition(.scale(scale: 0.92).combined(with: .opacity))
+                }
+            }
+            .animation(.spring(response: 0.26, dampingFraction: 0.8), value: slotDrag?.source)
+            .animation(.spring(response: 0.24, dampingFraction: 0.75), value: dropTarget)
 
             if let hint = minimap.hint {
                 VStack(alignment: .leading, spacing: 3) {
@@ -263,6 +303,22 @@ private struct GridMinimapAnimatedView: View {
             }
         }
         .fixedSize(horizontal: true, vertical: false)
+        .onChange(of: isSlotGestureActive) { _, isActive in
+            guard !isActive else {
+                return
+            }
+
+            // A cancelled drag never calls onEnded. Give onEnded a turn to commit the drop, then
+            // clear whatever is left so the lifted tile can't get stuck.
+            DispatchQueue.main.async {
+                guard slotDrag != nil, !isSlotGestureActive else {
+                    return
+                }
+
+                slotDrag = nil
+                onDragActiveChange(false)
+            }
+        }
         .onAppear {
             hasAppeared = true
             animateSelectorToTarget()
@@ -391,7 +447,53 @@ private struct GridMinimapAnimatedView: View {
         let showLabel = minimap.detailMode == .expanded && isTargetSelected && (column.activeLabel?.isEmpty == false)
         let hasAppIcon = column.bundleId?.isEmpty == false
         let cellPulse = isTargetSelected ? selectedCellPulse : 0
+        let position = SlotPosition(row: rowIndex, column: columnIndex)
+        let isDragSource = slotDrag?.source == position
+        let isDropTarget = dropTarget == position
 
+        // The drag gesture lives on this view, so it must stay in the hierarchy while it's the drag
+        // source; swapping it out would cancel the gesture mid-drag.
+        gridColumnContent(
+            column,
+            layerColor: layerColor,
+            isTargetSelected: isTargetSelected,
+            showLabel: showLabel,
+            hasAppIcon: hasAppIcon,
+            cellPulse: cellPulse
+        )
+        .opacity(isDragSource ? 0 : 1)
+        .overlay {
+            if isDragSource {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(Color.white.opacity(0.28), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.22)))
+            } else {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(Color.accentColor.opacity(isDropTarget ? 0.9 : 0), lineWidth: 1.5)
+            }
+        }
+        .scaleEffect(isDropTarget ? 0.94 : 1)
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .onTapGesture {
+            guard let actions, slotDrag == nil else {
+                return
+            }
+
+            actions.focusSlot(minimap.layers[rowIndex].id, column.id)
+        }
+        .gesture(slotDragGesture(for: position, column: column), including: canDrag(row: rowIndex, column: column) ? .all : .none)
+        .zIndex(isTargetSelected || isDropTarget ? 1 : 0)
+    }
+
+    @ViewBuilder
+    private func gridColumnContent(
+        _ column: GridMinimapColumn,
+        layerColor: GridLayerColor,
+        isTargetSelected: Bool,
+        showLabel: Bool,
+        hasAppIcon: Bool,
+        cellPulse: CGFloat
+    ) -> some View {
         VStack(spacing: 4) {
             HStack(spacing: 6) {
                 if let bundleId = column.bundleId, hasAppIcon {
@@ -441,6 +543,113 @@ private struct GridMinimapAnimatedView: View {
         .shadow(color: Color.black.opacity(0.24), radius: 8, x: 0, y: 4)
         .shadow(color: isTargetSelected ? layerColor.swiftUIColor.opacity(0.28 + 0.18 * cellPulse) : .clear, radius: 10 + 8 * cellPulse, x: 0, y: 0)
         .zIndex(isTargetSelected ? 1 : 0)
+    }
+
+    private func liftedSlotView(bundleId: String) -> some View {
+        AppIconView(bundleId: bundleId)
+            .frame(width: 20, height: 20)
+            .frame(width: cellTotalWidth, height: rowHeight)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(white: 0.30).opacity(0.92))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(Color.accentColor.opacity(0.9), lineWidth: 1.5)
+            )
+            .scaleEffect(1.06)
+            .shadow(color: .black.opacity(0.45), radius: 14, y: 6)
+    }
+
+    // MARK: - Rearranging slots
+
+    private func isEditableRow(_ row: Int) -> Bool {
+        actions != nil && minimap.layers.indices.contains(row) && minimap.layers[row].id != gridStandaloneMinimapRowID
+    }
+
+    private func canDrag(row: Int, column: GridMinimapColumn) -> Bool {
+        isEditableRow(row) && column.isFilled && column.bundleId?.isEmpty == false
+    }
+
+    private func slotDragGesture(for position: SlotPosition, column: GridMinimapColumn) -> some Gesture {
+        DragGesture(minimumDistance: 4, coordinateSpace: .named(gridBodyCoordinateSpace))
+            .updating($isSlotGestureActive) { _, isActive, _ in
+                isActive = true
+            }
+            .onChanged { value in
+                if slotDrag == nil {
+                    guard let bundleId = column.bundleId else {
+                        return
+                    }
+
+                    let center = slotCenter(position)
+                    slotDrag = SlotDrag(
+                        source: position,
+                        bundleId: bundleId,
+                        grabOffset: CGSize(width: value.startLocation.x - center.x, height: value.startLocation.y - center.y),
+                        location: value.location
+                    )
+                    onDragActiveChange(true)
+                } else {
+                    slotDrag?.location = value.location
+                }
+            }
+            .onEnded { _ in
+                let drag = slotDrag
+                let target = dropTarget
+                slotDrag = nil
+                onDragActiveChange(false)
+
+                guard let drag, let target, let actions else {
+                    return
+                }
+
+                let fromLayer = minimap.layers[drag.source.row]
+                let toLayer = minimap.layers[target.row]
+                guard fromLayer.columns.indices.contains(drag.source.column),
+                      toLayer.columns.indices.contains(target.column) else {
+                    return
+                }
+
+                actions.moveSlot(
+                    fromLayer.id,
+                    fromLayer.columns[drag.source.column].id,
+                    toLayer.id,
+                    toLayer.columns[target.column].id
+                )
+            }
+    }
+
+    /// The slot under the lifted icon's center, excluding the slot it was picked up from.
+    private var dropTarget: SlotPosition? {
+        guard let slotDrag else {
+            return nil
+        }
+
+        let x = slotDrag.location.x - slotDrag.grabOffset.width - rowLabelTotalWidth - leadingGridSpacing + columnSpacing / 2
+        let y = slotDrag.location.y - slotDrag.grabOffset.height + rowSpacing / 2
+        guard x >= 0, y >= 0 else {
+            return nil
+        }
+
+        let position = SlotPosition(
+            row: Int(y / (rowHeight + rowSpacing)),
+            column: Int(x / (cellTotalWidth + columnSpacing))
+        )
+        guard position != slotDrag.source,
+              isEditableRow(position.row),
+              minimap.layers[position.row].columns.indices.contains(position.column) else {
+            return nil
+        }
+
+        return position
+    }
+
+    private func slotCenter(_ position: SlotPosition) -> CGPoint {
+        CGPoint(
+            x: rowLabelTotalWidth + leadingGridSpacing + CGFloat(position.column) * (cellTotalWidth + columnSpacing) + cellTotalWidth / 2,
+            y: CGFloat(position.row) * (rowHeight + rowSpacing) + rowHeight / 2
+        )
     }
 
     @ViewBuilder

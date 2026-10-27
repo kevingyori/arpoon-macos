@@ -408,6 +408,26 @@ final class AppRuntimeAndCommandCenterTests: XCTestCase {
         XCTAssertEqual(gridSession.currentTool(in: gridStore.columns), browserColumn)
     }
 
+    func testGridStoreMoveBindingMovesIntoEmptySlotAndSwapsBoundSlots() async throws {
+        let store = makeGridStore()
+        await store.load()
+
+        let firstLayerID = try XCTUnwrap(store.layers.first?.id)
+        let secondLayerID = try XCTUnwrap(store.layers.dropFirst().first?.id)
+        let browser = Target.app(AppTarget(bundleId: "com.example.browser", appName: "Browser"))
+        let terminal = Target.app(AppTarget(bundleId: "com.example.terminal", appName: "Terminal"))
+        _ = store.replaceBinding(layerID: firstLayerID, tool: .browser, bindingID: nil, target: browser)
+        _ = store.replaceBinding(layerID: firstLayerID, tool: .terminal, bindingID: nil, target: terminal)
+
+        store.moveBinding(fromLayerID: firstLayerID, fromColumnID: GridToolColumn.browser.id, toLayerID: secondLayerID, toColumnID: GridToolColumn.ide.id)
+        XCTAssertNil(store.layer(id: firstLayerID)?.group(for: .browser).activeBinding)
+        XCTAssertEqual(store.layer(id: secondLayerID)?.group(for: .ide).activeBinding?.target, browser)
+
+        store.moveBinding(fromLayerID: secondLayerID, fromColumnID: GridToolColumn.ide.id, toLayerID: firstLayerID, toColumnID: GridToolColumn.terminal.id)
+        XCTAssertEqual(store.layer(id: firstLayerID)?.group(for: .terminal).activeBinding?.target, browser)
+        XCTAssertEqual(store.layer(id: secondLayerID)?.group(for: .ide).activeBinding?.target, terminal)
+    }
+
     func testGridStorePersistsCustomColumnsAlongsideDefaults() async throws {
         let store = makeGridStore()
 

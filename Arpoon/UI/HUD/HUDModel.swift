@@ -47,10 +47,20 @@ struct GridMinimapModel: Hashable {
     let selectorLayerPosition: Double
     let selectorColumnPosition: Double
     let selectorTracksFinger: Bool
+    /// Whether the HUD accepts the mouse: click a slot to jump to it, drag a slot to move or swap it.
+    var isEditable: Bool = false
 
     var maxColumnCount: Int {
         layers.map(\.columns.count).max() ?? 0
     }
+}
+
+/// The standalone apps are shown as an extra row below the projects. It can't be rearranged.
+let gridStandaloneMinimapRowID = "grid-standalone-row"
+
+struct GridHUDActions {
+    let moveSlot: (_ fromLayerID: String, _ fromColumnID: String, _ toLayerID: String, _ toColumnID: String) -> Void
+    let focusSlot: (_ layerID: String, _ columnID: String) -> Void
 }
 
 struct HUDOverviewEntry: Identifiable {

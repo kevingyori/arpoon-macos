@@ -11,6 +11,8 @@ final class HUDWindowController {
     private var fadeTask: Task<Void, Never>?
     private var fadeSequence: Int = 0
     private var visible = false
+    private var lastHoveredAt: Date?
+    private let hoverGracePeriod: TimeInterval = 0.5
 
     init() {
         viewModel = HUDViewModel(model: .symbol(systemName: "circle.fill", tone: .neutral))
@@ -41,11 +43,11 @@ final class HUDWindowController {
         cancelFadeOutIfNeeded()
         present(model: model)
 
-        let task = DispatchWorkItem { [weak self] in
-            self?.beginFadeOut()
-        }
-        dismissTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: task)
+        scheduleDismissal(after: timeout)
+    }
+
+    func setGridActions(_ actions: GridHUDActions?) {
+        viewModel.gridActions = actions
     }
 
     func showPersistent(model: HUDModel) {
@@ -65,6 +67,33 @@ final class HUDWindowController {
 
     func hide() {
         cancelDismissal()
+        beginFadeOut()
+    }
+
+    private func scheduleDismissal(after delay: TimeInterval) {
+        let task = DispatchWorkItem { [weak self] in
+            self?.dismissUnlessInUse()
+        }
+        dismissTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: task)
+    }
+
+    /// An editable HUD stays up while the pointer is over it or a slot is being dragged, and fades
+    /// shortly after the pointer leaves.
+    private func dismissUnlessInUse() {
+        dismissTask = nil
+
+        if !panel.ignoresMouseEvents {
+            if viewModel.isGridDragActive || panel.frame.contains(NSEvent.mouseLocation) {
+                lastHoveredAt = .now
+            }
+
+            if let lastHoveredAt, Date.now.timeIntervalSince(lastHoveredAt) < hoverGracePeriod {
+                scheduleDismissal(after: 0.2)
+                return
+            }
+        }
+
         beginFadeOut()
     }
 
@@ -130,6 +159,7 @@ final class HUDWindowController {
     private func present(model: HUDModel) {
         if !visible {
             viewModel.presentationID += 1
+            lastHoveredAt = nil
         }
         applyModel(model, allowWindowReordering: true)
 
@@ -146,6 +176,11 @@ final class HUDWindowController {
 
     private func applyModel(_ model: HUDModel, allowWindowReordering: Bool) {
         viewModel.model = model
+        if case .gridMinimap(let minimap) = model, minimap.isEditable {
+            panel.ignoresMouseEvents = false
+        } else {
+            panel.ignoresMouseEvents = true
+        }
 
         let contentSize = NSSize(width: model.preferredWidth, height: model.preferredHeight)
         let targetFrame = panelFrame(width: contentSize.width, height: contentSize.height)

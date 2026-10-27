@@ -46,6 +46,11 @@ protocol HUDPresenting: AnyObject {
     func showPersistent(model: HUDModel)
     func update(model: HUDModel)
     func hide()
+    func setGridActions(_ actions: GridHUDActions?)
+}
+
+extension HUDPresenting {
+    func setGridActions(_ actions: GridHUDActions?) {}
 }
 
 @MainActor
@@ -115,6 +120,7 @@ final class AppCommandCenter {
     private var gridGestureActive = false
     private var gridGesturePreview: GridGesturePreview?
     private var gridSelectedStandaloneAppID: String?
+    private var lastGridMinimapDetailMode: GridMinimapModel.DetailMode = .compact
     private var niriGestureActive = false
     private var niriGesturePreview: NiriGesturePreview?
     private var lastObservedGridFocusSignature: String?
@@ -159,6 +165,17 @@ final class AppCommandCenter {
         self.hapticPerformer = hapticPerformer
         self.hudController = hudController
         self.setHotkeyRecordingActive = setHotkeyRecordingActive
+
+        hudController.setGridActions(
+            GridHUDActions(
+                moveSlot: { [weak self] fromLayerID, fromColumnID, toLayerID, toColumnID in
+                    self?.moveGridSlot(fromLayerID: fromLayerID, fromColumnID: fromColumnID, toLayerID: toLayerID, toColumnID: toColumnID)
+                },
+                focusSlot: { [weak self] layerID, columnID in
+                    self?.focusGridSlot(layerID: layerID, columnID: columnID)
+                }
+            )
+        )
     }
 
     func bindFocusedTarget(to slot: Int) {
@@ -363,10 +380,30 @@ final class AppCommandCenter {
     }
 
     func showGridHUD() {
+        // Explicitly opened, so leave enough time to reach the HUD with the mouse and edit it.
         hudController.show(
             model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: .expanded),
-            timeout: gridHUDTimeout
+            timeout: max(3, settings.hudTimeout)
         )
+    }
+
+    func moveGridSlot(fromLayerID: String, fromColumnID: String, toLayerID: String, toColumnID: String) {
+        gridStore.moveBinding(fromLayerID: fromLayerID, fromColumnID: fromColumnID, toLayerID: toLayerID, toColumnID: toColumnID)
+        hudController.update(
+            model: gridMinimapModel(movement: .neutral, hint: nil, detailMode: lastGridMinimapDetailMode)
+        )
+    }
+
+    func focusGridSlot(layerID: String, columnID: String) {
+        if layerID == gridStandaloneMinimapRowID {
+            jumpToGridStandaloneApp(columnID)
+            return
+        }
+
+        syncGridSession()
+        let layerMovement = gridSession.selectLayer(id: layerID)
+        let columnMovement = gridSession.selectColumn(id: columnID, in: gridStore.columns)
+        focusCurrentGridSelection(after: layerMovement == .neutral ? columnMovement : layerMovement)
     }
 
     func setGridGestureActive(_ isActive: Bool) {
@@ -1882,6 +1919,7 @@ final class AppCommandCenter {
         hint: GridHUDHint?,
         detailMode: GridMinimapModel.DetailMode = .compact
     ) -> HUDModel {
+        lastGridMinimapDetailMode = detailMode
         let defaultSelection = currentGridMinimapSelection()
         let defaultSelectedLayerIndex = defaultSelection.layerIndex
         let defaultSelectedColumnIndex = defaultSelection.columnIndex
@@ -1919,7 +1957,8 @@ final class AppCommandCenter {
                 selectedColumnIndex: selectedColumnIndex,
                 selectorLayerPosition: selectorPosition.layerPosition,
                 selectorColumnPosition: selectorPosition.columnPosition,
-                selectorTracksFinger: gridGesturePreview != nil
+                selectorTracksFinger: gridGesturePreview != nil,
+                isEditable: !gridGestureActive && gridGesturePreview == nil
             )
         )
     }
@@ -1948,7 +1987,7 @@ final class AppCommandCenter {
         if !gridStore.standaloneApps.isEmpty {
             rows.append(
                 GridMinimapLayer(
-                    id: "grid-standalone-row",
+                    id: gridStandaloneMinimapRowID,
                     name: "Standalone",
                     color: .slate,
                     columns: gridStore.standaloneApps.map { app in

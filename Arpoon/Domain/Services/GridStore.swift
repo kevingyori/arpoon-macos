@@ -280,6 +280,29 @@ final class GridStore: ObservableObject {
         return updatedBinding
     }
 
+    /// Moves a slot's binding to another slot. If the destination is already bound, the two swap.
+    func moveBinding(fromLayerID: String, fromColumnID: String, toLayerID: String, toColumnID: String) {
+        guard fromLayerID != toLayerID || fromColumnID != toColumnID,
+              let fromColumn = column(id: fromColumnID),
+              let toColumn = column(id: toColumnID),
+              let fromIndex = layers.firstIndex(where: { $0.id == fromLayerID }),
+              let toIndex = layers.firstIndex(where: { $0.id == toLayerID }) else {
+            return
+        }
+
+        let fromGroup = layers[fromIndex].group(for: fromColumn)
+        let toGroup = layers[toIndex].group(for: toColumn)
+        guard fromGroup.activeBinding != nil else {
+            return
+        }
+
+        var updatedLayers = layers
+        updatedLayers[fromIndex] = updatedLayers[fromIndex].updatingGroup(toGroup.normalized(), for: fromColumn)
+        updatedLayers[toIndex] = updatedLayers[toIndex].updatingGroup(fromGroup.normalized(), for: toColumn)
+        layers = updatedLayers
+        persist()
+    }
+
     private func updateLayer(id: String, transform: (GridLayer) -> GridLayer) {
         guard let index = layers.firstIndex(where: { $0.id == id }) else {
             return
